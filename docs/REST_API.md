@@ -4,17 +4,66 @@
 
 NextBotAdapter 是一个用于适配 NextBot 获取 TShock 服务端信息的插件。
 
-当前提供 3 个只读 REST API：
+当前提供 6 个 REST API：
 
 - `GET /nextbot/users/{user}/inventory`
 - `GET /nextbot/users/{user}/stats`
 - `GET /nextbot/world/progress`
+- `GET /nextbot/whitelist`
+- `POST /nextbot/whitelist/add/{user}`
+- `POST /nextbot/whitelist/remove/{user}`
 
 ## 权限节点
 
 - `nextbot.users.inventory`
 - `nextbot.users.stats`
 - `nextbot.world.progress`
+- `nextbot.whitelist.view`
+- `nextbot.whitelist.add`
+- `nextbot.whitelist.remove`
+
+## 白名单配置文件
+
+插件运行时会在 TShock 保存目录下使用 `NextBotAdapter` 配置文件夹。
+
+### 1. NextBotAdapter.json
+
+用于保存白名单相关配置，例如：
+
+```json
+{
+  "enabled": true,
+  "denyMessage": "You are not on the whitelist.",
+  "caseSensitive": true
+}
+```
+
+字段说明：
+- `enabled`: 是否启用白名单
+- `denyMessage`: 不在白名单时踢出提示
+- `caseSensitive`: 名称比较是否区分大小写，默认 `true`
+
+### 2. whitelist.json
+
+用于保存白名单玩家名称列表，例如：
+
+```json
+{
+  "users": [
+    "Arispex",
+    "NextBot"
+  ]
+}
+```
+
+## 入服校验行为
+
+当白名单启用时，玩家进入服务器后会立即按玩家名称进行白名单检查：
+
+- 在白名单内：允许进入
+- 不在白名单内：拒绝进入，并使用 `denyMessage` 作为提示信息
+
+名称比较是否区分大小写由 `caseSensitive` 控制。
 
 ## 响应格式
 
@@ -28,10 +77,6 @@ NextBotAdapter 是一个用于适配 NextBot 获取 TShock 服务端信息的插
   "data": { ... }
 }
 ```
-
-说明：
-- `status` 由 TShock `RestObject` 自动出现在响应体中
-- `data` 为接口返回的业务数据
 
 ### 错误响应
 
@@ -57,8 +102,9 @@ NextBotAdapter 是一个用于适配 NextBot 获取 TShock 服务端信息的插
 当前接口使用以下状态码：
 
 - `200`：请求成功
-- `400`：缺少必要路由参数，例如缺少 `user`
-- `404`：用户不存在，或玩家数据不存在
+- `400`：缺少必要路由参数或参数不合法
+- `404`：用户不存在、玩家数据不存在、或白名单用户不存在
+- `409`：添加白名单时用户已存在
 
 ## 接口说明
 
@@ -80,81 +126,6 @@ NextBotAdapter 是一个用于适配 NextBot 获取 TShock 服务端信息的插
 nextbot.users.inventory
 ```
 
-**路径参数**:
-
-- `user`: TShock 用户名
-
-### 成功响应示例
-
-```json
-{
-  "status": "200",
-  "data": {
-    "items": [
-      {
-        "slot": 0,
-        "netId": 100,
-        "stack": 2,
-        "prefixId": 1
-      },
-      {
-        "slot": 1,
-        "netId": 200,
-        "stack": 5,
-        "prefixId": 3
-      }
-    ]
-  }
-}
-```
-
-### 字段说明
-
-#### `data.items[]`
-
-- `slot`: 物品槽位索引
-- `netId`: Terraria 物品 NetId
-- `stack`: 物品数量
-- `prefixId`: 物品前缀 ID
-
-### 失败响应示例
-
-#### 用户参数缺失
-
-```json
-{
-  "status": "400",
-  "error": {
-    "code": "missing_user",
-    "message": "Missing required route parameter 'user'."
-  }
-}
-```
-
-#### 用户不存在
-
-```json
-{
-  "status": "404",
-  "error": {
-    "code": "user_not_found",
-    "message": "User was not found."
-  }
-}
-```
-
-#### 玩家数据不存在
-
-```json
-{
-  "status": "404",
-  "error": {
-    "code": "user_data_not_found",
-    "message": "Player data was not found."
-  }
-}
-```
-
 ---
 
 ## 2. 获取用户状态
@@ -171,63 +142,6 @@ nextbot.users.inventory
 
 ```text
 nextbot.users.stats
-```
-
-**路径参数**:
-
-- `user`: TShock 用户名
-
-### 成功响应示例
-
-```json
-{
-  "status": "200",
-  "data": {
-    "health": 120,
-    "maxHealth": 400,
-    "mana": 80,
-    "maxMana": 200,
-    "questsCompleted": 9,
-    "deathsPve": 4,
-    "deathsPvp": 2
-  }
-}
-```
-
-### 字段说明
-
-- `health`: 当前生命值
-- `maxHealth`: 最大生命值
-- `mana`: 当前魔力值
-- `maxMana`: 最大魔力值
-- `questsCompleted`: 渔夫任务完成数
-- `deathsPve`: PVE 死亡次数
-- `deathsPvp`: PVP 死亡次数
-
-### 失败响应示例
-
-#### 用户不存在
-
-```json
-{
-  "status": "404",
-  "error": {
-    "code": "user_not_found",
-    "message": "User was not found."
-  }
-}
-```
-
-#### 玩家数据不存在
-
-```json
-{
-  "status": "404",
-  "error": {
-    "code": "user_data_not_found",
-    "message": "Player data was not found."
-  }
-}
 ```
 
 ---
@@ -248,60 +162,97 @@ nextbot.users.stats
 nextbot.world.progress
 ```
 
+---
+
+## 4. 获取白名单列表
+
+**Method**: `GET`
+
+**Path**:
+
+```text
+/nextbot/whitelist
+```
+
+**权限**:
+
+```text
+nextbot.whitelist.view
+```
+
 ### 成功响应示例
 
 ```json
 {
   "status": "200",
   "data": {
-    "kingSlime": true,
-    "eyeOfCthulhu": false,
-    "eaterOfWorldsOrBrainOfCthulhu": false,
-    "queenBee": false,
-    "skeletron": false,
-    "deerclops": false,
-    "wallOfFlesh": true,
-    "queenSlime": false,
-    "theTwins": false,
-    "theDestroyer": false,
-    "skeletronPrime": false,
-    "plantera": false,
-    "golem": false,
-    "dukeFishron": false,
-    "empressOfLight": false,
-    "lunaticCultist": false,
-    "solarPillar": false,
-    "nebulaPillar": false,
-    "vortexPillar": false,
-    "stardustPillar": false,
-    "moonLord": false
+    "users": [
+      "Arispex",
+      "NextBot"
+    ]
   }
 }
 ```
 
-### 字段说明
+---
 
-- `kingSlime`: 史莱姆王
-- `eyeOfCthulhu`: 克苏鲁之眼
-- `eaterOfWorldsOrBrainOfCthulhu`: 世界吞噬者或克苏鲁之脑
-- `queenBee`: 蜂王
-- `skeletron`: 骷髅王
-- `deerclops`: 独眼巨鹿
-- `wallOfFlesh`: 血肉墙 / 是否进入困难模式
-- `queenSlime`: 史莱姆皇后
-- `theTwins`: 双子魔眼
-- `theDestroyer`: 毁灭者
-- `skeletronPrime`: 机械骷髅王
-- `plantera`: 世纪之花
-- `golem`: 石巨人
-- `dukeFishron`: 猪龙鱼公爵
-- `empressOfLight`: 光之女皇
-- `lunaticCultist`: 拜月教邪教徒
-- `solarPillar`: 日耀柱
-- `nebulaPillar`: 星云柱
-- `vortexPillar`: 星旋柱
-- `stardustPillar`: 星尘柱
-- `moonLord`: 月亮领主
+## 5. 添加白名单用户
+
+**Method**: `POST`
+
+**Path**:
+
+```text
+/nextbot/whitelist/add/{user}
+```
+
+**权限**:
+
+```text
+nextbot.whitelist.add
+```
+
+### 失败响应示例
+
+```json
+{
+  "status": "409",
+  "error": {
+    "code": "whitelist_user_exists",
+    "message": "User already exists in whitelist."
+  }
+}
+```
+
+---
+
+## 6. 删除白名单用户
+
+**Method**: `POST`
+
+**Path**:
+
+```text
+/nextbot/whitelist/remove/{user}
+```
+
+**权限**:
+
+```text
+nextbot.whitelist.remove
+```
+
+### 失败响应示例
+
+```json
+{
+  "status": "404",
+  "error": {
+    "code": "whitelist_user_not_found",
+    "message": "User not found in whitelist."
+  }
+}
+```
 
 ## 兼容性说明
 
@@ -309,20 +260,11 @@ nextbot.world.progress
 
 ## 示例请求
 
-### 获取用户背包
-
 ```text
 GET /nextbot/users/Arispex/inventory
-```
-
-### 获取用户状态
-
-```text
 GET /nextbot/users/Arispex/stats
-```
-
-### 获取世界进度
-
-```text
 GET /nextbot/world/progress
+GET /nextbot/whitelist
+POST /nextbot/whitelist/add/Arispex
+POST /nextbot/whitelist/remove/Arispex
 ```

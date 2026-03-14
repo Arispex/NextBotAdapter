@@ -1,5 +1,6 @@
 using NextBotAdapter.Infrastructure;
 using NextBotAdapter.Models;
+using NextBotAdapter.Models.Responses;
 using NextBotAdapter.Rest;
 using Rests;
 
@@ -41,7 +42,7 @@ public sealed class EndpointBehaviorTests
     }
 
     [Fact]
-    public void CreateCommands_ShouldReturnThreeRoutesWithExpectedMetadata()
+    public void CreateCommands_ShouldReturnAllRoutesWithExpectedMetadata()
     {
         var commands = EndpointRegistrar.CreateCommands();
 
@@ -49,7 +50,10 @@ public sealed class EndpointBehaviorTests
             commands,
             command => AssertRoute(command, EndpointRoutes.UserInventory, Permissions.UserInventory),
             command => AssertRoute(command, EndpointRoutes.UserStats, Permissions.UserStats),
-            command => AssertRoute(command, EndpointRoutes.WorldProgress, Permissions.WorldProgress));
+            command => AssertRoute(command, EndpointRoutes.WorldProgress, Permissions.WorldProgress),
+            command => AssertRoute(command, EndpointRoutes.Whitelist, Permissions.WhitelistView),
+            command => AssertRoute(command, EndpointRoutes.WhitelistAddUser, Permissions.WhitelistAdd),
+            command => AssertRoute(command, EndpointRoutes.WhitelistRemoveUser, Permissions.WhitelistRemove));
     }
 
     private static void AssertRoute(RestCommand command, string expectedRoute, string expectedPermission)

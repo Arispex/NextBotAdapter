@@ -32,7 +32,7 @@ public static class EndpointResponseFactory
         };
     }
 
-    private static RestObject Error(string code, string errorCode, string message)
+    public static RestObject Error(string code, string errorCode, string message)
     {
         return new RestObject(code)
         {
