@@ -1,0 +1,29 @@
+# Build artifacts
+[Bb]in/
+[Oo]bj/
+
+# Test results and coverage
+TestResults/
+*.trx
+coverage*.xml
+
+# Rider / IntelliJ
+.idea/
+*.sln.iml
+
+# Visual Studio
+.vs/
+*.user
+*.rsuser
+*.suo
+
+# JetBrains Rider caches
+_ReSharper*/
+*.[Rr]e[Ss]harper
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
