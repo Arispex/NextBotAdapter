@@ -44,5 +44,5 @@ public static class UserEndpoints
     }
 
     private static string? ReadRouteUser(RestRequestArgs args)
-        => args.Parameters?[RequestParameters.User] ?? args.Request?.Parameters?[RequestParameters.User];
+        => args.Verbs?[RequestParameters.User] ?? args.Parameters?[RequestParameters.User] ?? args.Request?.Parameters?[RequestParameters.User];
 }

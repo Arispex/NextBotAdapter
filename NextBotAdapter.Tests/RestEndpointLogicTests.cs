@@ -116,6 +116,23 @@ public sealed class RestEndpointLogicTests
         Assert.True(response.MoonLord);
     }
 
+    [Fact]
+    public void ReadRouteUser_ShouldPreferVerbParametersWhenProvided()
+    {
+        var args = new RestRequestArgs(new RestVerbs { [RequestParameters.User] = "verb-user" }, null!, null!, null!);
+
+        var user = InvokeReadRouteUser(args);
+
+        Assert.Equal("verb-user", user);
+    }
+
+    private static string? InvokeReadRouteUser(RestRequestArgs args)
+    {
+        var method = typeof(UserEndpoints).GetMethod("ReadRouteUser", System.Reflection.BindingFlags.Static | System.Reflection.BindingFlags.NonPublic);
+        Assert.NotNull(method);
+        return method!.Invoke(null, [args]) as string;
+    }
+
     private sealed class FakePlayerDataAccessor : IPlayerDataAccessor
     {
         private readonly object? _data;

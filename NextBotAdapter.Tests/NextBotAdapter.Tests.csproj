@@ -12,6 +12,7 @@
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.12.0" />
     <PackageReference Include="xunit" Version="2.9.2" />
     <PackageReference Include="xunit.runner.visualstudio" Version="2.8.2" />
+    <PackageReference Include="TShock" Version="5.2.4" ExcludeAssets="contentFiles" GeneratePathProperty="true" />
   </ItemGroup>
 
   <ItemGroup>
@@ -20,6 +21,9 @@
 
   <ItemGroup>
     <ProjectReference Include="..\NextBotAdapter\NextBotAdapter.csproj" />
+    <Reference Include="HttpServer">
+      <HintPath>$(PkgTShock)/content/HttpServer.dll</HintPath>
+    </Reference>
   </ItemGroup>
 
 </Project>
