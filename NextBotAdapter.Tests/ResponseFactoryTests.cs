@@ -1,4 +1,4 @@
-using System.Text.Json;
+using Newtonsoft.Json;
 using NextBotAdapter.Models;
 using NextBotAdapter.Models.Responses;
 
@@ -29,11 +29,24 @@ public sealed class ResponseFactoryTests
     }
 
     [Fact]
-    public void ApiError_ShouldSerializeWithLowercasePropertyNames()
+    public void ApiError_ShouldSerializeWithLowercasePropertyNamesInSystemTextJson()
     {
         var error = new ApiError("user_not_found", "User was not found.");
 
-        var json = JsonSerializer.Serialize(error);
+        var json = System.Text.Json.JsonSerializer.Serialize(error);
+
+        Assert.Contains("\"code\":\"user_not_found\"", json);
+        Assert.Contains("\"message\":\"User was not found.\"", json);
+        Assert.DoesNotContain("\"Code\"", json);
+        Assert.DoesNotContain("\"Message\"", json);
+    }
+
+    [Fact]
+    public void ApiError_ShouldSerializeWithLowercasePropertyNamesInNewtonsoftJson()
+    {
+        var error = new ApiError("user_not_found", "User was not found.");
+
+        var json = JsonConvert.SerializeObject(error);
 
         Assert.Contains("\"code\":\"user_not_found\"", json);
         Assert.Contains("\"message\":\"User was not found.\"", json);
