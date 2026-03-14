@@ -6,13 +6,13 @@ namespace NextBotAdapter.Infrastructure;
 public static class EndpointResponseFactory
 {
     public static RestObject MissingUser(string code = "400")
-        => Error(code, "Missing required route parameter 'user'.");
+        => Error(code, ErrorCodes.MissingUser, "Missing required route parameter 'user'.");
 
     public static RestObject UserNotFound(string message, string code = "404")
-        => Error(code, message);
+        => Error(code, ErrorCodes.UserNotFound, message);
 
     public static RestObject UserDataNotFound(string message, string code = "404")
-        => Error(code, message);
+        => Error(code, ErrorCodes.UserDataNotFound, message);
 
     public static RestObject FromUserLookupError(UserLookupError? error)
     {
@@ -32,13 +32,13 @@ public static class EndpointResponseFactory
         };
     }
 
-    private static RestObject Error(string code, string message)
+    private static RestObject Error(string code, string errorCode, string message)
     {
         return new RestObject(code)
         {
             {
                 "error",
-                new ApiError(message)
+                new ApiError(errorCode, message)
             }
         };
     }
