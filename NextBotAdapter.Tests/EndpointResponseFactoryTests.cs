@@ -14,7 +14,6 @@ public sealed class EndpointResponseFactoryTests
 
         Assert.Equal("400", result.Status);
         var error = Assert.IsType<ApiError>(result["error"]);
-        Assert.Equal(ErrorCodes.MissingUser, error.Code);
         Assert.Equal("Missing required route parameter 'user'.", error.Message);
     }
 
@@ -25,7 +24,6 @@ public sealed class EndpointResponseFactoryTests
 
         Assert.Equal("404", result.Status);
         var error = Assert.IsType<ApiError>(result["error"]);
-        Assert.Equal(ErrorCodes.UserNotFound, error.Code);
         Assert.Equal("User was not found.", error.Message);
     }
 
@@ -36,7 +34,6 @@ public sealed class EndpointResponseFactoryTests
 
         Assert.Equal("404", result.Status);
         var error = Assert.IsType<ApiError>(result["error"]);
-        Assert.Equal(ErrorCodes.UserDataNotFound, error.Code);
         Assert.Equal("Player data was not found.", error.Message);
     }
 

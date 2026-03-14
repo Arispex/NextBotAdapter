@@ -17,13 +17,12 @@ public sealed class ResponseFactoryTests
     }
 
     [Fact]
-    public void Failure_ShouldWrapErrorDetailsInErrorEnvelope()
+    public void Failure_ShouldWrapMessageInErrorEnvelope()
     {
-        var result = ApiResponse.Failure("missing_user", "Missing required route parameter 'user'.");
+        var result = ApiResponse.Failure("Missing required route parameter 'user'.");
 
         Assert.Null(result.Data);
         Assert.NotNull(result.Error);
-        Assert.Equal("missing_user", result.Error!.Code);
-        Assert.Equal("Missing required route parameter 'user'.", result.Error.Message);
+        Assert.Equal("Missing required route parameter 'user'.", result.Error!.Message);
     }
 }

@@ -30,7 +30,7 @@ public sealed class ModelAndPluginCoverageTests
     [Fact]
     public void ApiEnvelope_ShouldStoreDataAndErrorValues()
     {
-        var error = new ApiError("code", "message");
+        var error = new ApiError("message");
         var envelope = new ApiEnvelope<string>(null, error);
 
         Assert.Null(envelope.Data);
