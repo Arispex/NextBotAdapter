@@ -26,6 +26,7 @@ public sealed class NextBotAdapterPlugin(Main game) : TerrariaPlugin(game)
     {
         _whitelistService = new PersistedWhitelistService(new WhitelistConfigService());
         WhitelistEndpoints.Service = _whitelistService;
+        ConfigEndpoints.Service = new ConfigurationReloadService(_whitelistService);
 
         EndpointRegistrar.Register(TShock.RestApi);
         GetDataHandlers.PlayerInfo.Register(OnPlayerInfo, HandlerPriority.Highest);

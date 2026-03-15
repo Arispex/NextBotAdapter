@@ -8,4 +8,5 @@ public static class EndpointRoutes
     public const string Whitelist = "/nextbot/whitelist";
     public const string WhitelistAddUser = "/nextbot/whitelist/add/{user}";
     public const string WhitelistRemoveUser = "/nextbot/whitelist/remove/{user}";
+    public const string ConfigReload = "/nextbot/config/reload";
 }
