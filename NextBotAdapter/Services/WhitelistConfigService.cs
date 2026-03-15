@@ -41,7 +41,6 @@ public sealed class WhitelistConfigService
         catch (Exception ex)
         {
             TryLog($"Failed to load whitelist settings, using defaults: {ex.Message}");
-            SaveSettings(WhitelistSettings.Default);
             return WhitelistSettings.Default;
         }
     }
@@ -70,7 +69,6 @@ public sealed class WhitelistConfigService
         catch (Exception ex)
         {
             TryLog($"Failed to load whitelist data, using empty whitelist: {ex.Message}");
-            SaveWhitelist(WhitelistStore.Empty);
             return WhitelistStore.Empty;
         }
     }

@@ -11,22 +11,26 @@ public sealed class WhitelistConfigServiceTests
     public void LoadSettings_ShouldFallbackToDefaultWhenJsonIsInvalid()
     {
         var service = CreateService();
-        File.WriteAllText(service.SettingsFilePath, "{invalid json}");
+        const string invalidJson = "{invalid json}";
+        File.WriteAllText(service.SettingsFilePath, invalidJson);
 
         var settings = service.LoadSettings();
 
         Assert.Equal(WhitelistSettings.Default, settings);
+        Assert.Equal(invalidJson, File.ReadAllText(service.SettingsFilePath));
     }
 
     [Fact]
     public void LoadWhitelist_ShouldFallbackToEmptyWhenJsonIsInvalid()
     {
         var service = CreateService();
-        File.WriteAllText(service.WhitelistFilePath, "{invalid json}");
+        const string invalidJson = "{invalid json}";
+        File.WriteAllText(service.WhitelistFilePath, invalidJson);
 
         var store = service.LoadWhitelist();
 
         Assert.Equal(WhitelistStore.Empty, store);
+        Assert.Equal(invalidJson, File.ReadAllText(service.WhitelistFilePath));
     }
 
     [Fact]
