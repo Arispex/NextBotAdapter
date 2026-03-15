@@ -26,7 +26,13 @@ public sealed class PersistedWhitelistService : IWhitelistService
         if (added)
         {
             Persist();
+            PluginLogger.Info("Whitelist", $"Added whitelist entry: {user}");
         }
+        else if (error is not null)
+        {
+            PluginLogger.Warn("Whitelist", $"Failed to add whitelist entry: {user}, reason: {error.Message}");
+        }
+
         return added;
     }
 
@@ -36,7 +42,13 @@ public sealed class PersistedWhitelistService : IWhitelistService
         if (removed)
         {
             Persist();
+            PluginLogger.Info("Whitelist", $"Removed whitelist entry: {user}");
         }
+        else if (error is not null)
+        {
+            PluginLogger.Warn("Whitelist", $"Failed to remove whitelist entry: {user}, reason: {error.Message}");
+        }
+
         return removed;
     }
 
@@ -46,6 +58,9 @@ public sealed class PersistedWhitelistService : IWhitelistService
     public void Reload()
     {
         _inner = new WhitelistService(_configService.LoadSettings(), _configService.LoadWhitelist());
+        PluginLogger.Info(
+            "Whitelist",
+            $"Reloaded whitelist state: enabled={_inner.Settings.Enabled}, caseSensitive={_inner.Settings.CaseSensitive}, entries={_inner.GetAll().Count}");
     }
 
     private void Persist()

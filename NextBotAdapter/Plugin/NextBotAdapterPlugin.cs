@@ -24,18 +24,33 @@ public sealed class NextBotAdapterPlugin(Main game) : TerrariaPlugin(game)
 
     public override void Initialize()
     {
+        PluginLogger.Info("Lifecycle", "Initializing plugin.");
+
         _whitelistService = new PersistedWhitelistService(new WhitelistConfigService());
         WhitelistEndpoints.Service = _whitelistService;
         ConfigEndpoints.Service = new ConfigurationReloadService(_whitelistService);
+        PluginLogger.Info("Lifecycle", "Whitelist service initialized.");
 
         EndpointRegistrar.Register(TShock.RestApi);
+        PluginLogger.Info("REST", $"Registered {EndpointRegistrar.CreateCommands().Count} REST endpoints.");
+
         GetDataHandlers.PlayerInfo.Register(OnPlayerInfo, HandlerPriority.Highest);
+        PluginLogger.Info("Lifecycle", "Registered PlayerInfo whitelist check hook.");
+        PluginLogger.Info(
+            "Config",
+            $"Active whitelist settings: enabled={_whitelistService.Settings.Enabled}, caseSensitive={_whitelistService.Settings.CaseSensitive}, entries={_whitelistService.GetAll().Count}");
+
+        if (!_whitelistService.Settings.Enabled)
+        {
+            PluginLogger.Warn("Whitelist", "Whitelist is disabled.");
+        }
     }
 
     protected override void Dispose(bool disposing)
     {
         if (disposing)
         {
+            PluginLogger.Info("Lifecycle", "Disposing plugin.");
             GetDataHandlers.PlayerInfo.UnRegister(OnPlayerInfo);
         }
 
@@ -54,6 +69,7 @@ public sealed class NextBotAdapterPlugin(Main game) : TerrariaPlugin(game)
             return;
         }
 
+        PluginLogger.Warn("Whitelist", $"Rejected player: {args.Name}");
         args.Player?.Disconnect(denialReason ?? "You are not on the whitelist.");
         args.Handled = true;
     }
