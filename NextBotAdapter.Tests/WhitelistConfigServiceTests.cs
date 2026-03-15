@@ -1,4 +1,5 @@
 using System.IO;
+using System.Text.Json;
 using NextBotAdapter.Models;
 using NextBotAdapter.Services;
 
@@ -41,6 +42,21 @@ public sealed class WhitelistConfigServiceTests
 
         Assert.Equal(WhitelistSettings.Default, settings);
         Assert.True(File.Exists(service.SettingsFilePath));
+
+        var raw = File.ReadAllText(service.SettingsFilePath);
+        Assert.Contains("\"whitelist\"", raw);
+
+        var config = JsonSerializer.Deserialize<NextBotAdapterConfig>(raw, new JsonSerializerOptions(JsonSerializerDefaults.Web));
+        Assert.NotNull(config);
+        Assert.Equal(WhitelistSettings.Default, config!.Whitelist);
+    }
+
+    [Fact]
+    public void WhitelistFilePath_ShouldUseCapitalizedFileName()
+    {
+        var service = CreateService();
+
+        Assert.EndsWith("Whitelist.json", service.WhitelistFilePath);
     }
 
     private static WhitelistConfigService CreateService()

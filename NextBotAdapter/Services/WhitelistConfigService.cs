@@ -22,7 +22,7 @@ public sealed class WhitelistConfigService
 
     public string ConfigDirectoryPath => _configDirectoryPath;
     public string SettingsFilePath => Path.Combine(ConfigDirectoryPath, "NextBotAdapter.json");
-    public string WhitelistFilePath => Path.Combine(ConfigDirectoryPath, "whitelist.json");
+    public string WhitelistFilePath => Path.Combine(ConfigDirectoryPath, "Whitelist.json");
 
     public WhitelistSettings LoadSettings()
     {
@@ -35,8 +35,8 @@ public sealed class WhitelistConfigService
 
         try
         {
-            var settings = JsonSerializer.Deserialize<WhitelistSettings>(File.ReadAllText(SettingsFilePath), _jsonOptions);
-            return settings ?? WhitelistSettings.Default;
+            var config = JsonSerializer.Deserialize<NextBotAdapterConfig>(File.ReadAllText(SettingsFilePath), _jsonOptions);
+            return config?.Whitelist ?? WhitelistSettings.Default;
         }
         catch (Exception ex)
         {
@@ -49,7 +49,8 @@ public sealed class WhitelistConfigService
     public void SaveSettings(WhitelistSettings settings)
     {
         EnsureDirectory();
-        File.WriteAllText(SettingsFilePath, JsonSerializer.Serialize(settings, _jsonOptions));
+        var config = new NextBotAdapterConfig(settings);
+        File.WriteAllText(SettingsFilePath, JsonSerializer.Serialize(config, _jsonOptions));
     }
 
     public WhitelistStore LoadWhitelist()
