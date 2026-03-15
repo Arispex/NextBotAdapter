@@ -2,9 +2,7 @@
 
 ## 概述
 
-NextBotAdapter 是一个用于适配 NextBot 获取 TShock 服务端信息的插件。
-
-当前提供 6 个 REST API：
+NextBotAdapter 当前提供 7 个 REST API：
 
 - `GET /nextbot/users/{user}/inventory`
 - `GET /nextbot/users/{user}/stats`
@@ -12,6 +10,7 @@ NextBotAdapter 是一个用于适配 NextBot 获取 TShock 服务端信息的插
 - `GET /nextbot/whitelist`
 - `POST /nextbot/whitelist/add/{user}`
 - `POST /nextbot/whitelist/remove/{user}`
+- `POST /nextbot/config/reload`
 
 ## 权限节点
 
@@ -21,49 +20,7 @@ NextBotAdapter 是一个用于适配 NextBot 获取 TShock 服务端信息的插
 - `nextbot.whitelist.view`
 - `nextbot.whitelist.add`
 - `nextbot.whitelist.remove`
-
-## 白名单配置文件
-
-插件运行时会在 TShock 保存目录下使用 `NextBotAdapter` 配置文件夹。
-
-### 1. NextBotAdapter.json
-
-用于保存白名单相关配置，例如：
-
-```json
-{
-  "enabled": true,
-  "denyMessage": "You are not on the whitelist.",
-  "caseSensitive": true
-}
-```
-
-字段说明：
-- `enabled`: 是否启用白名单
-- `denyMessage`: 不在白名单时踢出提示
-- `caseSensitive`: 名称比较是否区分大小写，默认 `true`
-
-### 2. whitelist.json
-
-用于保存白名单玩家名称列表，例如：
-
-```json
-{
-  "users": [
-    "Arispex",
-    "NextBot"
-  ]
-}
-```
-
-## 入服校验行为
-
-当白名单启用时，玩家进入服务器后会立即按玩家名称进行白名单检查：
-
-- 在白名单内：允许进入
-- 不在白名单内：拒绝进入，并使用 `denyMessage` 作为提示信息
-
-名称比较是否区分大小写由 `caseSensitive` 控制。
+- `nextbot.config.reload`
 
 ## 响应格式
 
@@ -105,6 +62,7 @@ NextBotAdapter 是一个用于适配 NextBot 获取 TShock 服务端信息的插
 - `400`：缺少必要路由参数或参数不合法
 - `404`：用户不存在、玩家数据不存在、或白名单用户不存在
 - `409`：添加白名单时用户已存在
+- `500`：配置重载失败
 
 ## 接口说明
 
@@ -126,6 +84,42 @@ NextBotAdapter 是一个用于适配 NextBot 获取 TShock 服务端信息的插
 nextbot.users.inventory
 ```
 
+### 成功响应示例
+
+```json
+{
+  "status": "200",
+  "data": {
+    "items": [
+      {
+        "slot": 0,
+        "netId": 100,
+        "stack": 2,
+        "prefixId": 1
+      },
+      {
+        "slot": 1,
+        "netId": 200,
+        "stack": 5,
+        "prefixId": 3
+      }
+    ]
+  }
+}
+```
+
+### 失败响应示例
+
+```json
+{
+  "status": "404",
+  "error": {
+    "code": "user_not_found",
+    "message": "User was not found."
+  }
+}
+```
+
 ---
 
 ## 2. 获取用户状态
@@ -142,6 +136,35 @@ nextbot.users.inventory
 
 ```text
 nextbot.users.stats
+```
+
+### 成功响应示例
+
+```json
+{
+  "status": "200",
+  "data": {
+    "health": 120,
+    "maxHealth": 400,
+    "mana": 80,
+    "maxMana": 200,
+    "questsCompleted": 9,
+    "deathsPve": 4,
+    "deathsPvp": 2
+  }
+}
+```
+
+### 失败响应示例
+
+```json
+{
+  "status": "404",
+  "error": {
+    "code": "user_data_not_found",
+    "message": "Player data was not found."
+  }
+}
 ```
 
 ---
@@ -161,6 +184,41 @@ nextbot.users.stats
 ```text
 nextbot.world.progress
 ```
+
+### 成功响应示例
+
+```json
+{
+  "status": "200",
+  "data": {
+    "kingSlime": true,
+    "eyeOfCthulhu": false,
+    "eaterOfWorldsOrBrainOfCthulhu": false,
+    "queenBee": false,
+    "skeletron": false,
+    "deerclops": false,
+    "wallOfFlesh": true,
+    "queenSlime": false,
+    "theTwins": false,
+    "theDestroyer": false,
+    "skeletronPrime": false,
+    "plantera": false,
+    "golem": false,
+    "dukeFishron": false,
+    "empressOfLight": false,
+    "lunaticCultist": false,
+    "solarPillar": false,
+    "nebulaPillar": false,
+    "vortexPillar": false,
+    "stardustPillar": false,
+    "moonLord": false
+  }
+}
+```
+
+### 失败响应示例
+
+当前该接口没有专门的业务失败分支；如果框架层或运行时异常发生，将返回 TShock 默认错误响应。
 
 ---
 
@@ -194,6 +252,10 @@ nextbot.whitelist.view
 }
 ```
 
+### 失败响应示例
+
+当前该接口没有专门的业务失败分支；如果框架层或运行时异常发生，将返回 TShock 默认错误响应。
+
 ---
 
 ## 5. 添加白名单用户
@@ -210,6 +272,20 @@ nextbot.whitelist.view
 
 ```text
 nextbot.whitelist.add
+```
+
+### 成功响应示例
+
+```json
+{
+  "status": "200",
+  "data": {
+    "users": [
+      "Arispex",
+      "NextBot"
+    ]
+  }
+}
 ```
 
 ### 失败响应示例
@@ -242,6 +318,19 @@ nextbot.whitelist.add
 nextbot.whitelist.remove
 ```
 
+### 成功响应示例
+
+```json
+{
+  "status": "200",
+  "data": {
+    "users": [
+      "Arispex"
+    ]
+  }
+}
+```
+
 ### 失败响应示例
 
 ```json
@@ -250,6 +339,58 @@ nextbot.whitelist.remove
   "error": {
     "code": "whitelist_user_not_found",
     "message": "User not found in whitelist."
+  }
+}
+```
+
+---
+
+## 7. 重载全部配置
+
+**Method**: `POST`
+
+**Path**:
+
+```text
+/nextbot/config/reload
+```
+
+**权限**:
+
+```text
+nextbot.config.reload
+```
+
+### 行为说明
+
+当前会重载插件的全部实际运行时配置，包括：
+
+- `NextBotAdapter.json`
+- `Whitelist.json`
+
+重载后会立即影响：
+- 玩家入服白名单校验
+- 白名单 REST API 的查看 / 添加 / 删除行为
+
+### 成功响应示例
+
+```json
+{
+  "status": "200",
+  "data": {
+    "reloaded": true
+  }
+}
+```
+
+### 失败响应示例
+
+```json
+{
+  "status": "500",
+  "error": {
+    "code": "config_reload_failed",
+    "message": "reload failed"
   }
 }
 ```
@@ -267,4 +408,5 @@ GET /nextbot/world/progress
 GET /nextbot/whitelist
 POST /nextbot/whitelist/add/Arispex
 POST /nextbot/whitelist/remove/Arispex
+POST /nextbot/config/reload
 ```
