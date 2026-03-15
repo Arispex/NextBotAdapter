@@ -23,6 +23,7 @@ public static class ConfigEndpoints
         }
         catch (Exception ex)
         {
+            PluginLogger.Error("Config", $"Reload failed: {ex.Message}");
             return EndpointResponseFactory.Error("500", ErrorCodes.ConfigReloadFailed, ex.Message);
         }
     }
