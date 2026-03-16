@@ -4,8 +4,8 @@ public sealed class ConfigurationReloadService(PersistedWhitelistService whiteli
 {
     public void ReloadAll()
     {
-        PluginLogger.Info("Config", "Reload requested via REST API.");
+        PluginLogger.Info("开始处理配置热重载请求。");
         whitelistService.Reload();
-        PluginLogger.Info("Config", "Reload completed successfully.");
+        PluginLogger.Info("处理配置热重载请求成功。");
     }
 }

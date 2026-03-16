@@ -24,25 +24,24 @@ public sealed class NextBotAdapterPlugin(Main game) : TerrariaPlugin(game)
 
     public override void Initialize()
     {
-        PluginLogger.Info("Lifecycle", "Initializing plugin.");
+        PluginLogger.Info("开始初始化插件。");
 
         _whitelistService = new PersistedWhitelistService(new WhitelistConfigService());
         WhitelistEndpoints.Service = _whitelistService;
         ConfigEndpoints.Service = new ConfigurationReloadService(_whitelistService);
-        PluginLogger.Info("Lifecycle", "Whitelist service initialized.");
+        PluginLogger.Info("初始化白名单服务完成。");
 
         EndpointRegistrar.Register(TShock.RestApi);
-        PluginLogger.Info("REST", $"Registered {EndpointRegistrar.CreateCommands().Count} REST endpoints.");
+        PluginLogger.Info($"注册 REST 端点完成，共 {EndpointRegistrar.CreateCommands().Count} 个。");
 
         GetDataHandlers.PlayerInfo.Register(OnPlayerInfo, HandlerPriority.Highest);
-        PluginLogger.Info("Lifecycle", "Registered PlayerInfo whitelist check hook.");
+        PluginLogger.Info("注册玩家信息校验钩子完成。");
         PluginLogger.Info(
-            "Config",
-            $"Active whitelist settings: enabled={_whitelistService.Settings.Enabled}, caseSensitive={_whitelistService.Settings.CaseSensitive}, entries={_whitelistService.GetAll().Count}");
+            $"应用当前白名单配置完成。启用状态为 {_whitelistService.Settings.Enabled}，区分大小写为 {_whitelistService.Settings.CaseSensitive}，当前共有 {_whitelistService.GetAll().Count} 个条目。");
 
         if (!_whitelistService.Settings.Enabled)
         {
-            PluginLogger.Warn("Whitelist", "Whitelist is disabled.");
+            PluginLogger.Warn("检测到白名单功能未启用，玩家进入服务器时将不会进行白名单校验。");
         }
     }
 
@@ -50,7 +49,7 @@ public sealed class NextBotAdapterPlugin(Main game) : TerrariaPlugin(game)
     {
         if (disposing)
         {
-            PluginLogger.Info("Lifecycle", "Disposing plugin.");
+            PluginLogger.Info("开始释放插件资源。");
             GetDataHandlers.PlayerInfo.UnRegister(OnPlayerInfo);
         }
 
@@ -69,7 +68,7 @@ public sealed class NextBotAdapterPlugin(Main game) : TerrariaPlugin(game)
             return;
         }
 
-        PluginLogger.Warn("Whitelist", $"Rejected player: {args.Name}");
+        PluginLogger.Warn($"拒绝玩家 {args.Name} 进入服务器，原因：{denialReason ?? "You are not on the whitelist."}");
         args.Player?.Disconnect(denialReason ?? "You are not on the whitelist.");
         args.Handled = true;
     }
