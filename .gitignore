@@ -21,6 +21,9 @@ coverage*.xml
 _ReSharper*/
 *.[Rr]e[Ss]harper
 
+# Worktrees
+.worktrees/
+
 # OS files
 .DS_Store
 Thumbs.db
