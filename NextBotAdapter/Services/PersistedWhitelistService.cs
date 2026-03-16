@@ -26,11 +26,11 @@ public sealed class PersistedWhitelistService : IWhitelistService
         if (added)
         {
             Persist();
-            PluginLogger.Info("Whitelist", $"Added whitelist entry: {user}");
+            PluginLogger.Info($"添加玩家 {user} 到白名单成功。");
         }
         else if (error is not null)
         {
-            PluginLogger.Warn("Whitelist", $"Failed to add whitelist entry: {user}, reason: {error.Message}");
+            PluginLogger.Warn($"添加玩家 {user} 到白名单失败，原因：{error.Message}");
         }
 
         return added;
@@ -42,11 +42,11 @@ public sealed class PersistedWhitelistService : IWhitelistService
         if (removed)
         {
             Persist();
-            PluginLogger.Info("Whitelist", $"Removed whitelist entry: {user}");
+            PluginLogger.Info($"将玩家 {user} 移出白名单成功。");
         }
         else if (error is not null)
         {
-            PluginLogger.Warn("Whitelist", $"Failed to remove whitelist entry: {user}, reason: {error.Message}");
+            PluginLogger.Warn($"将玩家 {user} 移出白名单失败，原因：{error.Message}");
         }
 
         return removed;
@@ -59,8 +59,7 @@ public sealed class PersistedWhitelistService : IWhitelistService
     {
         _inner = new WhitelistService(_configService.LoadSettings(), _configService.LoadWhitelist());
         PluginLogger.Info(
-            "Whitelist",
-            $"Reloaded whitelist state: enabled={_inner.Settings.Enabled}, caseSensitive={_inner.Settings.CaseSensitive}, entries={_inner.GetAll().Count}");
+            $"重新加载白名单状态成功。当前启用状态为 {_inner.Settings.Enabled}，区分大小写为 {_inner.Settings.CaseSensitive}，当前共有 {_inner.GetAll().Count} 个条目。");
     }
 
     private void Persist()

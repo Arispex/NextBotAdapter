@@ -28,20 +28,21 @@ public sealed class WhitelistConfigService
         EnsureDirectory();
         if (!File.Exists(SettingsFilePath))
         {
-            SaveSettings(WhitelistSettings.Default);
-            PluginLogger.Info("Config", "Settings file not found, created default NextBotAdapter.json.");
+            WriteSettingsFile(WhitelistSettings.Default);
+            PluginLogger.Info("创建默认白名单配置文件成功。");
             return WhitelistSettings.Default;
         }
 
         try
         {
             var config = JsonSerializer.Deserialize<NextBotAdapterConfig>(File.ReadAllText(SettingsFilePath), _jsonOptions);
-            PluginLogger.Info("Config", "Loaded whitelist settings.");
-            return config?.Whitelist ?? WhitelistSettings.Default;
+            var settings = config?.Whitelist ?? WhitelistSettings.Default;
+            PluginLogger.Info($"加载白名单配置成功。当前启用状态为 {settings.Enabled}，区分大小写为 {settings.CaseSensitive}。");
+            return settings;
         }
         catch (Exception ex)
         {
-            PluginLogger.Error("Config", $"Failed to load whitelist settings, using defaults: {ex.Message}");
+            PluginLogger.Warn($"加载白名单配置失败，将回退为默认配置，原因：{ex.Message}");
             return WhitelistSettings.Default;
         }
     }
@@ -49,9 +50,8 @@ public sealed class WhitelistConfigService
     public void SaveSettings(WhitelistSettings settings)
     {
         EnsureDirectory();
-        var config = new NextBotAdapterConfig(settings);
-        File.WriteAllText(SettingsFilePath, JsonSerializer.Serialize(config, _jsonOptions));
-        PluginLogger.Info("Config", "Saved whitelist settings.");
+        WriteSettingsFile(settings);
+        PluginLogger.Info($"保存白名单配置成功。当前启用状态为 {settings.Enabled}，区分大小写为 {settings.CaseSensitive}。");
     }
 
     public WhitelistStore LoadWhitelist()
@@ -59,8 +59,8 @@ public sealed class WhitelistConfigService
         EnsureDirectory();
         if (!File.Exists(WhitelistFilePath))
         {
-            SaveWhitelist(WhitelistStore.Empty);
-            PluginLogger.Info("Config", "Whitelist file not found, created default Whitelist.json.");
+            WriteWhitelistFile(WhitelistStore.Empty);
+            PluginLogger.Info("创建默认白名单文件成功。");
             return WhitelistStore.Empty;
         }
 
@@ -68,12 +68,12 @@ public sealed class WhitelistConfigService
         {
             var store = JsonSerializer.Deserialize<WhitelistStore>(File.ReadAllText(WhitelistFilePath), _jsonOptions);
             var whitelist = store ?? WhitelistStore.Empty;
-            PluginLogger.Info("Config", $"Loaded whitelist entries: {whitelist.Users.Count}.");
+            PluginLogger.Info($"加载白名单数据成功，当前共有 {whitelist.Users.Count} 个条目。");
             return whitelist;
         }
         catch (Exception ex)
         {
-            PluginLogger.Error("Config", $"Failed to load whitelist data, using empty whitelist: {ex.Message}");
+            PluginLogger.Warn($"加载白名单数据失败，将回退为空白名单，原因：{ex.Message}");
             return WhitelistStore.Empty;
         }
     }
@@ -81,12 +81,23 @@ public sealed class WhitelistConfigService
     public void SaveWhitelist(WhitelistStore store)
     {
         EnsureDirectory();
-        File.WriteAllText(WhitelistFilePath, JsonSerializer.Serialize(store, _jsonOptions));
-        PluginLogger.Info("Config", $"Saved whitelist data: {store.Users.Count} entries.");
+        WriteWhitelistFile(store);
+        PluginLogger.Info($"保存白名单数据成功，当前共有 {store.Users.Count} 个条目。");
     }
 
     private void EnsureDirectory()
     {
         Directory.CreateDirectory(ConfigDirectoryPath);
+    }
+
+    private void WriteSettingsFile(WhitelistSettings settings)
+    {
+        var config = new NextBotAdapterConfig(settings);
+        File.WriteAllText(SettingsFilePath, JsonSerializer.Serialize(config, _jsonOptions));
+    }
+
+    private void WriteWhitelistFile(WhitelistStore store)
+    {
+        File.WriteAllText(WhitelistFilePath, JsonSerializer.Serialize(store, _jsonOptions));
     }
 }
