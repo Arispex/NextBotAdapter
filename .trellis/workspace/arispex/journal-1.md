@@ -59,3 +59,56 @@
 ### Next Steps
 
 - None - task complete
+
+
+## Session 2: Add world map image endpoint
+
+**Date**: 2026-03-17
+**Task**: Add world map image endpoint
+
+### Summary
+
+(Add summary)
+
+### Main Changes
+
+| Area | Description |
+|------|-------------|
+| REST API | Added `GET /nextbot/world/map-image` with `nextbot.world.map_image` permission |
+| Map image generation | Migrated the map image export capability into `NextBotAdapter` as a REST-only service |
+| Cache directory | Added `cache/` creation under the plugin config directory and wired it into plugin initialization |
+| Dependencies | Upgraded `TShock` package usage to `6.1.0` and embedded `SixLabors.ImageSharp.dll` for plugin runtime loading |
+| Contracts and tests | Updated REST / config docs and added route, endpoint, and cache directory tests |
+
+**Updated Files**:
+- `NextBotAdapter/Rest/MapEndpoints.cs`
+- `NextBotAdapter/Services/MapImageService.cs`
+- `NextBotAdapter/Services/IMapImageService.cs`
+- `NextBotAdapter/Models/Responses/MapImageResponse.cs`
+- `NextBotAdapter/Plugin/NextBotAdapterPlugin.cs`
+- `NextBotAdapter/Services/WhitelistConfigService.cs`
+- `NextBotAdapter/Infrastructure/EndpointRoutes.cs`
+- `NextBotAdapter/Infrastructure/Permissions.cs`
+- `NextBotAdapter/Infrastructure/ErrorCodes.cs`
+- `docs/REST_API.md`
+- `docs/CONFIGURATION.md`
+- `NextBotAdapter.Tests/MapEndpointsTests.cs`
+
+
+### Git Commits
+
+| Hash | Message |
+|------|---------|
+| `439737c` | (see git log) |
+
+### Testing
+
+- [OK] (Add test results)
+
+### Status
+
+[OK] **Completed**
+
+### Next Steps
+
+- None - task complete
