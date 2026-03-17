@@ -7,13 +7,20 @@
     </PropertyGroup>
 
     <ItemGroup>
-        <PackageReference Include="TShock" Version="5.2.4" ExcludeAssets="contentFiles" GeneratePathProperty="true" />
+        <PackageReference Include="TShock" Version="6.1.0" ExcludeAssets="contentFiles" GeneratePathProperty="true" />
+        <PackageReference Include="SixLabors.ImageSharp" Version="3.1.12" GeneratePathProperty="true" />
     </ItemGroup>
 
     <ItemGroup>
         <Reference Include="HttpServer">
             <HintPath>$(PkgTShock)/content/HttpServer.dll</HintPath>
         </Reference>
+    </ItemGroup>
+
+    <ItemGroup>
+        <EmbeddedResource Include="$(PkgSixLabors_ImageSharp)/lib/net6.0/SixLabors.ImageSharp.dll">
+            <LogicalName>embedded.SixLabors.ImageSharp.dll</LogicalName>
+        </EmbeddedResource>
     </ItemGroup>
 
 </Project>

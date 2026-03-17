@@ -1,5 +1,6 @@
 using System;
 using System.Diagnostics.CodeAnalysis;
+using System.Reflection;
 using NextBotAdapter.Rest;
 using NextBotAdapter.Services;
 using Terraria;
@@ -25,11 +26,15 @@ public sealed class NextBotAdapterPlugin(Main game) : TerrariaPlugin(game)
     public override void Initialize()
     {
         PluginLogger.Info("开始初始化插件。");
+        AppDomain.CurrentDomain.AssemblyResolve += CurrentDomain_AssemblyResolve;
 
-        _whitelistService = new PersistedWhitelistService(new WhitelistConfigService());
+        var configService = new WhitelistConfigService();
+        _whitelistService = new PersistedWhitelistService(configService);
         WhitelistEndpoints.Service = _whitelistService;
         ConfigEndpoints.Service = new ConfigurationReloadService(_whitelistService);
+        MapEndpoints.Service = new MapImageService(configService.CacheDirectoryPath);
         PluginLogger.Info("初始化白名单服务完成。");
+        PluginLogger.Info($"初始化缓存目录完成。缓存路径为 {configService.CacheDirectoryPath}。");
 
         EndpointRegistrar.Register(TShock.RestApi);
         PluginLogger.Info($"注册 REST 端点完成，共 {EndpointRegistrar.CreateCommands().Count} 个。");
@@ -51,6 +56,7 @@ public sealed class NextBotAdapterPlugin(Main game) : TerrariaPlugin(game)
         {
             PluginLogger.Info("开始释放插件资源。");
             GetDataHandlers.PlayerInfo.UnRegister(OnPlayerInfo);
+            AppDomain.CurrentDomain.AssemblyResolve -= CurrentDomain_AssemblyResolve;
         }
 
         base.Dispose(disposing);
@@ -71,5 +77,19 @@ public sealed class NextBotAdapterPlugin(Main game) : TerrariaPlugin(game)
         PluginLogger.Warn($"拒绝玩家 {args.Name} 进入服务器，原因：{denialReason ?? "You are not on the whitelist."}");
         args.Player?.Disconnect(denialReason ?? "You are not on the whitelist.");
         args.Handled = true;
+    }
+
+    private Assembly? CurrentDomain_AssemblyResolve(object? sender, ResolveEventArgs args)
+    {
+        var resourceName = $"embedded.{new AssemblyName(args.Name).Name}.dll";
+        using var stream = Assembly.GetExecutingAssembly().GetManifestResourceStream(resourceName);
+        if (stream is null)
+        {
+            return null;
+        }
+
+        var assemblyData = new byte[stream.Length];
+        _ = stream.Read(assemblyData, 0, assemblyData.Length);
+        return Assembly.Load(assemblyData);
     }
 }

@@ -2,11 +2,12 @@
 
 ## 概述
 
-NextBotAdapter 当前提供 7 个 REST API：
+NextBotAdapter 当前提供 8 个 REST API：
 
 - `GET /nextbot/users/{user}/inventory`
 - `GET /nextbot/users/{user}/stats`
 - `GET /nextbot/world/progress`
+- `GET /nextbot/world/map-image`
 - `GET /nextbot/whitelist`
 - `POST /nextbot/whitelist/add/{user}`
 - `POST /nextbot/whitelist/remove/{user}`
@@ -17,6 +18,7 @@ NextBotAdapter 当前提供 7 个 REST API：
 - `nextbot.users.inventory`
 - `nextbot.users.stats`
 - `nextbot.world.progress`
+- `nextbot.world.map_image`
 - `nextbot.whitelist.view`
 - `nextbot.whitelist.add`
 - `nextbot.whitelist.remove`
@@ -53,6 +55,7 @@ NextBotAdapter 当前提供 7 个 REST API：
 - `status` 由 TShock `RestObject` 自动出现在响应体中
 - `error.code` 用于给 NextBot 做程序判断
 - `error.message` 用于展示具体错误信息
+- 成功响应不会返回面向前端展示的 `message`
 
 ## HTTP 状态码语义
 
@@ -62,7 +65,7 @@ NextBotAdapter 当前提供 7 个 REST API：
 - `400`：缺少必要路由参数或参数不合法
 - `404`：用户不存在、玩家数据不存在、或白名单用户不存在
 - `409`：添加白名单时用户已存在
-- `500`：配置重载失败
+- `500`：配置重载失败，或地图图片生成失败
 
 ## 接口说明
 
@@ -222,7 +225,57 @@ nextbot.world.progress
 
 ---
 
-## 4. 获取白名单列表
+## 4. 生成世界地图图片
+
+**Method**: `GET`
+
+**Path**:
+
+```text
+/nextbot/world/map-image
+```
+
+**权限**:
+
+```text
+nextbot.world.map_image
+```
+
+### 行为说明
+
+当前接口会：
+
+- 生成当前世界的完整地图 PNG 图片
+- 将生成结果保存到插件配置目录下的 `cache/` 子目录
+- 在响应体中返回生成文件名和图片内容的 base64
+
+### 成功响应示例
+
+```json
+{
+  "status": "200",
+  "data": {
+    "fileName": "map-2026-03-17_20-30-00.png",
+    "base64": "iVBORw0KGgoAAAANSUhEUgAA..."
+  }
+}
+```
+
+### 失败响应示例
+
+```json
+{
+  "status": "500",
+  "error": {
+    "code": "map_image_generation_failed",
+    "message": "map generation failed"
+  }
+}
+```
+
+---
+
+## 5. 获取白名单列表
 
 **Method**: `GET`
 
@@ -258,7 +311,7 @@ nextbot.whitelist.view
 
 ---
 
-## 5. 添加白名单用户
+## 6. 添加白名单用户
 
 **Method**: `POST`
 
@@ -302,7 +355,7 @@ nextbot.whitelist.add
 
 ---
 
-## 6. 删除白名单用户
+## 7. 删除白名单用户
 
 **Method**: `POST`
 
@@ -345,7 +398,7 @@ nextbot.whitelist.remove
 
 ---
 
-## 7. 重载全部配置
+## 8. 重载全部配置
 
 **Method**: `POST`
 
@@ -405,6 +458,7 @@ nextbot.config.reload
 GET /nextbot/users/Arispex/inventory
 GET /nextbot/users/Arispex/stats
 GET /nextbot/world/progress
+GET /nextbot/world/map-image
 GET /nextbot/whitelist
 POST /nextbot/whitelist/add/Arispex
 POST /nextbot/whitelist/remove/Arispex

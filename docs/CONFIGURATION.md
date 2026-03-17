@@ -4,10 +4,11 @@
 
 NextBotAdapter 的运行时配置文件位于 TShock 保存目录下的 `NextBotAdapter` 文件夹中。
 
-当前包含两个文件：
+当前包含两个文件和一个缓存目录：
 
 - `NextBotAdapter.json`
 - `Whitelist.json`
+- `cache/`
 
 ## 1. NextBotAdapter.json
 
@@ -57,6 +58,21 @@ NextBotAdapter 的运行时配置文件位于 TShock 保存目录下的 `NextBot
 #### `users`
 - 白名单玩家名称数组
 - 按玩家名称匹配
+
+## 3. cache/
+
+`cache/` 用于保存插件运行时生成的缓存文件。
+
+当前会保存：
+
+- 地图图片缓存文件（PNG）
+
+### 创建时机
+- 插件初始化配置目录时会自动创建 `cache/`
+- 即使当前目录下还没有缓存文件，该目录也会预先存在
+
+### 当前用途
+- `GET /nextbot/world/map-image` 在生成地图图片时，会将 PNG 文件保存到该目录下，并在响应中返回生成结果
 
 ## 入服校验行为
 

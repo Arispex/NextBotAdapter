@@ -121,6 +121,17 @@ public sealed class RestEndpointLogicTests
     }
 
     [Fact]
+    public void MapImage_ShouldReturnOkWithGeneratedBase64()
+    {
+        var result = MapEndpoints.Image(new FakeMapImageService(("map-1.png", "/tmp/map-1.png", [1, 2, 3])));
+
+        Assert.Equal("200", result.Status);
+        var response = Assert.IsType<MapImageResponse>(result["data"]);
+        Assert.Equal("map-1.png", response.FileName);
+        Assert.Equal(Convert.ToBase64String([1, 2, 3]), response.Base64);
+    }
+
+    [Fact]
     public void ReadRouteUser_ShouldPreferVerbParametersWhenProvided()
     {
         var args = new RestRequestArgs(new RestVerbs { [RequestParameters.User] = "verb-user" }, null!, null!, null!);
@@ -175,5 +186,10 @@ public sealed class RestEndpointLogicTests
     private sealed class FakeWorldProgressSource(WorldProgressSnapshot snapshot) : IWorldProgressSource
     {
         public WorldProgressSnapshot GetSnapshot() => snapshot;
+    }
+
+    private sealed class FakeMapImageService((string FileName, string FilePath, byte[] Content) result) : IMapImageService
+    {
+        public (string FileName, string FilePath, byte[] Content) GenerateAndCache() => result;
     }
 }

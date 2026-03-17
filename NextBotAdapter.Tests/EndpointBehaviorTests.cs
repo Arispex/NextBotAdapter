@@ -51,6 +51,7 @@ public sealed class EndpointBehaviorTests
             command => AssertRoute(command, EndpointRoutes.UserInventory, Permissions.UserInventory),
             command => AssertRoute(command, EndpointRoutes.UserStats, Permissions.UserStats),
             command => AssertRoute(command, EndpointRoutes.WorldProgress, Permissions.WorldProgress),
+            command => AssertRoute(command, EndpointRoutes.WorldMapImage, Permissions.WorldMapImage),
             command => AssertRoute(command, EndpointRoutes.Whitelist, Permissions.WhitelistView),
             command => AssertRoute(command, EndpointRoutes.WhitelistAddUser, Permissions.WhitelistAdd),
             command => AssertRoute(command, EndpointRoutes.WhitelistRemoveUser, Permissions.WhitelistRemove),
