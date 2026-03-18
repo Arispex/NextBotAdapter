@@ -23,7 +23,7 @@ public static class ConfigEndpoints
         }
         catch (Exception ex)
         {
-            PluginLogger.Error($"处理配置热重载请求失败，原因：{ex.Message}");
+            PluginLogger.Error($"插件配置重新加载失败，原因：{ex.Message}");
             return EndpointResponseFactory.Error("500", ErrorCodes.ConfigReloadFailed, ex.Message);
         }
     }

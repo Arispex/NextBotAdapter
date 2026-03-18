@@ -16,16 +16,16 @@ public static class MapEndpoints
     {
         try
         {
-            PluginLogger.Info("开始生成地图图片。");
+            PluginLogger.Info("世界地图图片正在生成......");
             var result = service.GenerateAndCache();
-            PluginLogger.Info($"生成地图图片成功，文件名为 {result.FileName}。缓存路径为 {result.FilePath}。");
+            PluginLogger.Info($"世界地图图片生成完成，文件名：{result.FileName}，缓存路径：{result.FilePath}。");
             return EndpointResponseFactory.Success(new MapImageResponse(
                 result.FileName,
                 Convert.ToBase64String(result.Content)));
         }
         catch (Exception ex)
         {
-            PluginLogger.Error($"生成地图图片失败，原因：{ex.Message}");
+            PluginLogger.Error($"世界地图图片生成失败，原因：{ex.Message}");
             return EndpointResponseFactory.Error("500", ErrorCodes.MapImageGenerationFailed, ex.Message);
         }
     }

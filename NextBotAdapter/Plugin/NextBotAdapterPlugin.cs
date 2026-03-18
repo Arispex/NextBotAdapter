@@ -25,7 +25,7 @@ public sealed class NextBotAdapterPlugin(Main game) : TerrariaPlugin(game)
 
     public override void Initialize()
     {
-        PluginLogger.Info("开始初始化插件。");
+        PluginLogger.Info("插件正在初始化......");
         AppDomain.CurrentDomain.AssemblyResolve += CurrentDomain_AssemblyResolve;
 
         var configService = new WhitelistConfigService();
@@ -33,20 +33,20 @@ public sealed class NextBotAdapterPlugin(Main game) : TerrariaPlugin(game)
         WhitelistEndpoints.Service = _whitelistService;
         ConfigEndpoints.Service = new ConfigurationReloadService(_whitelistService);
         MapEndpoints.Service = new MapImageService(configService.CacheDirectoryPath);
-        PluginLogger.Info("初始化白名单服务完成。");
-        PluginLogger.Info($"初始化缓存目录完成。缓存路径为 {configService.CacheDirectoryPath}。");
+        PluginLogger.Info("白名单服务初始化完成。");
+        PluginLogger.Info($"缓存目录初始化完成，路径：{configService.CacheDirectoryPath}。");
 
         EndpointRegistrar.Register(TShock.RestApi);
-        PluginLogger.Info($"注册 REST 端点完成，共 {EndpointRegistrar.CreateCommands().Count} 个。");
+        PluginLogger.Info($"REST 端点注册完成，共 {EndpointRegistrar.CreateCommands().Count} 个。");
 
         GetDataHandlers.PlayerInfo.Register(OnPlayerInfo, HandlerPriority.Highest);
-        PluginLogger.Info("注册玩家信息校验钩子完成。");
+        PluginLogger.Info("玩家信息校验钩子注册完成。");
         PluginLogger.Info(
-            $"应用当前白名单配置完成。启用状态为 {_whitelistService.Settings.Enabled}，区分大小写为 {_whitelistService.Settings.CaseSensitive}，当前共有 {_whitelistService.GetAll().Count} 个条目。");
+            $"白名单配置已生效：启用状态：{_whitelistService.Settings.Enabled}，区分大小写：{_whitelistService.Settings.CaseSensitive}，共有 {_whitelistService.GetAll().Count} 个条目。");
 
         if (!_whitelistService.Settings.Enabled)
         {
-            PluginLogger.Warn("检测到白名单功能未启用，玩家进入服务器时将不会进行白名单校验。");
+            PluginLogger.Warn("白名单功能未启用，玩家入服时将跳过白名单校验。");
         }
     }
 
@@ -73,7 +73,7 @@ public sealed class NextBotAdapterPlugin(Main game) : TerrariaPlugin(game)
             return;
         }
 
-        PluginLogger.Warn($"拒绝玩家 {args.Name} 进入服务器，原因：{denialReason ?? "You are not on the whitelist."}");
+        PluginLogger.Warn($"玩家 {args.Name} 入服被拒绝，原因：{denialReason ?? "You are not on the whitelist."}");
         args.Player?.Disconnect(denialReason ?? "You are not on the whitelist.");
         args.Handled = true;
     }
