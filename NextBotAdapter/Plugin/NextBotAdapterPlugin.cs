@@ -54,7 +54,6 @@ public sealed class NextBotAdapterPlugin(Main game) : TerrariaPlugin(game)
     {
         if (disposing)
         {
-            PluginLogger.Info("开始释放插件资源。");
             GetDataHandlers.PlayerInfo.UnRegister(OnPlayerInfo);
             AppDomain.CurrentDomain.AssemblyResolve -= CurrentDomain_AssemblyResolve;
         }
