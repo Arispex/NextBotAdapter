@@ -8,8 +8,8 @@
 
 <!-- @@@auto:current-status -->
 - **Active File**: `journal-1.md`
-- **Total Sessions**: 2
-- **Last Active**: 2026-03-17
+- **Total Sessions**: 3
+- **Last Active**: 2026-03-18
 <!-- @@@/auto:current-status -->
 
 ---
@@ -19,7 +19,7 @@
 <!-- @@@auto:active-documents -->
 | File | Lines | Status |
 |------|-------|--------|
-| `journal-1.md` | ~114 | Active |
+| `journal-1.md` | ~154 | Active |
 <!-- @@@/auto:active-documents -->
 
 ---
@@ -29,6 +29,7 @@
 <!-- @@@auto:session-history -->
 | # | Date | Title | Commits |
 |---|------|-------|---------|
+| 3 | 2026-03-18 | Fix shutdown logging disposal issue | `e1a33b4` |
 | 2 | 2026-03-17 | Add world map image endpoint | `439737c` |
 | 1 | 2026-03-17 | Bootstrap Trellis guidelines | `84fa33f` |
 <!-- @@@/auto:session-history -->

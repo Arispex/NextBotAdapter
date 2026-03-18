@@ -112,3 +112,43 @@
 ### Next Steps
 
 - None - task complete
+
+
+## Session 3: Fix shutdown logging disposal issue
+
+**Date**: 2026-03-18
+**Task**: Fix shutdown logging disposal issue
+
+### Summary
+
+(Add summary)
+
+### Main Changes
+
+| Area | Description |
+|------|-------------|
+| Shutdown logging | Removed the plugin disposal log that ran after the TShock logger had already been disposed |
+| Stability | Prevented shutdown-time log write failures such as `Unable to write to log as log has been disposed.` |
+| Validation | Rebuilt the solution and reran automated tests after the logging fix |
+
+**Updated Files**:
+- `NextBotAdapter/Plugin/NextBotAdapterPlugin.cs`
+
+
+### Git Commits
+
+| Hash | Message |
+|------|---------|
+| `e1a33b4` | (see git log) |
+
+### Testing
+
+- [OK] (Add test results)
+
+### Status
+
+[OK] **Completed**
+
+### Next Steps
+
+- None - task complete
