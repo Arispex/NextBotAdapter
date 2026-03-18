@@ -152,3 +152,50 @@
 ### Next Steps
 
 - None - task complete
+
+
+## Session 4: Refine backend log copy style
+
+**Date**: 2026-03-18
+**Task**: Refine backend log copy style
+
+### Summary
+
+(Add summary)
+
+### Main Changes
+
+| Area | Description |
+|------|-------------|
+| Log wording | Unified backend log copy into a more professional and natural style |
+| In-progress wording | Changed start-state logs to use ongoing phrasing such as `正在......` |
+| Field phrasing | Standardized field-style fragments from `为` to `：` where appropriate |
+| Scope | Updated plugin initialization, whitelist config, persisted whitelist operations, config reload, and map generation logs |
+| Validation | Rebuilt the solution and reran automated tests after the wording changes |
+
+**Updated Files**:
+- `NextBotAdapter/Plugin/NextBotAdapterPlugin.cs`
+- `NextBotAdapter/Services/WhitelistConfigService.cs`
+- `NextBotAdapter/Services/PersistedWhitelistService.cs`
+- `NextBotAdapter/Services/ConfigurationReloadService.cs`
+- `NextBotAdapter/Rest/ConfigEndpoints.cs`
+- `NextBotAdapter/Rest/MapEndpoints.cs`
+
+
+### Git Commits
+
+| Hash | Message |
+|------|---------|
+| `dcd8072` | (see git log) |
+
+### Testing
+
+- [OK] (Add test results)
+
+### Status
+
+[OK] **Completed**
+
+### Next Steps
+
+- None - task complete
