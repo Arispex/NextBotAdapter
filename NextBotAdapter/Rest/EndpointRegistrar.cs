@@ -12,6 +12,7 @@ public static class EndpointRegistrar
             new SecureRestCommand(Infrastructure.EndpointRoutes.UserStats, UserEndpoints.Stats, Infrastructure.Permissions.UserStats),
             new SecureRestCommand(Infrastructure.EndpointRoutes.WorldProgress, WorldEndpoints.Progress, Infrastructure.Permissions.WorldProgress),
             new SecureRestCommand(Infrastructure.EndpointRoutes.WorldMapImage, MapEndpoints.Image, Infrastructure.Permissions.WorldMapImage),
+            new SecureRestCommand(Infrastructure.EndpointRoutes.WorldFile, WorldEndpoints.WorldFile, Infrastructure.Permissions.WorldFile),
             new SecureRestCommand(Infrastructure.EndpointRoutes.Whitelist, WhitelistEndpoints.List, Infrastructure.Permissions.WhitelistView),
             new SecureRestCommand(Infrastructure.EndpointRoutes.WhitelistAddUser, WhitelistEndpoints.Add, Infrastructure.Permissions.WhitelistAdd),
             new SecureRestCommand(Infrastructure.EndpointRoutes.WhitelistRemoveUser, WhitelistEndpoints.Remove, Infrastructure.Permissions.WhitelistRemove),

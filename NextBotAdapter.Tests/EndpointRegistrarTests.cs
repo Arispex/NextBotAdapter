@@ -27,6 +27,7 @@ public sealed class EndpointRegistrarTests
             command => AssertRoute(command, EndpointRoutes.UserStats, NextBotAdapter.Infrastructure.Permissions.UserStats),
             command => AssertRoute(command, EndpointRoutes.WorldProgress, NextBotAdapter.Infrastructure.Permissions.WorldProgress),
             command => AssertRoute(command, EndpointRoutes.WorldMapImage, NextBotAdapter.Infrastructure.Permissions.WorldMapImage),
+            command => AssertRoute(command, EndpointRoutes.WorldFile, NextBotAdapter.Infrastructure.Permissions.WorldFile),
             command => AssertRoute(command, EndpointRoutes.Whitelist, NextBotAdapter.Infrastructure.Permissions.WhitelistView),
             command => AssertRoute(command, EndpointRoutes.WhitelistAddUser, NextBotAdapter.Infrastructure.Permissions.WhitelistAdd),
             command => AssertRoute(command, EndpointRoutes.WhitelistRemoveUser, NextBotAdapter.Infrastructure.Permissions.WhitelistRemove),

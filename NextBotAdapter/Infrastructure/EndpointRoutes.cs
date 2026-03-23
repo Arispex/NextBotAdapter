@@ -6,6 +6,7 @@ public static class EndpointRoutes
     public const string UserStats = "/nextbot/users/{user}/stats";
     public const string WorldProgress = "/nextbot/world/progress";
     public const string WorldMapImage = "/nextbot/world/map-image";
+    public const string WorldFile = "/nextbot/world/world-file";
     public const string Whitelist = "/nextbot/whitelist";
     public const string WhitelistAddUser = "/nextbot/whitelist/add/{user}";
     public const string WhitelistRemoveUser = "/nextbot/whitelist/remove/{user}";
