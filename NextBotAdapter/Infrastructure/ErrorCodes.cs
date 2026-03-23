@@ -11,4 +11,5 @@ public static class ErrorCodes
     public const string ConfigReloadFailed = "config_reload_failed";
     public const string MapImageGenerationFailed = "map_image_generation_failed";
     public const string WorldFileReadFailed = "world_file_read_failed";
+    public const string MapFileReadFailed = "map_file_read_failed";
 }

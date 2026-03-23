@@ -34,6 +34,7 @@ public sealed class NextBotAdapterPlugin(Main game) : TerrariaPlugin(game)
         ConfigEndpoints.Service = new ConfigurationReloadService(_whitelistService);
         MapEndpoints.Service = new MapImageService(configService.CacheDirectoryPath);
         WorldEndpoints.WorldFileService = new WorldFileService();
+        WorldEndpoints.MapFileService = new MapFileService();
         PluginLogger.Info("白名单服务初始化完成。");
         PluginLogger.Info($"缓存目录初始化完成，路径：{configService.CacheDirectoryPath}。");
 
