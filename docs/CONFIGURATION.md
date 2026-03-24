@@ -1,18 +1,21 @@
 # NextBotAdapter Configuration
 
-## 概述
+配置文件位于 TShock 保存目录下的 `NextBotAdapter/` 文件夹中，包含两个文件：
 
-NextBotAdapter 的运行时配置文件位于 TShock 保存目录下的 `NextBotAdapter` 文件夹中。
+```
+tshock/
+└── NextBotAdapter/
+    ├── NextBotAdapter.json   # 插件配置
+    └── Whitelist.json        # 白名单数据
+```
 
-当前包含两个文件和一个缓存目录：
+首次启动时两个文件均会自动创建。
 
-- `NextBotAdapter.json`
-- `Whitelist.json`
-- `cache/`
+---
 
-## 1. NextBotAdapter.json
+## NextBotAdapter.json
 
-`NextBotAdapter.json` 是插件总配置文件。
+插件主配置文件。
 
 ```json
 {
@@ -24,25 +27,19 @@ NextBotAdapter 的运行时配置文件位于 TShock 保存目录下的 `NextBot
 }
 ```
 
-### 字段说明
+### `whitelist`
 
-#### `whitelist.enabled`
-- 是否启用白名单
-- `true`：启用白名单
-- `false`：关闭白名单
+| 字段            | 类型    | 默认值                              | 说明                                         |
+|-----------------|---------|-------------------------------------|----------------------------------------------|
+| `enabled`       | boolean | `true`                              | 是否启用白名单。`false` 时所有玩家均可入服   |
+| `denyMessage`   | string  | `"You are not on the whitelist."`   | 玩家不在白名单时的拒绝提示                   |
+| `caseSensitive` | boolean | `true`                              | 玩家名称比较是否区分大小写                   |
 
-#### `whitelist.denyMessage`
-- 玩家不在白名单内时显示的拒绝提示信息
+---
 
-#### `whitelist.caseSensitive`
-- 玩家名称比较时是否区分大小写
-- 默认值：`true`
+## Whitelist.json
 
-## 2. Whitelist.json
-
-`Whitelist.json` 用于保存白名单玩家名称列表。
-
-示例：
+白名单玩家名称列表，由插件通过 API 自动维护，通常不需要手动编辑。
 
 ```json
 {
@@ -53,47 +50,38 @@ NextBotAdapter 的运行时配置文件位于 TShock 保存目录下的 `NextBot
 }
 ```
 
-### 字段说明
+| 字段    | 类型            | 说明           |
+|---------|-----------------|----------------|
+| `users` | array of string | 白名单玩家名称 |
 
-#### `users`
-- 白名单玩家名称数组
-- 按玩家名称匹配
+---
 
-## 3. cache/
+## 白名单校验
 
-`cache/` 用于保存插件运行时生成的缓存文件。
+启用白名单后，玩家连接时会按名称进行检查：
 
-当前会保存：
+- 在白名单内 → 允许入服
+- 不在白名单内 → 断开连接，提示 `denyMessage`
 
-- 地图图片缓存文件（PNG）
+名称比较是否区分大小写由 `caseSensitive` 控制。
 
-### 创建时机
-- 插件初始化配置目录时会自动创建 `cache/`
-- 即使当前目录下还没有缓存文件，该目录也会预先存在
+---
 
-### 当前用途
-- `GET /nextbot/world/map-image` 在生成地图图片时，会将 PNG 文件保存到该目录下，并在响应中返回生成结果
+## 配置热重载
 
-## 入服校验行为
+通过 API 可在不重启服务器的情况下重新加载配置：
 
-当白名单启用时，玩家进入服务器后会立即按玩家名称进行白名单检查：
+```
+GET /nextbot/config/reload?token=<token>
+```
 
-- 在白名单内：允许进入
-- 不在白名单内：拒绝进入，并使用 `whitelist.denyMessage` 作为提示信息
+两个文件均会重新从磁盘读取。
 
-名称比较是否区分大小写由 `whitelist.caseSensitive` 控制。
+---
 
-## 配置异常回退行为
+## 异常回退
 
-### 文件缺失时
-如果配置文件不存在：
-- 会自动生成默认配置文件
-- 插件继续正常运行
-
-### 文件损坏时
-如果配置文件存在但 JSON 内容损坏：
-- 插件会记录错误日志
-- 使用内存中的默认配置 / 空白名单继续运行
-- **不会覆盖原有损坏文件**
-
-这意味着你仍然可以手动检查和修复原文件。
+| 情况           | 行为                                                     |
+|----------------|----------------------------------------------------------|
+| 文件不存在     | 自动创建默认文件，插件正常运行                           |
+| 文件 JSON 损坏 | 记录警告日志，使用默认配置 / 空白名单运行，**原文件不会被覆盖** |
