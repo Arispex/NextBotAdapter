@@ -1,21 +1,21 @@
 # NextBotAdapter
 
-[TShock](https://github.com/Pryaxis/TShock) plugin for [NextBot](https://github.com/Arispex/nextbot).
+[TShock](https://github.com/Pryaxis/TShock) 插件，用于适配 [NextBot](https://github.com/Arispex/nextbot)。
 
-## Requirements
+## 环境要求
 
 - TShock for Terraria
 
-## Installation
+## 安装
 
-1. Download the latest release
-2. Place `NextBotAdapter.dll` in TShock's `ServerPlugins/` directory
-3. Start the server — configuration files will be created automatically at `tshock/NextBotAdapter/`
+1. 下载最新版本
+2. 将 `NextBotAdapter.dll` 放入 TShock 的 `ServerPlugins/` 目录
+3. 启动服务器 —— 配置文件将自动创建于 `tshock/NextBotAdapter/`
 
-## Configuration
+## 配置
 
-See [docs/CONFIGURATION.md](docs/CONFIGURATION.md).
+参见 [docs/CONFIGURATION.md](docs/CONFIGURATION.md)。
 
 ## REST API
 
-See [docs/REST_API.md](docs/REST_API.md).
+参见 [docs/REST_API.md](docs/REST_API.md)。
