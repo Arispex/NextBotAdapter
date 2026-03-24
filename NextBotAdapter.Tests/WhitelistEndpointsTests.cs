@@ -1,6 +1,5 @@
 using NextBotAdapter.Infrastructure;
 using NextBotAdapter.Models;
-using NextBotAdapter.Models.Responses;
 using NextBotAdapter.Rest;
 using NextBotAdapter.Services;
 using Rests;
@@ -12,13 +11,22 @@ public sealed class WhitelistEndpointsTests
     [Fact]
     public void List_ShouldReturnWhitelistEntries()
     {
-        var service = new FakeWhitelistService(new WhitelistListResponse(["Arispex", "NextBot"]));
+        var service = new FakeWhitelistService(["Arispex", "NextBot"]);
 
         var result = Assert.IsType<RestObject>(WhitelistEndpoints.List(service));
 
         Assert.Equal("200", result.Status);
-        var response = Assert.IsType<WhitelistListResponse>(result["data"]);
-        Assert.Equal(["Arispex", "NextBot"], response.Users);
+        var users = Assert.IsAssignableFrom<IReadOnlyList<string>>(result["users"]);
+        Assert.Equal(["Arispex", "NextBot"], users);
+    }
+
+    [Fact]
+    public void Add_ShouldReturnResponseOnSuccess()
+    {
+        var result = Assert.IsType<RestObject>(WhitelistEndpoints.Add("Arispex", new FakeWhitelistService()));
+
+        Assert.Equal("200", result.Status);
+        Assert.Equal("User 'Arispex' has been added to the whitelist.", result["response"]);
     }
 
     [Fact]
@@ -27,52 +35,58 @@ public sealed class WhitelistEndpointsTests
         var result = Assert.IsType<RestObject>(WhitelistEndpoints.Add(null, new FakeWhitelistService()));
 
         Assert.Equal("400", result.Status);
-        var error = Assert.IsType<ApiError>(result["error"]);
-        Assert.Equal("whitelist_user_invalid", error.Code);
+        Assert.Equal("Whitelist user is invalid.", result.Error);
     }
 
     [Fact]
-    public void Add_ShouldReturnConflictWhenUserAlreadyExists()
+    public void Add_ShouldReturnBadRequestWhenUserAlreadyExists()
     {
-        var service = new FakeWhitelistService(addError: new UserLookupError("whitelist_user_exists", "User already exists in whitelist."));
+        var service = new FakeWhitelistService(addError: new UserLookupError("User already exists in whitelist."));
 
         var result = Assert.IsType<RestObject>(WhitelistEndpoints.Add("Arispex", service));
 
-        Assert.Equal("409", result.Status);
-        var error = Assert.IsType<ApiError>(result["error"]);
-        Assert.Equal("whitelist_user_exists", error.Code);
+        Assert.Equal("400", result.Status);
+        Assert.Equal("User already exists in whitelist.", result.Error);
     }
 
     [Fact]
-    public void Remove_ShouldReturnNotFoundWhenUserMissingFromWhitelist()
+    public void Remove_ShouldReturnResponseOnSuccess()
     {
-        var service = new FakeWhitelistService(removeError: new UserLookupError("whitelist_user_not_found", "User not found in whitelist."));
+        var result = Assert.IsType<RestObject>(WhitelistEndpoints.Remove("Arispex", new FakeWhitelistService()));
+
+        Assert.Equal("200", result.Status);
+        Assert.Equal("User 'Arispex' has been removed from the whitelist.", result["response"]);
+    }
+
+    [Fact]
+    public void Remove_ShouldReturnBadRequestWhenUserMissingFromWhitelist()
+    {
+        var service = new FakeWhitelistService(removeError: new UserLookupError("User not found in whitelist."));
 
         var result = Assert.IsType<RestObject>(WhitelistEndpoints.Remove("Missing", service));
 
-        Assert.Equal("404", result.Status);
-        var error = Assert.IsType<ApiError>(result["error"]);
-        Assert.Equal("whitelist_user_not_found", error.Code);
+        Assert.Equal("400", result.Status);
+        Assert.Equal("User not found in whitelist.", result.Error);
     }
 
     private sealed class FakeWhitelistService : IWhitelistService
     {
-        private readonly WhitelistListResponse _list;
+        private readonly IReadOnlyList<string> _users;
         private readonly UserLookupError? _addError;
         private readonly UserLookupError? _removeError;
 
-        public FakeWhitelistService(WhitelistListResponse? list = null, UserLookupError? addError = null, UserLookupError? removeError = null)
+        public FakeWhitelistService(IReadOnlyList<string>? users = null, UserLookupError? addError = null, UserLookupError? removeError = null)
         {
-            _list = list ?? new WhitelistListResponse([]);
+            _users = users ?? [];
             _addError = addError;
             _removeError = removeError;
         }
 
         public WhitelistSettings Settings => new(true, "Denied", true);
 
-        public IReadOnlyList<string> GetAll() => _list.Users;
+        public IReadOnlyList<string> GetAll() => _users;
 
-        public bool IsWhitelisted(string user) => _list.Users.Contains(user);
+        public bool IsWhitelisted(string user) => _users.Contains(user);
 
         public bool TryAdd(string user, out UserLookupError? error)
         {

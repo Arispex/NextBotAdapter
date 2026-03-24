@@ -15,9 +15,7 @@ public sealed class RestEndpointLogicTests
         var result = Assert.IsType<RestObject>(UserEndpoints.Inventory(" ", new FakePlayerDataAccessor(new object())));
 
         Assert.Equal("400", result.Status);
-        var error = Assert.IsType<ApiError>(result["error"]);
-        Assert.Equal(ErrorCodes.MissingUser, error.Code);
-        Assert.Equal("Missing required route parameter 'user'.", error.Message);
+        Assert.Equal("Missing required route parameter 'user'.", result.Error);
     }
 
     [Fact]
@@ -30,22 +28,20 @@ public sealed class RestEndpointLogicTests
         var result = Assert.IsType<RestObject>(UserEndpoints.Inventory("alice", accessor));
 
         Assert.Equal("200", result.Status);
-        var response = Assert.IsType<UserInventoryResponse>(result["data"]);
-        Assert.Single(response.Items);
-        Assert.Equal(99, response.Items[0].NetId);
+        var items = Assert.IsAssignableFrom<IReadOnlyList<InventoryItemResponse>>(result["items"]);
+        Assert.Single(items);
+        Assert.Equal(99, items[0].NetId);
     }
 
     [Fact]
-    public void Inventory_ShouldReturnNotFoundWhenAccessorFails()
+    public void Inventory_ShouldReturnBadRequestWhenAccessorFails()
     {
-        var accessor = new FakePlayerDataAccessor(new UserLookupError(ErrorCodes.UserNotFound, "User was not found."));
+        var accessor = new FakePlayerDataAccessor(new UserLookupError("User was not found."));
 
         var result = Assert.IsType<RestObject>(UserEndpoints.Inventory("alice", accessor));
 
-        Assert.Equal("404", result.Status);
-        var error = Assert.IsType<ApiError>(result["error"]);
-        Assert.Equal(ErrorCodes.UserNotFound, error.Code);
-        Assert.Equal("User was not found.", error.Message);
+        Assert.Equal("400", result.Status);
+        Assert.Equal("User was not found.", result.Error);
     }
 
     [Fact]
@@ -54,9 +50,7 @@ public sealed class RestEndpointLogicTests
         var result = Assert.IsType<RestObject>(UserEndpoints.Stats(null, new FakePlayerDataAccessor(new object())));
 
         Assert.Equal("400", result.Status);
-        var error = Assert.IsType<ApiError>(result["error"]);
-        Assert.Equal(ErrorCodes.MissingUser, error.Code);
-        Assert.Equal("Missing required route parameter 'user'.", error.Message);
+        Assert.Equal("Missing required route parameter 'user'.", result.Error);
     }
 
     [Fact]
@@ -69,22 +63,19 @@ public sealed class RestEndpointLogicTests
         var result = Assert.IsType<RestObject>(UserEndpoints.Stats("alice", accessor));
 
         Assert.Equal("200", result.Status);
-        var response = Assert.IsType<UserInfoResponse>(result["data"]);
-        Assert.Equal(120, response.Health);
-        Assert.Equal(4, response.DeathsPve);
+        Assert.Equal(120, result["health"]);
+        Assert.Equal(4, result["deathsPve"]);
     }
 
     [Fact]
-    public void Stats_ShouldReturnNotFoundWhenAccessorFails()
+    public void Stats_ShouldReturnBadRequestWhenAccessorFails()
     {
-        var accessor = new FakePlayerDataAccessor(new UserLookupError(ErrorCodes.UserDataNotFound, "Player data was not found."));
+        var accessor = new FakePlayerDataAccessor(new UserLookupError("Player data was not found."));
 
         var result = Assert.IsType<RestObject>(UserEndpoints.Stats("alice", accessor));
 
-        Assert.Equal("404", result.Status);
-        var error = Assert.IsType<ApiError>(result["error"]);
-        Assert.Equal(ErrorCodes.UserDataNotFound, error.Code);
-        Assert.Equal("Player data was not found.", error.Message);
+        Assert.Equal("400", result.Status);
+        Assert.Equal("Player data was not found.", result.Error);
     }
 
     [Fact]
@@ -114,10 +105,9 @@ public sealed class RestEndpointLogicTests
             true)));
 
         Assert.Equal("200", result.Status);
-        var response = Assert.IsType<WorldProgressResponse>(result["data"]);
-        Assert.True(response.KingSlime);
-        Assert.True(response.WallOfFlesh);
-        Assert.True(response.MoonLord);
+        Assert.Equal(true, result["kingSlime"]);
+        Assert.Equal(true, result["wallOfFlesh"]);
+        Assert.Equal(true, result["moonLord"]);
     }
 
     [Fact]
@@ -126,9 +116,8 @@ public sealed class RestEndpointLogicTests
         var result = MapEndpoints.Image(new FakeMapImageService(("map-1.png", "/tmp/map-1.png", [1, 2, 3])));
 
         Assert.Equal("200", result.Status);
-        var response = Assert.IsType<MapImageResponse>(result["data"]);
-        Assert.Equal("map-1.png", response.FileName);
-        Assert.Equal(Convert.ToBase64String([1, 2, 3]), response.Base64);
+        Assert.Equal("map-1.png", result["fileName"]);
+        Assert.Equal(Convert.ToBase64String([1, 2, 3]), result["base64"]);
     }
 
     [Fact]

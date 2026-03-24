@@ -43,7 +43,7 @@ public sealed class ServiceBehaviorTests
     [Fact]
     public void TryGetInventory_ShouldBubbleAccessorErrors()
     {
-        var expectedError = new UserLookupError(ErrorCodes.UserNotFound, "User was not found.");
+        var expectedError = new UserLookupError("User was not found.");
         var accessor = new FakePlayerDataAccessor(expectedError);
 
         var success = UserInventoryService.TryGetInventory("alice", accessor, out var response, out var error);
@@ -76,7 +76,7 @@ public sealed class ServiceBehaviorTests
     [Fact]
     public void TryGetUserInfo_ShouldBubbleAccessorErrors()
     {
-        var expectedError = new UserLookupError(ErrorCodes.UserDataNotFound, "Player data was not found.");
+        var expectedError = new UserLookupError("Player data was not found.");
         var accessor = new FakePlayerDataAccessor(expectedError);
 
         var success = UserInfoService.TryGetUserInfo("alice", accessor, out var response, out var error);

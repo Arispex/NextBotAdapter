@@ -1,4 +1,3 @@
-using NextBotAdapter.Infrastructure;
 using NextBotAdapter.Models;
 using NextBotAdapter.Models.Responses;
 using NextBotAdapter.Rest;
@@ -28,21 +27,10 @@ public sealed class ModelAndPluginCoverageTests
     }
 
     [Fact]
-    public void ApiEnvelope_ShouldStoreDataAndErrorValues()
+    public void UserLookupError_ShouldStoreMessage()
     {
-        var error = new ApiError("code", "message");
-        var envelope = new ApiEnvelope<string>(null, error);
+        var error = new UserLookupError("User was not found.");
 
-        Assert.Null(envelope.Data);
-        Assert.Equal(error, envelope.Error);
-    }
-
-    [Fact]
-    public void UserLookupError_ShouldStoreCodeAndMessage()
-    {
-        var error = new UserLookupError(ErrorCodes.UserNotFound, "User was not found.");
-
-        Assert.Equal(ErrorCodes.UserNotFound, error.Code);
         Assert.Equal("User was not found.", error.Message);
     }
 

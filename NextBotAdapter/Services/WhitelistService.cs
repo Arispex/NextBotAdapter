@@ -1,4 +1,3 @@
-using NextBotAdapter.Infrastructure;
 using NextBotAdapter.Models;
 using NextBotAdapter.Models.Responses;
 
@@ -34,14 +33,14 @@ public sealed class WhitelistService : IWhitelistService
         error = null;
         if (string.IsNullOrWhiteSpace(user))
         {
-            error = new UserLookupError(ErrorCodes.WhitelistUserInvalid, "Whitelist user is invalid.");
+            error = new UserLookupError("Whitelist user is invalid.");
             return false;
         }
 
         var comparer = Settings.CaseSensitive ? StringComparer.Ordinal : StringComparer.OrdinalIgnoreCase;
         if (_users.Contains(user, comparer))
         {
-            error = new UserLookupError(ErrorCodes.WhitelistUserExists, "User already exists in whitelist.");
+            error = new UserLookupError("User already exists in whitelist.");
             return false;
         }
 
@@ -54,7 +53,7 @@ public sealed class WhitelistService : IWhitelistService
         error = null;
         if (string.IsNullOrWhiteSpace(user))
         {
-            error = new UserLookupError(ErrorCodes.WhitelistUserInvalid, "Whitelist user is invalid.");
+            error = new UserLookupError("Whitelist user is invalid.");
             return false;
         }
 
@@ -62,7 +61,7 @@ public sealed class WhitelistService : IWhitelistService
         var existing = _users.FirstOrDefault(item => comparer.Equals(item, user));
         if (existing is null)
         {
-            error = new UserLookupError(ErrorCodes.WhitelistUserNotFound, "User not found in whitelist.");
+            error = new UserLookupError("User not found in whitelist.");
             return false;
         }
 

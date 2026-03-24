@@ -1,6 +1,5 @@
 using NextBotAdapter.Infrastructure;
 using NextBotAdapter.Models;
-using NextBotAdapter.Models.Responses;
 using NextBotAdapter.Rest;
 using Rests;
 
@@ -11,23 +10,19 @@ public sealed class EndpointBehaviorTests
     [Fact]
     public void MissingUser_ShouldMapToBadRequestRestObject()
     {
-        var result = EndpointResponseFactory.FromUserLookupError(new UserLookupError(ErrorCodes.MissingUser, "ignored"));
+        var result = EndpointResponseFactory.FromUserLookupError(new UserLookupError("User cannot be empty."));
 
         Assert.Equal("400", result.Status);
-        var error = Assert.IsType<ApiError>(result["error"]);
-        Assert.Equal(ErrorCodes.MissingUser, error.Code);
-        Assert.Equal("Missing required route parameter 'user'.", error.Message);
+        Assert.Equal("User cannot be empty.", result.Error);
     }
 
     [Fact]
-    public void UserDataNotFound_ShouldMapToNotFoundRestObject()
+    public void UserDataNotFound_ShouldMapToBadRequestRestObject()
     {
-        var result = EndpointResponseFactory.FromUserLookupError(new UserLookupError(ErrorCodes.UserDataNotFound, "Player data was not found."));
+        var result = EndpointResponseFactory.FromUserLookupError(new UserLookupError("Player data was not found."));
 
-        Assert.Equal("404", result.Status);
-        var error = Assert.IsType<ApiError>(result["error"]);
-        Assert.Equal(ErrorCodes.UserDataNotFound, error.Code);
-        Assert.Equal("Player data was not found.", error.Message);
+        Assert.Equal("400", result.Status);
+        Assert.Equal("Player data was not found.", result.Error);
     }
 
     [Fact]
@@ -35,10 +30,8 @@ public sealed class EndpointBehaviorTests
     {
         var result = EndpointResponseFactory.FromUserLookupError(null);
 
-        Assert.Equal("404", result.Status);
-        var error = Assert.IsType<ApiError>(result["error"]);
-        Assert.Equal(ErrorCodes.UserNotFound, error.Code);
-        Assert.Equal("User was not found.", error.Message);
+        Assert.Equal("400", result.Status);
+        Assert.Equal("User was not found.", result.Error);
     }
 
     [Fact]

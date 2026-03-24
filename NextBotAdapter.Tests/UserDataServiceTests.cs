@@ -1,4 +1,3 @@
-using NextBotAdapter.Infrastructure;
 using NextBotAdapter.Models;
 using NextBotAdapter.Services;
 
@@ -15,7 +14,7 @@ public sealed class UserDataServiceTests
 
         Assert.False(success);
         Assert.Null(error is null ? null : data);
-        Assert.Equal(ErrorCodes.MissingUser, error?.Code);
+        Assert.Equal("User cannot be empty.", error?.Message);
     }
 
     [Fact]
@@ -26,7 +25,7 @@ public sealed class UserDataServiceTests
         var success = service.TryGetPlayerData("alice", out _, out var error);
 
         Assert.False(success);
-        Assert.Equal(ErrorCodes.UserNotFound, error?.Code);
+        Assert.Equal("User was not found.", error?.Message);
     }
 
     [Fact]
@@ -37,7 +36,7 @@ public sealed class UserDataServiceTests
         var success = service.TryGetPlayerData("alice", out _, out var error);
 
         Assert.False(success);
-        Assert.Equal(ErrorCodes.UserDataNotFound, error?.Code);
+        Assert.Equal("Player data was not found.", error?.Message);
     }
 
     [Fact]

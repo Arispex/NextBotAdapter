@@ -1,5 +1,4 @@
 using System.Diagnostics.CodeAnalysis;
-using NextBotAdapter.Infrastructure;
 using NextBotAdapter.Models;
 using TShockAPI;
 
@@ -25,19 +24,19 @@ public sealed class UserDataService : IPlayerDataAccessor
 
         if (string.IsNullOrWhiteSpace(user))
         {
-            error = new UserLookupError(ErrorCodes.MissingUser, "User cannot be empty.");
+            error = new UserLookupError("User cannot be empty.");
             return false;
         }
 
         if (!_gateway.TryGetUserAccountId(user, out var accountId))
         {
-            error = new UserLookupError(ErrorCodes.UserNotFound, "User was not found.");
+            error = new UserLookupError("User was not found.");
             return false;
         }
 
         if (!_gateway.TryGetPlayerData(accountId, out data))
         {
-            error = new UserLookupError(ErrorCodes.UserDataNotFound, "Player data was not found.");
+            error = new UserLookupError("Player data was not found.");
             return false;
         }
 
