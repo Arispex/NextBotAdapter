@@ -1,4 +1,5 @@
 using SixLabors.ImageSharp;
+using SixLabors.ImageSharp.Formats.Png;
 using SixLabors.ImageSharp.PixelFormats;
 using Terraria;
 using Terraria.IO;
@@ -9,26 +10,16 @@ namespace NextBotAdapter.Services;
 public sealed class MapImageService : IMapImageService
 {
     private const int Edge = WorldMap.BlackEdgeWidth;
-    private readonly string _cacheDirectoryPath;
 
-    public MapImageService(string cacheDirectoryPath)
-    {
-        _cacheDirectoryPath = cacheDirectoryPath;
-    }
-
-    public string CacheDirectoryPath => _cacheDirectoryPath;
-
-    public (string FileName, string FilePath, byte[] Content) GenerateAndCache()
+    public (string FileName, byte[] Content) Generate()
     {
         PrepareMapEnvironment();
 
         using var image = CreateMapImage();
+        using var stream = new MemoryStream();
+        image.Save(stream, PngFormat.Instance);
         var fileName = $"map-{DateTimeOffset.Now:yyyy-MM-dd_HH-mm-ss}.png";
-        var filePath = Path.Combine(_cacheDirectoryPath, fileName);
-
-        image.SaveAsPng(filePath);
-        var content = File.ReadAllBytes(filePath);
-        return (fileName, filePath, content);
+        return (fileName, stream.ToArray());
     }
 
     private static void PrepareMapEnvironment()

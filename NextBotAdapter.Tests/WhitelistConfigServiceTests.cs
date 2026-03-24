@@ -56,16 +56,6 @@ public sealed class WhitelistConfigServiceTests
     }
 
     [Fact]
-    public void EnsureDirectory_ShouldCreateCacheDirectoryWhenLoadingSettings()
-    {
-        var service = CreateService();
-
-        _ = service.LoadSettings();
-
-        Assert.True(Directory.Exists(service.CacheDirectoryPath));
-    }
-
-    [Fact]
     public void WhitelistFilePath_ShouldUseCapitalizedFileName()
     {
         var service = CreateService();

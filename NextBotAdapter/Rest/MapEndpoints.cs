@@ -16,8 +16,8 @@ public static class MapEndpoints
         try
         {
             PluginLogger.Info("世界地图图片正在生成......");
-            var result = service.GenerateAndCache();
-            PluginLogger.Info($"世界地图图片生成完成，文件名：{result.FileName}，缓存路径：{result.FilePath}。");
+            var result = service.Generate();
+            PluginLogger.Info($"世界地图图片生成完成，文件名：{result.FileName}。");
             return new RestObject("200")
             {
                 { "fileName", result.FileName },

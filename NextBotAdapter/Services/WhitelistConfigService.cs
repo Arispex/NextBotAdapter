@@ -22,7 +22,6 @@ public sealed class WhitelistConfigService
     public string ConfigDirectoryPath => _configDirectoryPath;
     public string SettingsFilePath => Path.Combine(ConfigDirectoryPath, "NextBotAdapter.json");
     public string WhitelistFilePath => Path.Combine(ConfigDirectoryPath, "Whitelist.json");
-    public string CacheDirectoryPath => Path.Combine(ConfigDirectoryPath, "cache");
 
     public WhitelistSettings LoadSettings()
     {
@@ -89,7 +88,6 @@ public sealed class WhitelistConfigService
     private void EnsureDirectory()
     {
         Directory.CreateDirectory(ConfigDirectoryPath);
-        Directory.CreateDirectory(CacheDirectoryPath);
     }
 
     private void WriteSettingsFile(WhitelistSettings settings)

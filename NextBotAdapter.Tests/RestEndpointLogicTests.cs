@@ -113,7 +113,7 @@ public sealed class RestEndpointLogicTests
     [Fact]
     public void MapImage_ShouldReturnOkWithGeneratedBase64()
     {
-        var result = MapEndpoints.Image(new FakeMapImageService(("map-1.png", "/tmp/map-1.png", [1, 2, 3])));
+        var result = MapEndpoints.Image(new FakeMapImageService(("map-1.png", [1, 2, 3])));
 
         Assert.Equal("200", result.Status);
         Assert.Equal("map-1.png", result["fileName"]);
@@ -177,8 +177,8 @@ public sealed class RestEndpointLogicTests
         public WorldProgressSnapshot GetSnapshot() => snapshot;
     }
 
-    private sealed class FakeMapImageService((string FileName, string FilePath, byte[] Content) result) : IMapImageService
+    private sealed class FakeMapImageService((string FileName, byte[] Content) result) : IMapImageService
     {
-        public (string FileName, string FilePath, byte[] Content) GenerateAndCache() => result;
+        public (string FileName, byte[] Content) Generate() => result;
     }
 }

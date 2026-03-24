@@ -32,11 +32,10 @@ public sealed class NextBotAdapterPlugin(Main game) : TerrariaPlugin(game)
         _whitelistService = new PersistedWhitelistService(configService);
         WhitelistEndpoints.Service = _whitelistService;
         ConfigEndpoints.Service = new ConfigurationReloadService(_whitelistService);
-        MapEndpoints.Service = new MapImageService(configService.CacheDirectoryPath);
+        MapEndpoints.Service = new MapImageService();
         WorldEndpoints.WorldFileService = new WorldFileService();
         WorldEndpoints.MapFileService = new MapFileService();
         PluginLogger.Info("白名单服务初始化完成。");
-        PluginLogger.Info($"缓存目录初始化完成，路径：{configService.CacheDirectoryPath}。");
 
         EndpointRegistrar.Register(TShock.RestApi);
         PluginLogger.Info($"REST 端点注册完成，共 {EndpointRegistrar.CreateCommands().Count} 个。");

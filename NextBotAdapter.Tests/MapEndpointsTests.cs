@@ -10,7 +10,7 @@ public sealed class MapEndpointsTests
     [Fact]
     public void Image_ShouldReturnOkWhenGenerationSucceeds()
     {
-        var service = new FakeMapImageService(("map-1.png", "/tmp/map-1.png", [1, 2, 3]));
+        var service = new FakeMapImageService(("map-1.png", [1, 2, 3]));
 
         var result = MapEndpoints.Image(service);
 
@@ -30,13 +30,13 @@ public sealed class MapEndpointsTests
         Assert.Equal("map generation failed", result.Error);
     }
 
-    private sealed class FakeMapImageService((string FileName, string FilePath, byte[] Content) result) : IMapImageService
+    private sealed class FakeMapImageService((string FileName, byte[] Content) result) : IMapImageService
     {
-        public (string FileName, string FilePath, byte[] Content) GenerateAndCache() => result;
+        public (string FileName, byte[] Content) Generate() => result;
     }
 
     private sealed class ThrowingMapImageService(Exception exception) : IMapImageService
     {
-        public (string FileName, string FilePath, byte[] Content) GenerateAndCache() => throw exception;
+        public (string FileName, byte[] Content) Generate() => throw exception;
     }
 }
