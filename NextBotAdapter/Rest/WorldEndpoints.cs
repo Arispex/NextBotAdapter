@@ -48,7 +48,7 @@ public static class WorldEndpoints
     {
         try
         {
-            PluginLogger.Info("世界文件正在读取......");
+            PluginLogger.Info("开始读取世界文件。");
             var result = service.GetWorldFile();
             PluginLogger.Info($"世界文件读取完成，文件名：{result.FileName}。");
             return new RestObject("200")
@@ -71,7 +71,7 @@ public static class WorldEndpoints
     {
         try
         {
-            PluginLogger.Info("地图文件正在生成......");
+            PluginLogger.Info("开始生成地图文件。");
             var result = service.GetMapFile();
             PluginLogger.Info($"地图文件生成完成，文件名：{result.FileName}。");
             return new RestObject("200")

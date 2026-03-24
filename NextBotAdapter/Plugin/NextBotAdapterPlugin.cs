@@ -25,7 +25,7 @@ public sealed class NextBotAdapterPlugin(Main game) : TerrariaPlugin(game)
 
     public override void Initialize()
     {
-        PluginLogger.Info("插件正在初始化......");
+        PluginLogger.Info("插件开始初始化。");
         AppDomain.CurrentDomain.AssemblyResolve += CurrentDomain_AssemblyResolve;
 
         var configService = new WhitelistConfigService();
@@ -35,15 +35,10 @@ public sealed class NextBotAdapterPlugin(Main game) : TerrariaPlugin(game)
         MapEndpoints.Service = new MapImageService();
         WorldEndpoints.WorldFileService = new WorldFileService();
         WorldEndpoints.MapFileService = new MapFileService();
-        PluginLogger.Info("白名单服务初始化完成。");
 
         EndpointRegistrar.Register(TShock.RestApi);
-        PluginLogger.Info($"REST 端点注册完成，共 {EndpointRegistrar.CreateCommands().Count} 个。");
 
         GetDataHandlers.PlayerInfo.Register(OnPlayerInfo, HandlerPriority.Highest);
-        PluginLogger.Info("玩家信息校验钩子注册完成。");
-        PluginLogger.Info(
-            $"白名单配置已生效：启用状态：{_whitelistService.Settings.Enabled}，区分大小写：{_whitelistService.Settings.CaseSensitive}，共有 {_whitelistService.GetAll().Count} 个条目。");
 
         if (!_whitelistService.Settings.Enabled)
         {
