@@ -29,7 +29,7 @@ public sealed class WhitelistConfigService
         if (!File.Exists(SettingsFilePath))
         {
             WriteSettingsFile(WhitelistSettings.Default);
-            PluginLogger.Info("默认白名单配置文件已创建。");
+            PluginLogger.Info("默认插件配置文件已创建。");
             return WhitelistSettings.Default;
         }
 
