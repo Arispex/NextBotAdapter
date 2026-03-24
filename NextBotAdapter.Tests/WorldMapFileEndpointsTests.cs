@@ -1,6 +1,4 @@
 using NextBotAdapter.Infrastructure;
-using NextBotAdapter.Models;
-using NextBotAdapter.Models.Responses;
 using NextBotAdapter.Rest;
 using NextBotAdapter.Services;
 
@@ -16,9 +14,8 @@ public sealed class WorldMapFileEndpointsTests
         var result = WorldEndpoints.MapFile(service);
 
         Assert.Equal("200", result.Status);
-        var response = Assert.IsType<MapFileResponse>(result["data"]);
-        Assert.Equal("12345.map", response.FileName);
-        Assert.Equal(Convert.ToBase64String([1, 2, 3]), response.Base64);
+        Assert.Equal("12345.map", result["fileName"]);
+        Assert.Equal(Convert.ToBase64String([1, 2, 3]), result["base64"]);
     }
 
     [Fact]
@@ -29,9 +26,7 @@ public sealed class WorldMapFileEndpointsTests
         var result = WorldEndpoints.MapFile(service);
 
         Assert.Equal("500", result.Status);
-        var error = Assert.IsType<ApiError>(result["error"]);
-        Assert.Equal(ErrorCodes.MapFileReadFailed, error.Code);
-        Assert.Equal("map generation failed", error.Message);
+        Assert.Equal("map generation failed", result.Error);
     }
 
     private sealed class FakeMapFileService((string FileName, byte[] Content) result) : IMapFileService

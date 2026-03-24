@@ -1,5 +1,4 @@
 using NextBotAdapter.Infrastructure;
-using NextBotAdapter.Models.Responses;
 using NextBotAdapter.Services;
 using Rests;
 
@@ -13,7 +12,7 @@ public static class WhitelistEndpoints
         => List(Service);
 
     public static object List(IWhitelistService service)
-        => EndpointResponseFactory.Success(new WhitelistListResponse(service.GetAll()));
+        => new RestObject("200") { { "users", service.GetAll() } };
 
     public static object Add(RestRequestArgs args)
         => Add(ReadRouteUser(args), Service);
@@ -22,19 +21,15 @@ public static class WhitelistEndpoints
     {
         if (string.IsNullOrWhiteSpace(user))
         {
-            return EndpointResponseFactory.Error("400", ErrorCodes.WhitelistUserInvalid, "Whitelist user is invalid.");
+            return EndpointResponseFactory.Error("Whitelist user is invalid.");
         }
 
         if (!service.TryAdd(user, out var error))
         {
-            return error?.Code switch
-            {
-                ErrorCodes.WhitelistUserExists => EndpointResponseFactory.Error("409", error.Code, error.Message),
-                _ => EndpointResponseFactory.Error("400", error?.Code ?? ErrorCodes.WhitelistUserInvalid, error?.Message ?? "Whitelist user is invalid.")
-            };
+            return EndpointResponseFactory.Error(error?.Message ?? "Whitelist user is invalid.");
         }
 
-        return EndpointResponseFactory.Success(new WhitelistListResponse(service.GetAll()));
+        return new RestObject("200") { { "response", $"User '{user}' has been added to the whitelist." } };
     }
 
     public static object Remove(RestRequestArgs args)
@@ -44,19 +39,15 @@ public static class WhitelistEndpoints
     {
         if (string.IsNullOrWhiteSpace(user))
         {
-            return EndpointResponseFactory.Error("400", ErrorCodes.WhitelistUserInvalid, "Whitelist user is invalid.");
+            return EndpointResponseFactory.Error("Whitelist user is invalid.");
         }
 
         if (!service.TryRemove(user, out var error))
         {
-            return error?.Code switch
-            {
-                ErrorCodes.WhitelistUserNotFound => EndpointResponseFactory.Error("404", error.Code, error.Message),
-                _ => EndpointResponseFactory.Error("400", error?.Code ?? ErrorCodes.WhitelistUserInvalid, error?.Message ?? "Whitelist user is invalid.")
-            };
+            return EndpointResponseFactory.Error(error?.Message ?? "Whitelist user is invalid.");
         }
 
-        return EndpointResponseFactory.Success(new WhitelistListResponse(service.GetAll()));
+        return new RestObject("200") { { "response", $"User '{user}' has been removed from the whitelist." } };
     }
 
     private static string? ReadRouteUser(RestRequestArgs args)

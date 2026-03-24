@@ -1,5 +1,4 @@
 using NextBotAdapter.Infrastructure;
-using NextBotAdapter.Models.Responses;
 using NextBotAdapter.Services;
 using Rests;
 
@@ -22,7 +21,7 @@ public static class UserEndpoints
             return EndpointResponseFactory.FromUserLookupError(error);
         }
 
-        return EndpointResponseFactory.Success(inventory);
+        return new RestObject("200") { { "items", inventory.Items } };
     }
 
     public static object Stats(RestRequestArgs args)
@@ -40,7 +39,16 @@ public static class UserEndpoints
             return EndpointResponseFactory.FromUserLookupError(error);
         }
 
-        return EndpointResponseFactory.Success(response);
+        return new RestObject("200")
+        {
+            { "health", response.Health },
+            { "maxHealth", response.MaxHealth },
+            { "mana", response.Mana },
+            { "maxMana", response.MaxMana },
+            { "questsCompleted", response.QuestsCompleted },
+            { "deathsPve", response.DeathsPve },
+            { "deathsPvp", response.DeathsPvp }
+        };
     }
 
     private static string? ReadRouteUser(RestRequestArgs args)

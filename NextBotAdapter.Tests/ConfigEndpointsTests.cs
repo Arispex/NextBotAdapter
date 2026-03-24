@@ -1,5 +1,4 @@
 using NextBotAdapter.Infrastructure;
-using NextBotAdapter.Models;
 using NextBotAdapter.Rest;
 using NextBotAdapter.Services;
 using Rests;
@@ -17,8 +16,7 @@ public sealed class ConfigEndpointsTests
 
         Assert.Equal("200", result.Status);
         Assert.True(service.ReloadCalled);
-        var payload = Assert.IsAssignableFrom<IDictionary<string, object?>>(result["data"]);
-        Assert.Equal(true, payload["reloaded"]);
+        Assert.Equal("Configuration reloaded successfully.", result["response"]);
     }
 
     [Fact]
@@ -29,8 +27,7 @@ public sealed class ConfigEndpointsTests
         var result = Assert.IsType<RestObject>(ConfigEndpoints.Reload(service));
 
         Assert.Equal("500", result.Status);
-        var error = Assert.IsType<ApiError>(result["error"]);
-        Assert.Equal(ErrorCodes.ConfigReloadFailed, error.Code);
+        Assert.Equal("reload failed", result.Error);
     }
 
     private sealed class FakeReloadService(bool throwOnReload = false) : IConfigurationReloadService

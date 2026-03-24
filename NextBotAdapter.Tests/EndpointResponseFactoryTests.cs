@@ -1,6 +1,5 @@
 using NextBotAdapter.Infrastructure;
 using NextBotAdapter.Models;
-using NextBotAdapter.Models.Responses;
 using Rests;
 
 namespace NextBotAdapter.Tests;
@@ -13,41 +12,24 @@ public sealed class EndpointResponseFactoryTests
         var result = EndpointResponseFactory.MissingUser();
 
         Assert.Equal("400", result.Status);
-        var error = Assert.IsType<ApiError>(result["error"]);
-        Assert.Equal(ErrorCodes.MissingUser, error.Code);
-        Assert.Equal("Missing required route parameter 'user'.", error.Message);
+        Assert.Equal("Missing required route parameter 'user'.", result.Error);
     }
 
     [Fact]
-    public void UserNotFound_ShouldReturnNotFoundRestObject()
+    public void UserNotFound_ShouldReturnBadRequestRestObject()
     {
         var result = EndpointResponseFactory.UserNotFound("User was not found.");
 
-        Assert.Equal("404", result.Status);
-        var error = Assert.IsType<ApiError>(result["error"]);
-        Assert.Equal(ErrorCodes.UserNotFound, error.Code);
-        Assert.Equal("User was not found.", error.Message);
+        Assert.Equal("400", result.Status);
+        Assert.Equal("User was not found.", result.Error);
     }
 
     [Fact]
-    public void UserDataNotFound_ShouldReturnNotFoundRestObject()
+    public void UserDataNotFound_ShouldReturnBadRequestRestObject()
     {
         var result = EndpointResponseFactory.UserDataNotFound("Player data was not found.");
 
-        Assert.Equal("404", result.Status);
-        var error = Assert.IsType<ApiError>(result["error"]);
-        Assert.Equal(ErrorCodes.UserDataNotFound, error.Code);
-        Assert.Equal("Player data was not found.", error.Message);
-    }
-
-    [Fact]
-    public void Success_ShouldReturnOkRestObjectWithDataPayload()
-    {
-        var payload = new UserInfoResponse(100, 400, 20, 200, 15, 3, 1);
-
-        var result = EndpointResponseFactory.Success(payload);
-
-        Assert.Equal("200", result.Status);
-        Assert.Same(payload, result["data"]);
+        Assert.Equal("400", result.Status);
+        Assert.Equal("Player data was not found.", result.Error);
     }
 }

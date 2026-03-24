@@ -1,6 +1,4 @@
 using NextBotAdapter.Infrastructure;
-using NextBotAdapter.Models;
-using NextBotAdapter.Models.Responses;
 using NextBotAdapter.Rest;
 using NextBotAdapter.Services;
 using Rests;
@@ -17,9 +15,8 @@ public sealed class MapEndpointsTests
         var result = MapEndpoints.Image(service);
 
         Assert.Equal("200", result.Status);
-        var response = Assert.IsType<MapImageResponse>(result["data"]);
-        Assert.Equal("map-1.png", response.FileName);
-        Assert.Equal(Convert.ToBase64String([1, 2, 3]), response.Base64);
+        Assert.Equal("map-1.png", result["fileName"]);
+        Assert.Equal(Convert.ToBase64String([1, 2, 3]), result["base64"]);
     }
 
     [Fact]
@@ -30,9 +27,7 @@ public sealed class MapEndpointsTests
         var result = MapEndpoints.Image(service);
 
         Assert.Equal("500", result.Status);
-        var error = Assert.IsType<ApiError>(result["error"]);
-        Assert.Equal(ErrorCodes.MapImageGenerationFailed, error.Code);
-        Assert.Equal("map generation failed", error.Message);
+        Assert.Equal("map generation failed", result.Error);
     }
 
     private sealed class FakeMapImageService((string FileName, string FilePath, byte[] Content) result) : IMapImageService

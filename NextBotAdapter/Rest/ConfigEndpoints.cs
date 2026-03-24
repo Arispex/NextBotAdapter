@@ -16,15 +16,12 @@ public static class ConfigEndpoints
         try
         {
             service.ReloadAll();
-            return EndpointResponseFactory.Success(new Dictionary<string, object?>
-            {
-                { "reloaded", true }
-            });
+            return new RestObject("200") { { "response", "Configuration reloaded successfully." } };
         }
         catch (Exception ex)
         {
             PluginLogger.Error($"插件配置重新加载失败，原因：{ex.Message}");
-            return EndpointResponseFactory.Error("500", ErrorCodes.ConfigReloadFailed, ex.Message);
+            return EndpointResponseFactory.Error(ex.Message, "500");
         }
     }
 }
