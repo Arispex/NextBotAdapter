@@ -6,12 +6,9 @@ public static class WorldProgressService
 {
     public static IWorldProgressSource DefaultSource { get; } = new WorldProgressSourceAdapter();
 
-    public static WorldProgressResponse GetProgress()
+    public static WorldProgressSnapshot GetProgress()
         => GetProgress(DefaultSource);
 
-    public static WorldProgressResponse GetProgress(IWorldProgressSource source)
-    {
-        var snapshot = source.GetSnapshot();
-        return WorldProgressMapper.CreateResponse(snapshot);
-    }
+    public static WorldProgressSnapshot GetProgress(IWorldProgressSource source)
+        => source.GetSnapshot();
 }
