@@ -4,7 +4,7 @@ public sealed class ConfigurationReloadService(PersistedWhitelistService whiteli
 {
     public void ReloadAll()
     {
-        PluginLogger.Info("插件配置正在重新加载......");
+        PluginLogger.Info("开始重新加载插件配置。");
         whitelistService.Reload();
         PluginLogger.Info("插件配置重新加载完成。");
     }

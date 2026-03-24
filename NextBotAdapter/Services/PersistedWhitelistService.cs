@@ -58,8 +58,6 @@ public sealed class PersistedWhitelistService : IWhitelistService
     public void Reload()
     {
         _inner = new WhitelistService(_configService.LoadSettings(), _configService.LoadWhitelist());
-        PluginLogger.Info(
-            $"白名单已重新加载：启用状态：{_inner.Settings.Enabled}，区分大小写：{_inner.Settings.CaseSensitive}，共有 {_inner.GetAll().Count} 个条目。");
     }
 
     private void Persist()
