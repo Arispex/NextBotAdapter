@@ -8,12 +8,6 @@ public static class EndpointResponseFactory
     public static RestObject MissingUser()
         => Error("Missing required route parameter 'user'.");
 
-    public static RestObject UserNotFound(string message)
-        => Error(message);
-
-    public static RestObject UserDataNotFound(string message)
-        => Error(message);
-
     public static RestObject FromUserLookupError(UserLookupError? error)
         => Error(error?.Message ?? "User was not found.");
 

@@ -16,20 +16,20 @@ public sealed class EndpointResponseFactoryTests
     }
 
     [Fact]
-    public void UserNotFound_ShouldReturnBadRequestRestObject()
+    public void Error_ShouldDefaultTo400()
     {
-        var result = EndpointResponseFactory.UserNotFound("User was not found.");
+        var result = EndpointResponseFactory.Error("something went wrong");
 
         Assert.Equal("400", result.Status);
-        Assert.Equal("User was not found.", result.Error);
+        Assert.Equal("something went wrong", result.Error);
     }
 
     [Fact]
-    public void UserDataNotFound_ShouldReturnBadRequestRestObject()
+    public void Error_ShouldRespectExplicitStatusCode()
     {
-        var result = EndpointResponseFactory.UserDataNotFound("Player data was not found.");
+        var result = EndpointResponseFactory.Error("internal error", "500");
 
-        Assert.Equal("400", result.Status);
-        Assert.Equal("Player data was not found.", result.Error);
+        Assert.Equal("500", result.Status);
+        Assert.Equal("internal error", result.Error);
     }
 }
