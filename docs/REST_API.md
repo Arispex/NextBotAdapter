@@ -1,17 +1,17 @@
 # NextBotAdapter REST API
 
-All endpoints follow TShock's REST API conventions:
+所有端点遵循 TShock REST API 规范：
 
-- All requests require a `token` query parameter (a valid TShock REST token)
-- Read operations return flat fields directly
-- Write operations return `{ "response": "..." }`
-- Error responses return `{ "error": "..." }`
+- 所有请求均需携带 `token` 查询参数（有效的 TShock REST 令牌）
+- 查询操作直接返回平铺字段
+- 写入操作返回 `{ "response": "..." }`
+- 错误响应返回 `{ "error": "..." }`
 
 ---
 
-## Authentication
+## 鉴权
 
-All endpoints require a TShock REST token with the corresponding permission. Pass the token as a query parameter:
+所有端点均需携带具有对应权限的 TShock REST 令牌，通过查询参数传递：
 
 ```
 GET /nextbot/users/Arispex/inventory?token=<token>
@@ -19,21 +19,21 @@ GET /nextbot/users/Arispex/inventory?token=<token>
 
 ---
 
-## Users
+## Users（用户）
 
 ### GET `/nextbot/users/{user}/inventory`
 
-Returns the stored inventory of the specified user.
+返回指定用户的存档背包数据。
 
-**Permission:** `nextbot.users.inventory`
+**权限：** `nextbot.users.inventory`
 
-**Parameters**
+**参数**
 
-| Name   | Location    | Description     |
-|--------|-------------|-----------------|
-| `user` | route param | Username to look up |
+| 名称   | 位置       | 说明             |
+|--------|------------|------------------|
+| `user` | 路由参数   | 要查询的用户名   |
 
-**Response 200**
+**响应 200**
 
 ```json
 {
@@ -48,37 +48,37 @@ Returns the stored inventory of the specified user.
 }
 ```
 
-| Field           | Type     | Description                        |
-|-----------------|----------|------------------------------------|
-| `items`         | array    | List of inventory items            |
-| `items[].slot`  | integer  | Inventory slot index               |
-| `items[].netId` | integer  | Item net ID (Terraria item type)   |
-| `items[].stack` | integer  | Stack size                         |
-| `items[].prefixId` | integer | Item prefix ID (modifier)       |
+| 字段              | 类型    | 说明                              |
+|-------------------|---------|-----------------------------------|
+| `items`           | array   | 背包物品列表                      |
+| `items[].slot`    | integer | 背包槽位索引                      |
+| `items[].netId`   | integer | 物品 net ID（Terraria 物品类型）  |
+| `items[].stack`   | integer | 物品数量                          |
+| `items[].prefixId`| integer | 物品前缀 ID（修饰语）             |
 
-**Errors**
+**错误**
 
-| Status | `error`                            | Cause                              |
-|--------|------------------------------------|------------------------------------|
-| 400    | `Missing required route parameter 'user'.` | `{user}` is empty          |
-| 400    | `User was not found.`              | No registered account with that name |
-| 400    | `Player data was not found.`       | Account exists but has no saved character data |
+| 状态码 | `error`                                    | 原因                             |
+|--------|--------------------------------------------|----------------------------------|
+| 400    | `Missing required route parameter 'user'.` | `{user}` 为空                   |
+| 400    | `User was not found.`                      | 未找到该用户名对应的注册账号     |
+| 400    | `Player data was not found.`               | 账号存在但无存档角色数据         |
 
 ---
 
 ### GET `/nextbot/users/{user}/stats`
 
-Returns the stored character stats of the specified user.
+返回指定用户的存档角色属性数据。
 
-**Permission:** `nextbot.users.stats`
+**权限：** `nextbot.users.stats`
 
-**Parameters**
+**参数**
 
-| Name   | Location    | Description     |
-|--------|-------------|-----------------|
-| `user` | route param | Username to look up |
+| 名称   | 位置       | 说明             |
+|--------|------------|------------------|
+| `user` | 路由参数   | 要查询的用户名   |
 
-**Response 200**
+**响应 200**
 
 ```json
 {
@@ -92,35 +92,35 @@ Returns the stored character stats of the specified user.
 }
 ```
 
-| Field             | Type    | Description                        |
-|-------------------|---------|------------------------------------|
-| `health`          | integer | Current health                     |
-| `maxHealth`       | integer | Maximum health                     |
-| `mana`            | integer | Current mana                       |
-| `maxMana`         | integer | Maximum mana                       |
-| `questsCompleted` | integer | Number of Angler quests completed  |
-| `deathsPve`       | integer | PvE death count                    |
-| `deathsPvp`       | integer | PvP death count                    |
+| 字段              | 类型    | 说明                       |
+|-------------------|---------|----------------------------|
+| `health`          | integer | 当前生命值                 |
+| `maxHealth`       | integer | 最大生命值                 |
+| `mana`            | integer | 当前魔力值                 |
+| `maxMana`         | integer | 最大魔力值                 |
+| `questsCompleted` | integer | 渔夫任务完成次数           |
+| `deathsPve`       | integer | PvE 死亡次数               |
+| `deathsPvp`       | integer | PvP 死亡次数               |
 
-**Errors**
+**错误**
 
-| Status | `error`                            | Cause                              |
-|--------|------------------------------------|------------------------------------|
-| 400    | `Missing required route parameter 'user'.` | `{user}` is empty          |
-| 400    | `User was not found.`              | No registered account with that name |
-| 400    | `Player data was not found.`       | Account exists but has no saved character data |
+| 状态码 | `error`                                    | 原因                             |
+|--------|--------------------------------------------|----------------------------------|
+| 400    | `Missing required route parameter 'user'.` | `{user}` 为空                   |
+| 400    | `User was not found.`                      | 未找到该用户名对应的注册账号     |
+| 400    | `Player data was not found.`               | 账号存在但无存档角色数据         |
 
 ---
 
-## World
+## World（世界）
 
 ### GET `/nextbot/world/progress`
 
-Returns the boss and event kill status of the current world.
+返回当前世界的 Boss 与事件击杀状态。
 
-**Permission:** `nextbot.world.progress`
+**权限：** `nextbot.world.progress`
 
-**Response 200**
+**响应 200**
 
 ```json
 {
@@ -148,17 +148,17 @@ Returns the boss and event kill status of the current world.
 }
 ```
 
-All fields are `boolean`. `true` indicates the boss or event has been defeated in this world.
+所有字段均为 `boolean`，`true` 表示该 Boss 或事件在当前世界已被击败。
 
 ---
 
 ### GET `/nextbot/world/map-image`
 
-Generates a full PNG image of the current world map and returns it as Base64. The image is generated in real time on every request.
+实时生成当前世界地图的 PNG 图片并以 Base64 返回，每次请求均实时生成。
 
-**Permission:** `nextbot.world.map_image`
+**权限：** `nextbot.world.map_image`
 
-**Response 200**
+**响应 200**
 
 ```json
 {
@@ -167,26 +167,26 @@ Generates a full PNG image of the current world map and returns it as Base64. Th
 }
 ```
 
-| Field      | Type   | Description                            |
-|------------|--------|----------------------------------------|
-| `fileName` | string | Suggested file name with timestamp     |
-| `base64`   | string | Base64-encoded PNG image data          |
+| 字段       | 类型   | 说明                         |
+|------------|--------|------------------------------|
+| `fileName` | string | 带时间戳的建议文件名         |
+| `base64`   | string | Base64 编码的 PNG 图片数据   |
 
-**Errors**
+**错误**
 
-| Status | `error`              | Cause                          |
-|--------|----------------------|--------------------------------|
-| 500    | `<exception message>` | Map generation failed         |
+| 状态码 | `error`               | 原因             |
+|--------|-----------------------|------------------|
+| 500    | `<异常信息>`          | 地图生成失败     |
 
 ---
 
 ### GET `/nextbot/world/world-file`
 
-Reads the current world's `.wld` file and returns it as Base64.
+读取当前世界的 `.wld` 文件并以 Base64 返回。
 
-**Permission:** `nextbot.world.world_file`
+**权限：** `nextbot.world.world_file`
 
-**Response 200**
+**响应 200**
 
 ```json
 {
@@ -195,26 +195,26 @@ Reads the current world's `.wld` file and returns it as Base64.
 }
 ```
 
-| Field      | Type   | Description                    |
-|------------|--------|--------------------------------|
-| `fileName` | string | World file name                |
-| `base64`   | string | Base64-encoded `.wld` file data |
+| 字段       | 类型   | 说明                          |
+|------------|--------|-------------------------------|
+| `fileName` | string | 世界文件名                    |
+| `base64`   | string | Base64 编码的 `.wld` 文件数据 |
 
-**Errors**
+**错误**
 
-| Status | `error`               | Cause                        |
-|--------|-----------------------|------------------------------|
-| 500    | `<exception message>` | World file could not be read |
+| 状态码 | `error`               | 原因               |
+|--------|-----------------------|--------------------|
+| 500    | `<异常信息>`          | 世界文件读取失败   |
 
 ---
 
 ### GET `/nextbot/world/map-file`
 
-Generates and returns the current world's `.map` file (Terraria minimap data) as Base64. The map is fully lit before saving.
+生成当前世界的 `.map` 文件（Terraria 小地图数据）并以 Base64 返回，生成前会完整点亮地图。
 
-**Permission:** `nextbot.world.map_file`
+**权限：** `nextbot.world.map_file`
 
-**Response 200**
+**响应 200**
 
 ```json
 {
@@ -223,28 +223,28 @@ Generates and returns the current world's `.map` file (Terraria minimap data) as
 }
 ```
 
-| Field      | Type   | Description                    |
-|------------|--------|--------------------------------|
-| `fileName` | string | Map file name                  |
-| `base64`   | string | Base64-encoded `.map` file data |
+| 字段       | 类型   | 说明                          |
+|------------|--------|-------------------------------|
+| `fileName` | string | 地图文件名                    |
+| `base64`   | string | Base64 编码的 `.map` 文件数据 |
 
-**Errors**
+**错误**
 
-| Status | `error`               | Cause                         |
-|--------|-----------------------|-------------------------------|
-| 500    | `<exception message>` | Map file could not be generated or read |
+| 状态码 | `error`               | 原因                       |
+|--------|-----------------------|----------------------------|
+| 500    | `<异常信息>`          | 地图文件生成或读取失败     |
 
 ---
 
-## Whitelist
+## Whitelist（白名单）
 
 ### GET `/nextbot/whitelist`
 
-Returns all users currently on the whitelist.
+返回当前白名单中的所有用户。
 
-**Permission:** `nextbot.whitelist.view`
+**权限：** `nextbot.whitelist.view`
 
-**Response 200**
+**响应 200**
 
 ```json
 {
@@ -252,25 +252,25 @@ Returns all users currently on the whitelist.
 }
 ```
 
-| Field   | Type            | Description           |
-|---------|-----------------|-----------------------|
-| `users` | array of string | Current whitelist entries |
+| 字段    | 类型            | 说明             |
+|---------|-----------------|------------------|
+| `users` | array of string | 当前白名单条目   |
 
 ---
 
 ### GET `/nextbot/whitelist/add/{user}`
 
-Adds a user to the whitelist.
+将用户添加到白名单。
 
-**Permission:** `nextbot.whitelist.add`
+**权限：** `nextbot.whitelist.add`
 
-**Parameters**
+**参数**
 
-| Name   | Location    | Description          |
-|--------|-------------|----------------------|
-| `user` | route param | Username to add      |
+| 名称   | 位置       | 说明           |
+|--------|------------|----------------|
+| `user` | 路由参数   | 要添加的用户名 |
 
-**Response 200**
+**响应 200**
 
 ```json
 {
@@ -278,28 +278,28 @@ Adds a user to the whitelist.
 }
 ```
 
-**Errors**
+**错误**
 
-| Status | `error`                               | Cause                          |
-|--------|---------------------------------------|--------------------------------|
-| 400    | `Whitelist user is invalid.`          | `{user}` is empty              |
-| 400    | `User already exists in whitelist.`   | User is already on the whitelist |
+| 状态码 | `error`                             | 原因                   |
+|--------|-------------------------------------|------------------------|
+| 400    | `Whitelist user is invalid.`        | `{user}` 为空          |
+| 400    | `User already exists in whitelist.` | 用户已在白名单中       |
 
 ---
 
 ### GET `/nextbot/whitelist/remove/{user}`
 
-Removes a user from the whitelist.
+将用户从白名单中移除。
 
-**Permission:** `nextbot.whitelist.remove`
+**权限：** `nextbot.whitelist.remove`
 
-**Parameters**
+**参数**
 
-| Name   | Location    | Description          |
-|--------|-------------|----------------------|
-| `user` | route param | Username to remove   |
+| 名称   | 位置       | 说明           |
+|--------|------------|----------------|
+| `user` | 路由参数   | 要移除的用户名 |
 
-**Response 200**
+**响应 200**
 
 ```json
 {
@@ -307,24 +307,24 @@ Removes a user from the whitelist.
 }
 ```
 
-**Errors**
+**错误**
 
-| Status | `error`                          | Cause                           |
-|--------|----------------------------------|---------------------------------|
-| 400    | `Whitelist user is invalid.`     | `{user}` is empty               |
-| 400    | `User not found in whitelist.`   | User is not on the whitelist    |
+| 状态码 | `error`                        | 原因                   |
+|--------|--------------------------------|------------------------|
+| 400    | `Whitelist user is invalid.`   | `{user}` 为空          |
+| 400    | `User not found in whitelist.` | 用户不在白名单中       |
 
 ---
 
-## Config
+## Config（配置）
 
 ### GET `/nextbot/config/reload`
 
-Reloads the plugin configuration and whitelist from disk.
+从磁盘重新加载插件配置与白名单。
 
-**Permission:** `nextbot.config.reload`
+**权限：** `nextbot.config.reload`
 
-**Response 200**
+**响应 200**
 
 ```json
 {
@@ -332,8 +332,8 @@ Reloads the plugin configuration and whitelist from disk.
 }
 ```
 
-**Errors**
+**错误**
 
-| Status | `error`               | Cause                          |
-|--------|-----------------------|--------------------------------|
-| 500    | `<exception message>` | Configuration reload failed    |
+| 状态码 | `error`               | 原因           |
+|--------|-----------------------|----------------|
+| 500    | `<异常信息>`          | 配置重载失败   |
