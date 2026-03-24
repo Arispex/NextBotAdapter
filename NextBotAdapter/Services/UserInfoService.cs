@@ -5,10 +5,10 @@ namespace NextBotAdapter.Services;
 
 public static class UserInfoService
 {
-    public static bool TryGetUserInfo(string user, out UserInfoResponse response, out NextBotAdapter.Models.UserLookupError? error)
+    public static bool TryGetUserInfo(string user, out UserInfoResponse response, out string? error)
         => TryGetUserInfo(user, UserDataService.Default, out response, out error);
 
-    public static bool TryGetUserInfo(string user, IPlayerDataAccessor accessor, out UserInfoResponse response, out NextBotAdapter.Models.UserLookupError? error)
+    public static bool TryGetUserInfo(string user, IPlayerDataAccessor accessor, out UserInfoResponse response, out string? error)
     {
         response = new UserInfoResponse(0, 0, 0, 0, 0, 0, 0);
         error = null;

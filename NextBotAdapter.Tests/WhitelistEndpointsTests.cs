@@ -41,7 +41,7 @@ public sealed class WhitelistEndpointsTests
     [Fact]
     public void Add_ShouldReturnBadRequestWhenUserAlreadyExists()
     {
-        var service = new FakeWhitelistService(addError: new UserLookupError("User already exists in whitelist."));
+        var service = new FakeWhitelistService(addError: "User already exists in whitelist.");
 
         var result = Assert.IsType<RestObject>(WhitelistEndpoints.Add("Arispex", service));
 
@@ -61,7 +61,7 @@ public sealed class WhitelistEndpointsTests
     [Fact]
     public void Remove_ShouldReturnBadRequestWhenUserMissingFromWhitelist()
     {
-        var service = new FakeWhitelistService(removeError: new UserLookupError("User not found in whitelist."));
+        var service = new FakeWhitelistService(removeError: "User not found in whitelist.");
 
         var result = Assert.IsType<RestObject>(WhitelistEndpoints.Remove("Missing", service));
 
@@ -72,10 +72,10 @@ public sealed class WhitelistEndpointsTests
     private sealed class FakeWhitelistService : IWhitelistService
     {
         private readonly IReadOnlyList<string> _users;
-        private readonly UserLookupError? _addError;
-        private readonly UserLookupError? _removeError;
+        private readonly string? _addError;
+        private readonly string? _removeError;
 
-        public FakeWhitelistService(IReadOnlyList<string>? users = null, UserLookupError? addError = null, UserLookupError? removeError = null)
+        public FakeWhitelistService(IReadOnlyList<string>? users = null, string? addError = null, string? removeError = null)
         {
             _users = users ?? [];
             _addError = addError;
@@ -88,13 +88,13 @@ public sealed class WhitelistEndpointsTests
 
         public bool IsWhitelisted(string user) => _users.Contains(user);
 
-        public bool TryAdd(string user, out UserLookupError? error)
+        public bool TryAdd(string user, out string? error)
         {
             error = _addError;
             return error is null;
         }
 
-        public bool TryRemove(string user, out UserLookupError? error)
+        public bool TryRemove(string user, out string? error)
         {
             error = _removeError;
             return error is null;

@@ -31,7 +31,7 @@ public sealed class WhitelistServiceTests
 
         Assert.False(added);
         Assert.NotNull(error);
-        Assert.Equal("User already exists in whitelist.", error!.Message);
+        Assert.Equal("User already exists in whitelist.", error);
     }
 
     [Fact]
@@ -67,7 +67,7 @@ public sealed class WhitelistServiceTests
 
         Assert.False(removed);
         Assert.NotNull(error);
-        Assert.Equal("User not found in whitelist.", error!.Message);
+        Assert.Equal("User not found in whitelist.", error);
     }
 
     [Fact]

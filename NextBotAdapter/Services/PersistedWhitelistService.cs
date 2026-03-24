@@ -20,7 +20,7 @@ public sealed class PersistedWhitelistService : IWhitelistService
 
     public bool IsWhitelisted(string user) => _inner.IsWhitelisted(user);
 
-    public bool TryAdd(string user, out UserLookupError? error)
+    public bool TryAdd(string user, out string? error)
     {
         var added = _inner.TryAdd(user, out error);
         if (added)
@@ -30,13 +30,13 @@ public sealed class PersistedWhitelistService : IWhitelistService
         }
         else if (error is not null)
         {
-            PluginLogger.Warn($"玩家 {user} 加入白名单失败，原因：{error.Message}");
+            PluginLogger.Warn($"玩家 {user} 加入白名单失败，原因：{error}");
         }
 
         return added;
     }
 
-    public bool TryRemove(string user, out UserLookupError? error)
+    public bool TryRemove(string user, out string? error)
     {
         var removed = _inner.TryRemove(user, out error);
         if (removed)
@@ -46,7 +46,7 @@ public sealed class PersistedWhitelistService : IWhitelistService
         }
         else if (error is not null)
         {
-            PluginLogger.Warn($"玩家 {user} 移出白名单失败，原因：{error.Message}");
+            PluginLogger.Warn($"玩家 {user} 移出白名单失败，原因：{error}");
         }
 
         return removed;

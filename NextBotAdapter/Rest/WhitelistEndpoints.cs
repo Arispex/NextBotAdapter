@@ -26,7 +26,7 @@ public static class WhitelistEndpoints
 
         if (!service.TryAdd(user, out var error))
         {
-            return EndpointResponseFactory.Error(error?.Message ?? "Whitelist user is invalid.");
+            return EndpointResponseFactory.Error(error ??"Whitelist user is invalid.");
         }
 
         return new RestObject("200") { { "response", $"User '{user}' has been added to the whitelist." } };
@@ -44,7 +44,7 @@ public static class WhitelistEndpoints
 
         if (!service.TryRemove(user, out var error))
         {
-            return EndpointResponseFactory.Error(error?.Message ?? "Whitelist user is invalid.");
+            return EndpointResponseFactory.Error(error ??"Whitelist user is invalid.");
         }
 
         return new RestObject("200") { { "response", $"User '{user}' has been removed from the whitelist." } };

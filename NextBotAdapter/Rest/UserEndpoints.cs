@@ -18,7 +18,7 @@ public static class UserEndpoints
 
         if (!UserInventoryService.TryGetInventory(user, accessor, out var inventory, out var error))
         {
-            return EndpointResponseFactory.FromUserLookupError(error);
+            return EndpointResponseFactory.Error(error ?? "User was not found.");
         }
 
         return new RestObject("200") { { "items", inventory.Items } };
@@ -36,7 +36,7 @@ public static class UserEndpoints
 
         if (!UserInfoService.TryGetUserInfo(user, accessor, out var response, out var error))
         {
-            return EndpointResponseFactory.FromUserLookupError(error);
+            return EndpointResponseFactory.Error(error ?? "User was not found.");
         }
 
         return new RestObject("200")

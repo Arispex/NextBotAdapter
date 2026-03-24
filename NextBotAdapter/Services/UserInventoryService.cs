@@ -4,10 +4,10 @@ namespace NextBotAdapter.Services;
 
 public static class UserInventoryService
 {
-    public static bool TryGetInventory(string user, out UserInventoryResponse inventory, out NextBotAdapter.Models.UserLookupError? error)
+    public static bool TryGetInventory(string user, out UserInventoryResponse inventory, out string? error)
         => TryGetInventory(user, UserDataService.Default, out inventory, out error);
 
-    public static bool TryGetInventory(string user, IPlayerDataAccessor accessor, out UserInventoryResponse inventory, out NextBotAdapter.Models.UserLookupError? error)
+    public static bool TryGetInventory(string user, IPlayerDataAccessor accessor, out UserInventoryResponse inventory, out string? error)
     {
         inventory = new UserInventoryResponse(Array.Empty<InventoryItemResponse>());
         error = null;

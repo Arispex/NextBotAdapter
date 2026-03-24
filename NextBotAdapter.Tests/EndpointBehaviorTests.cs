@@ -1,5 +1,4 @@
 using NextBotAdapter.Infrastructure;
-using NextBotAdapter.Models;
 using NextBotAdapter.Rest;
 using Rests;
 
@@ -7,33 +6,6 @@ namespace NextBotAdapter.Tests;
 
 public sealed class EndpointBehaviorTests
 {
-    [Fact]
-    public void MissingUser_ShouldMapToBadRequestRestObject()
-    {
-        var result = EndpointResponseFactory.FromUserLookupError(new UserLookupError("User cannot be empty."));
-
-        Assert.Equal("400", result.Status);
-        Assert.Equal("User cannot be empty.", result.Error);
-    }
-
-    [Fact]
-    public void UserDataNotFound_ShouldMapToBadRequestRestObject()
-    {
-        var result = EndpointResponseFactory.FromUserLookupError(new UserLookupError("Player data was not found."));
-
-        Assert.Equal("400", result.Status);
-        Assert.Equal("Player data was not found.", result.Error);
-    }
-
-    [Fact]
-    public void NullLookupError_ShouldFallbackToUserNotFoundRestObject()
-    {
-        var result = EndpointResponseFactory.FromUserLookupError(null);
-
-        Assert.Equal("400", result.Status);
-        Assert.Equal("User was not found.", result.Error);
-    }
-
     [Fact]
     public void CreateCommands_ShouldReturnAllRoutesWithExpectedMetadata()
     {

@@ -1,4 +1,3 @@
-using NextBotAdapter.Models;
 using NextBotAdapter.Models.Responses;
 using NextBotAdapter.Rest;
 
@@ -24,14 +23,6 @@ public sealed class ModelAndPluginCoverageTests
         var response = new UserInventoryResponse(items);
 
         Assert.Same(items, response.Items);
-    }
-
-    [Fact]
-    public void UserLookupError_ShouldStoreMessage()
-    {
-        var error = new UserLookupError("User was not found.");
-
-        Assert.Equal("User was not found.", error.Message);
     }
 
     [Fact]

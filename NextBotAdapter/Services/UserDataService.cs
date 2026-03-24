@@ -1,5 +1,4 @@
 using System.Diagnostics.CodeAnalysis;
-using NextBotAdapter.Models;
 using TShockAPI;
 
 namespace NextBotAdapter.Services;
@@ -17,26 +16,26 @@ public sealed class UserDataService : IPlayerDataAccessor
         _gateway = gateway;
     }
 
-    public bool TryGetPlayerData(string user, out object data, out UserLookupError? error)
+    public bool TryGetPlayerData(string user, out object data, out string? error)
     {
         data = null!;
         error = null;
 
         if (string.IsNullOrWhiteSpace(user))
         {
-            error = new UserLookupError("User cannot be empty.");
+            error = "User cannot be empty.";
             return false;
         }
 
         if (!_gateway.TryGetUserAccountId(user, out var accountId))
         {
-            error = new UserLookupError("User was not found.");
+            error = "User was not found.";
             return false;
         }
 
         if (!_gateway.TryGetPlayerData(accountId, out data))
         {
-            error = new UserLookupError("Player data was not found.");
+            error = "Player data was not found.";
             return false;
         }
 

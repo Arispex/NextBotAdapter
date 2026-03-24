@@ -14,7 +14,7 @@ public sealed class UserDataServiceTests
 
         Assert.False(success);
         Assert.Null(error is null ? null : data);
-        Assert.Equal("User cannot be empty.", error?.Message);
+        Assert.Equal("User cannot be empty.", error);
     }
 
     [Fact]
@@ -25,7 +25,7 @@ public sealed class UserDataServiceTests
         var success = service.TryGetPlayerData("alice", out _, out var error);
 
         Assert.False(success);
-        Assert.Equal("User was not found.", error?.Message);
+        Assert.Equal("User was not found.", error);
     }
 
     [Fact]
@@ -36,7 +36,7 @@ public sealed class UserDataServiceTests
         var success = service.TryGetPlayerData("alice", out _, out var error);
 
         Assert.False(success);
-        Assert.Equal("Player data was not found.", error?.Message);
+        Assert.Equal("Player data was not found.", error);
     }
 
     [Fact]

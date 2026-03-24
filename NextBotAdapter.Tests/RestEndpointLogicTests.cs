@@ -36,7 +36,7 @@ public sealed class RestEndpointLogicTests
     [Fact]
     public void Inventory_ShouldReturnBadRequestWhenAccessorFails()
     {
-        var accessor = new FakePlayerDataAccessor(new UserLookupError("User was not found."));
+        var accessor = new FakePlayerDataAccessor("User was not found.");
 
         var result = Assert.IsType<RestObject>(UserEndpoints.Inventory("alice", accessor));
 
@@ -70,7 +70,7 @@ public sealed class RestEndpointLogicTests
     [Fact]
     public void Stats_ShouldReturnBadRequestWhenAccessorFails()
     {
-        var accessor = new FakePlayerDataAccessor(new UserLookupError("Player data was not found."));
+        var accessor = new FakePlayerDataAccessor("Player data was not found.");
 
         var result = Assert.IsType<RestObject>(UserEndpoints.Stats("alice", accessor));
 
@@ -140,19 +140,19 @@ public sealed class RestEndpointLogicTests
     private sealed class FakePlayerDataAccessor : IPlayerDataAccessor
     {
         private readonly object? _data;
-        private readonly UserLookupError? _error;
+        private readonly string? _error;
 
         public FakePlayerDataAccessor(object data)
         {
             _data = data;
         }
 
-        public FakePlayerDataAccessor(UserLookupError error)
+        public FakePlayerDataAccessor(string error)
         {
             _error = error;
         }
 
-        public bool TryGetPlayerData(string user, out object data, out UserLookupError? error)
+        public bool TryGetPlayerData(string user, out object data, out string? error)
         {
             data = _data!;
             error = _error;

@@ -10,9 +10,9 @@ public interface IWhitelistService
 
     bool IsWhitelisted(string user);
 
-    bool TryAdd(string user, out UserLookupError? error);
+    bool TryAdd(string user, out string? error);
 
-    bool TryRemove(string user, out UserLookupError? error);
+    bool TryRemove(string user, out string? error);
 
     bool TryValidateJoin(string user, out string? denialReason);
 }

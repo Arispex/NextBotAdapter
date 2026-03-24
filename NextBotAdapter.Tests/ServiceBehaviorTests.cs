@@ -1,6 +1,5 @@
 using System.Collections.Generic;
 using NextBotAdapter.Infrastructure;
-using NextBotAdapter.Models;
 using NextBotAdapter.Models.Responses;
 using NextBotAdapter.Services;
 
@@ -43,14 +42,13 @@ public sealed class ServiceBehaviorTests
     [Fact]
     public void TryGetInventory_ShouldBubbleAccessorErrors()
     {
-        var expectedError = new UserLookupError("User was not found.");
-        var accessor = new FakePlayerDataAccessor(expectedError);
+        var accessor = new FakePlayerDataAccessor("User was not found.");
 
         var success = UserInventoryService.TryGetInventory("alice", accessor, out var response, out var error);
 
         Assert.False(success);
         Assert.Empty(response.Items);
-        Assert.Equal(expectedError, error);
+        Assert.Equal("User was not found.", error);
     }
 
     [Fact]
@@ -76,14 +74,13 @@ public sealed class ServiceBehaviorTests
     [Fact]
     public void TryGetUserInfo_ShouldBubbleAccessorErrors()
     {
-        var expectedError = new UserLookupError("Player data was not found.");
-        var accessor = new FakePlayerDataAccessor(expectedError);
+        var accessor = new FakePlayerDataAccessor("Player data was not found.");
 
         var success = UserInfoService.TryGetUserInfo("alice", accessor, out var response, out var error);
 
         Assert.False(success);
         Assert.Equal(new UserInfoResponse(0, 0, 0, 0, 0, 0, 0), response);
-        Assert.Equal(expectedError, error);
+        Assert.Equal("Player data was not found.", error);
     }
 
     [Fact]
@@ -131,19 +128,19 @@ public sealed class ServiceBehaviorTests
     private sealed class FakePlayerDataAccessor : IPlayerDataAccessor
     {
         private readonly object? _data;
-        private readonly UserLookupError? _error;
+        private readonly string? _error;
 
         public FakePlayerDataAccessor(object data)
         {
             _data = data;
         }
 
-        public FakePlayerDataAccessor(UserLookupError error)
+        public FakePlayerDataAccessor(string error)
         {
             _error = error;
         }
 
-        public bool TryGetPlayerData(string user, out object data, out UserLookupError? error)
+        public bool TryGetPlayerData(string user, out object data, out string? error)
         {
             data = _data!;
             error = _error;

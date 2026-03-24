@@ -28,19 +28,19 @@ public sealed class WhitelistService : IWhitelistService
         return _users.Contains(user, comparer);
     }
 
-    public bool TryAdd(string user, out UserLookupError? error)
+    public bool TryAdd(string user, out string? error)
     {
         error = null;
         if (string.IsNullOrWhiteSpace(user))
         {
-            error = new UserLookupError("Whitelist user is invalid.");
+            error = "Whitelist user is invalid.";
             return false;
         }
 
         var comparer = Settings.CaseSensitive ? StringComparer.Ordinal : StringComparer.OrdinalIgnoreCase;
         if (_users.Contains(user, comparer))
         {
-            error = new UserLookupError("User already exists in whitelist.");
+            error = "User already exists in whitelist.";
             return false;
         }
 
@@ -48,12 +48,12 @@ public sealed class WhitelistService : IWhitelistService
         return true;
     }
 
-    public bool TryRemove(string user, out UserLookupError? error)
+    public bool TryRemove(string user, out string? error)
     {
         error = null;
         if (string.IsNullOrWhiteSpace(user))
         {
-            error = new UserLookupError("Whitelist user is invalid.");
+            error = "Whitelist user is invalid.";
             return false;
         }
 
@@ -61,7 +61,7 @@ public sealed class WhitelistService : IWhitelistService
         var existing = _users.FirstOrDefault(item => comparer.Equals(item, user));
         if (existing is null)
         {
-            error = new UserLookupError("User not found in whitelist.");
+            error = "User not found in whitelist.";
             return false;
         }
 
