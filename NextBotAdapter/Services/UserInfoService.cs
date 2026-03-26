@@ -9,6 +9,9 @@ public static class UserInfoService
         => TryGetUserInfo(user, UserDataService.Default, out response, out error);
 
     public static bool TryGetUserInfo(string user, IPlayerDataAccessor accessor, out UserInfoResponse response, out string? error)
+        => TryGetUserInfo(user, accessor, null, out response, out error);
+
+    public static bool TryGetUserInfo(string user, IPlayerDataAccessor accessor, IOnlineTimeService? onlineTimeService, out UserInfoResponse response, out string? error)
     {
         response = new UserInfoResponse(0, 0, 0, 0, 0, 0, 0);
         error = null;
@@ -18,7 +21,10 @@ public static class UserInfoService
             return false;
         }
 
-        response = UserInfoMapper.CreateResponse(data);
+        response = UserInfoMapper.CreateResponse(data) with
+        {
+            OnlineSeconds = onlineTimeService?.GetTotalSeconds(user) ?? 0
+        };
         return true;
     }
 }

@@ -88,7 +88,8 @@ GET /nextbot/users/Arispex/inventory?token=<token>
   "maxMana": 200,
   "questsCompleted": 7,
   "deathsPve": 12,
-  "deathsPvp": 3
+  "deathsPvp": 3,
+  "onlineSeconds": 36000
 }
 ```
 
@@ -101,6 +102,7 @@ GET /nextbot/users/Arispex/inventory?token=<token>
 | `questsCompleted` | integer | 渔夫任务完成次数           |
 | `deathsPve`       | integer | PvE 死亡次数               |
 | `deathsPvp`       | integer | PvP 死亡次数               |
+| `onlineSeconds`   | integer | 累计在线时长（秒）；若玩家当前在线则包含本次会话已用时 |
 
 **错误**
 
@@ -346,6 +348,37 @@ GET /nextbot/users/Arispex/inventory?token=<token>
 - 覆盖所有注册玩家，不限于在线玩家
 - 无角色存档数据的玩家不计入排行榜
 - 结果按 `deaths` 降序排列
+
+---
+
+### GET `/nextbot/leaderboards/online-time`
+
+返回所有有在线记录的玩家的在线时长排行榜，按 `onlineSeconds` 降序排列。
+
+**权限：** `nextbot.leaderboards.online_time`
+
+**响应 200**
+
+```json
+{
+  "entries": [
+    { "username": "Arispex", "onlineSeconds": 36000 },
+    { "username": "NextBot", "onlineSeconds": 7200 }
+  ]
+}
+```
+
+| 字段                      | 类型    | 说明                                         |
+|---------------------------|---------|----------------------------------------------|
+| `entries`                 | array   | 排行榜条目列表                               |
+| `entries[].username`      | string  | 玩家用户名                                   |
+| `entries[].onlineSeconds` | integer | 累计在线时长（秒）；包含当前会话已用时       |
+
+**说明**
+
+- 只包含至少登录过一次的玩家
+- 当前在线的玩家时长实时计算，无需重启即可反映
+- 在线时长持久化于 `OnlineTime.json`
 
 ---
 

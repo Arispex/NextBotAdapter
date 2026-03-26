@@ -10,4 +10,5 @@ public sealed record UserInfoResponse(
     [property: JsonProperty("maxMana"), JsonPropertyName("maxMana")] int MaxMana,
     [property: JsonProperty("questsCompleted"), JsonPropertyName("questsCompleted")] int QuestsCompleted,
     [property: JsonProperty("deathsPve"), JsonPropertyName("deathsPve")] int DeathsPve,
-    [property: JsonProperty("deathsPvp"), JsonPropertyName("deathsPvp")] int DeathsPvp);
+    [property: JsonProperty("deathsPvp"), JsonPropertyName("deathsPvp")] int DeathsPvp,
+    [property: JsonProperty("onlineSeconds"), JsonPropertyName("onlineSeconds")] long OnlineSeconds = 0);

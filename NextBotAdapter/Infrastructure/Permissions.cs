@@ -14,4 +14,5 @@ public static class Permissions
     public const string ConfigReload = "nextbot.config.reload";
     public const string LeaderboardDeaths = "nextbot.leaderboards.deaths";
     public const string LeaderboardFishingQuests = "nextbot.leaderboards.fishing_quests";
+    public const string LeaderboardOnlineTime = "nextbot.leaderboards.online_time";
 }

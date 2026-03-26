@@ -6,6 +6,7 @@ using NextBotAdapter.Services;
 using Terraria;
 using TerrariaApi.Server;
 using TShockAPI;
+using TShockAPI.Hooks;
 
 namespace NextBotAdapter.Plugin;
 
@@ -14,6 +15,7 @@ namespace NextBotAdapter.Plugin;
 public sealed class NextBotAdapterPlugin(Main game) : TerrariaPlugin(game)
 {
     private PersistedWhitelistService? _whitelistService;
+    private OnlineTimeService? _onlineTimeService;
 
     public override string Author => "Arispex";
 
@@ -36,9 +38,15 @@ public sealed class NextBotAdapterPlugin(Main game) : TerrariaPlugin(game)
         WorldEndpoints.WorldFileService = new WorldFileService();
         WorldEndpoints.MapFileService = new MapFileService();
 
+        _onlineTimeService = new OnlineTimeService(new OnlineTimeFileService());
+        UserEndpoints.OnlineTimeService = _onlineTimeService;
+        LeaderboardEndpoints.OnlineTimeService = _onlineTimeService;
+
         EndpointRegistrar.Register(TShock.RestApi);
 
         GetDataHandlers.PlayerInfo.Register(OnPlayerInfo, HandlerPriority.Highest);
+        PlayerHooks.PlayerPostLogin += OnPlayerPostLogin;
+        ServerApi.Hooks.ServerLeave.Register(this, OnServerLeave);
 
         if (!_whitelistService.Settings.Enabled)
         {
@@ -50,11 +58,28 @@ public sealed class NextBotAdapterPlugin(Main game) : TerrariaPlugin(game)
     {
         if (disposing)
         {
+            _onlineTimeService?.PersistAllSessions();
             GetDataHandlers.PlayerInfo.UnRegister(OnPlayerInfo);
+            PlayerHooks.PlayerPostLogin -= OnPlayerPostLogin;
+            ServerApi.Hooks.ServerLeave.Deregister(this, OnServerLeave);
             AppDomain.CurrentDomain.AssemblyResolve -= CurrentDomain_AssemblyResolve;
         }
 
         base.Dispose(disposing);
+    }
+
+    private void OnPlayerPostLogin(PlayerPostLoginEventArgs args)
+    {
+        _onlineTimeService?.StartSession(args.Player.Account.Name);
+    }
+
+    private void OnServerLeave(LeaveEventArgs args)
+    {
+        var player = TShock.Players[args.Who];
+        if (player?.Account?.Name is { } username)
+        {
+            _onlineTimeService?.EndSession(username);
+        }
     }
 
     private void OnPlayerInfo(object? _, GetDataHandlers.PlayerInfoEventArgs args)

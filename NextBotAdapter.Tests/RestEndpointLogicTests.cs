@@ -65,6 +65,7 @@ public sealed class RestEndpointLogicTests
         Assert.Equal("200", result.Status);
         Assert.Equal(120, result["health"]);
         Assert.Equal(4, result["deathsPve"]);
+        Assert.Equal(0L, result["onlineSeconds"]);
     }
 
     [Fact]
@@ -118,6 +119,46 @@ public sealed class RestEndpointLogicTests
         Assert.Equal("200", result.Status);
         Assert.Equal("map-1.png", result["fileName"]);
         Assert.Equal(Convert.ToBase64String([1, 2, 3]), result["base64"]);
+    }
+
+    [Fact]
+    public void Stats_ShouldIncludeOnlineSecondsFromOnlineTimeService()
+    {
+        var accessor = new FakePlayerDataAccessor(new FakePlayerData(
+            [new InventoryItemResponse(0, 1, 2, 3)],
+            new UserInfoResponse(120, 400, 80, 200, 9, 4, 2)));
+        var onlineTimeService = new FakeOnlineTimeService("alice", 3600);
+
+        var result = Assert.IsType<RestObject>(UserEndpoints.Stats("alice", accessor, onlineTimeService));
+
+        Assert.Equal("200", result.Status);
+        Assert.Equal(3600L, result["onlineSeconds"]);
+    }
+
+    [Fact]
+    public void OnlineTime_ShouldReturnOkWithEntriesSortedByOnlineSecondsDescending()
+    {
+        var onlineTimeService = new FakeOnlineTimeService([("bob", 7200L), ("alice", 3600L)]);
+
+        var result = Assert.IsType<RestObject>(LeaderboardEndpoints.OnlineTime(onlineTimeService));
+
+        Assert.Equal("200", result.Status);
+        var entries = Assert.IsAssignableFrom<IReadOnlyList<NextBotAdapter.Models.Responses.OnlineTimeLeaderboardEntryResponse>>(result["entries"]);
+        Assert.Equal(2, entries.Count);
+        Assert.Equal("bob",   entries[0].Username);
+        Assert.Equal(7200L,   entries[0].OnlineSeconds);
+        Assert.Equal("alice", entries[1].Username);
+        Assert.Equal(3600L,   entries[1].OnlineSeconds);
+    }
+
+    [Fact]
+    public void OnlineTime_ShouldReturnEmptyEntriesWhenServiceIsNull()
+    {
+        var result = Assert.IsType<RestObject>(LeaderboardEndpoints.OnlineTime((IOnlineTimeService?)null));
+
+        Assert.Equal("200", result.Status);
+        var entries = Assert.IsAssignableFrom<System.Collections.IEnumerable>(result["entries"]);
+        Assert.Empty(entries.Cast<object>());
     }
 
     [Fact]
@@ -244,6 +285,28 @@ public sealed class RestEndpointLogicTests
     private sealed class FakeMapImageService((string FileName, byte[] Content) result) : IMapImageService
     {
         public (string FileName, byte[] Content) Generate() => result;
+    }
+
+    private sealed class FakeOnlineTimeService : IOnlineTimeService
+    {
+        private readonly Dictionary<string, long> _records;
+
+        public FakeOnlineTimeService(string username, long seconds)
+        {
+            _records = new Dictionary<string, long> { [username] = seconds };
+        }
+
+        public FakeOnlineTimeService(IReadOnlyList<(string Username, long Seconds)> records)
+        {
+            _records = records.ToDictionary(r => r.Username, r => r.Seconds);
+        }
+
+        public void StartSession(string username) { }
+        public void EndSession(string username) { }
+        public void PersistAllSessions() { }
+        public long GetTotalSeconds(string username) => _records.TryGetValue(username, out var s) ? s : 0;
+        public IReadOnlyList<(string Username, long OnlineSeconds)> GetAllRecords()
+            => _records.Select(kv => (kv.Key, kv.Value)).OrderByDescending(x => x.Value).ToList();
     }
 
     private sealed class FakeLeaderboardGateway(

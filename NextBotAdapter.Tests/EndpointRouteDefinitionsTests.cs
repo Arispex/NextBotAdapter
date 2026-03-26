@@ -11,6 +11,7 @@ public sealed class EndpointRouteDefinitionsTests
     [InlineData(EndpointRoutes.WorldMapImage, "/nextbot/world/map-image")]
     [InlineData(EndpointRoutes.LeaderboardDeaths, "/nextbot/leaderboards/deaths")]
     [InlineData(EndpointRoutes.LeaderboardFishingQuests, "/nextbot/leaderboards/fishing-quests")]
+    [InlineData(EndpointRoutes.LeaderboardOnlineTime, "/nextbot/leaderboards/online-time")]
     public void RouteConstants_ShouldUseExpectedPaths(string actual, string expected)
     {
         Assert.Equal(expected, actual);
@@ -23,6 +24,7 @@ public sealed class EndpointRouteDefinitionsTests
     [InlineData(Permissions.WorldMapImage, "nextbot.world.map_image")]
     [InlineData(Permissions.LeaderboardDeaths, "nextbot.leaderboards.deaths")]
     [InlineData(Permissions.LeaderboardFishingQuests, "nextbot.leaderboards.fishing_quests")]
+    [InlineData(Permissions.LeaderboardOnlineTime, "nextbot.leaderboards.online_time")]
     public void PermissionConstants_ShouldUseExpectedNodes(string actual, string expected)
     {
         Assert.Equal(expected, actual);
