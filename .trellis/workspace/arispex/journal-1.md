@@ -249,3 +249,52 @@
 ### Next Steps
 
 - None - task complete
+
+
+## Session 6: Add fishing quests leaderboard REST API
+
+**Date**: 2026-03-26
+**Task**: Add fishing quests leaderboard REST API
+
+### Summary
+
+(Add summary)
+
+### Main Changes
+
+## 完成内容
+
+新增 `GET /nextbot/leaderboards/fishing-quests` endpoint，返回所有注册玩家的渔夫任务完成数排行榜（降序）。
+
+| 变更类型 | 描述 |
+|----------|------|
+| 新增 endpoint | `GET /nextbot/leaderboards/fishing-quests`，权限 `nextbot.leaderboards.fishing_quests` |
+| 新增服务 | `FishingQuestsLeaderboardService` 遍历全部注册玩家并按 questsCompleted 排序 |
+| 扩展 LeaderboardEndpoints | 新增 `FishingQuests` 方法，复用已有 gateway 模式 |
+| 新增响应模型 | `FishingQuestsLeaderboardEntryResponse`（username, questsCompleted） |
+| 文档更新 | `docs/REST_API.md` 补充新 endpoint 说明 |
+| 新增测试 | 7 个测试（服务层 5 个、endpoint 层 2 个） |
+
+**新增文件**:
+- `NextBotAdapter/Models/Responses/FishingQuestsLeaderboardEntryResponse.cs`
+- `NextBotAdapter/Services/FishingQuestsLeaderboardService.cs`
+- `NextBotAdapter.Tests/FishingQuestsLeaderboardServiceTests.cs`
+
+
+### Git Commits
+
+| Hash | Message |
+|------|---------|
+| `8019d78` | (see git log) |
+
+### Testing
+
+- [OK] (Add test results)
+
+### Status
+
+[OK] **Completed**
+
+### Next Steps
+
+- None - task complete
