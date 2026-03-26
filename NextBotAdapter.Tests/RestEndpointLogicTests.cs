@@ -153,6 +153,38 @@ public sealed class RestEndpointLogicTests
     }
 
     [Fact]
+    public void FishingQuests_ShouldReturnOkWithEntriesSortedByQuestsCompletedDescending()
+    {
+        var gateway = new FakeLeaderboardGateway(
+        [
+            (1, "alice", new FakePlayerData([new InventoryItemResponse(0, 1, 1, 0)], new UserInfoResponse(0, 0, 0, 0, 5, 0, 0))),
+            (2, "bob",   new FakePlayerData([new InventoryItemResponse(0, 1, 1, 0)], new UserInfoResponse(0, 0, 0, 0, 42, 0, 0)))
+        ]);
+
+        var result = Assert.IsType<RestObject>(LeaderboardEndpoints.FishingQuests(gateway));
+
+        Assert.Equal("200", result.Status);
+        var entries = Assert.IsAssignableFrom<IReadOnlyList<NextBotAdapter.Models.Responses.FishingQuestsLeaderboardEntryResponse>>(result["entries"]);
+        Assert.Equal(2, entries.Count);
+        Assert.Equal("bob",   entries[0].Username);
+        Assert.Equal(42,      entries[0].QuestsCompleted);
+        Assert.Equal("alice", entries[1].Username);
+        Assert.Equal(5,       entries[1].QuestsCompleted);
+    }
+
+    [Fact]
+    public void FishingQuests_ShouldReturnEmptyEntriesWhenNoPlayersExist()
+    {
+        var gateway = new FakeLeaderboardGateway([]);
+
+        var result = Assert.IsType<RestObject>(LeaderboardEndpoints.FishingQuests(gateway));
+
+        Assert.Equal("200", result.Status);
+        var entries = Assert.IsAssignableFrom<IReadOnlyList<NextBotAdapter.Models.Responses.FishingQuestsLeaderboardEntryResponse>>(result["entries"]);
+        Assert.Empty(entries);
+    }
+
+    [Fact]
     public void ReadRouteUser_ShouldPreferVerbParametersWhenProvided()
     {
         var args = new RestRequestArgs(new RestVerbs { [RequestParameters.User] = "verb-user" }, null!, null!, null!);

@@ -349,6 +349,37 @@ GET /nextbot/users/Arispex/inventory?token=<token>
 
 ---
 
+### GET `/nextbot/leaderboards/fishing-quests`
+
+返回所有注册玩家的渔夫任务完成数排行榜，按 `questsCompleted` 降序排列。
+
+**权限：** `nextbot.leaderboards.fishing_quests`
+
+**响应 200**
+
+```json
+{
+  "entries": [
+    { "username": "Arispex", "questsCompleted": 42 },
+    { "username": "NextBot", "questsCompleted": 7 }
+  ]
+}
+```
+
+| 字段                        | 类型    | 说明                          |
+|-----------------------------|---------|-------------------------------|
+| `entries`                   | array   | 排行榜条目列表                |
+| `entries[].username`        | string  | 玩家用户名                    |
+| `entries[].questsCompleted` | integer | 渔夫任务完成次数              |
+
+**说明**
+
+- 覆盖所有注册玩家，不限于在线玩家
+- 无角色存档数据的玩家不计入排行榜
+- 结果按 `questsCompleted` 降序排列
+
+---
+
 ## Config（配置）
 
 ### GET `/nextbot/config/reload`

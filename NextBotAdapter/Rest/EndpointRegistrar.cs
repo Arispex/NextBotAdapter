@@ -18,7 +18,8 @@ public static class EndpointRegistrar
             new SecureRestCommand(Infrastructure.EndpointRoutes.WhitelistAddUser, WhitelistEndpoints.Add, Infrastructure.Permissions.WhitelistAdd),
             new SecureRestCommand(Infrastructure.EndpointRoutes.WhitelistRemoveUser, WhitelistEndpoints.Remove, Infrastructure.Permissions.WhitelistRemove),
             new SecureRestCommand(Infrastructure.EndpointRoutes.ConfigReload, ConfigEndpoints.Reload, Infrastructure.Permissions.ConfigReload),
-            new SecureRestCommand(Infrastructure.EndpointRoutes.LeaderboardDeaths, LeaderboardEndpoints.Deaths, Infrastructure.Permissions.LeaderboardDeaths)
+            new SecureRestCommand(Infrastructure.EndpointRoutes.LeaderboardDeaths, LeaderboardEndpoints.Deaths, Infrastructure.Permissions.LeaderboardDeaths),
+            new SecureRestCommand(Infrastructure.EndpointRoutes.LeaderboardFishingQuests, LeaderboardEndpoints.FishingQuests, Infrastructure.Permissions.LeaderboardFishingQuests)
         ];
     }
 

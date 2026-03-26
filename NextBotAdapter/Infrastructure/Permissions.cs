@@ -13,4 +13,5 @@ public static class Permissions
     public const string WhitelistRemove = "nextbot.whitelist.remove";
     public const string ConfigReload = "nextbot.config.reload";
     public const string LeaderboardDeaths = "nextbot.leaderboards.deaths";
+    public const string LeaderboardFishingQuests = "nextbot.leaderboards.fishing_quests";
 }

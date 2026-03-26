@@ -13,4 +13,13 @@ public static class LeaderboardEndpoints
         var entries = DeathLeaderboardService.GetLeaderboard(gateway);
         return new RestObject("200") { { "entries", entries } };
     }
+
+    public static object FishingQuests(RestRequestArgs args)
+        => FishingQuests(UserDataService.DefaultGateway);
+
+    public static object FishingQuests(IUserDataGateway gateway)
+    {
+        var entries = FishingQuestsLeaderboardService.GetLeaderboard(gateway);
+        return new RestObject("200") { { "entries", entries } };
+    }
 }
