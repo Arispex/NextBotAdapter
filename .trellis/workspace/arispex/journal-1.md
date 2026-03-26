@@ -298,3 +298,57 @@
 ### Next Steps
 
 - None - task complete
+
+
+## Session 7: Add player online time tracking
+
+**Date**: 2026-03-27
+**Task**: Add player online time tracking
+
+### Summary
+
+(Add summary)
+
+### Main Changes
+
+## 完成内容
+
+新增玩家在线时长统计功能：事件追踪、持久化存储、stats API 扩展、在线时长排行榜。
+
+| 变更类型 | 描述 |
+|----------|------|
+| 新增服务 | `OnlineTimeService` 线程安全会话追踪，支持实时计算当前会话时长 |
+| 新增持久化 | `OnlineTimeFileService` + `OnlineTimeStore`，数据写入 `OnlineTime.json` |
+| 扩展 stats API | `GET /nextbot/users/{user}/stats` 新增 `onlineSeconds` 字段 |
+| 新增排行榜 | `GET /nextbot/leaderboards/online-time`，权限 `nextbot.leaderboards.online_time` |
+| Plugin 钩子 | `PlayerPostLogin` 开始计时，`ServerLeave` 结束计时，`Dispose` 持久化所有会话 |
+| 新增测试 | 14 个测试（服务层 9 个、endpoint 层 3 个、路由/权限注册 2 个） |
+| 文档更新 | `docs/REST_API.md` 更新 stats 响应示例及字段表，新增排行榜 endpoint 文档 |
+
+**新增文件**:
+- `NextBotAdapter/Models/OnlineTimeStore.cs`
+- `NextBotAdapter/Models/Responses/OnlineTimeLeaderboardEntryResponse.cs`
+- `NextBotAdapter/Services/IOnlineTimeFileService.cs`
+- `NextBotAdapter/Services/IOnlineTimeService.cs`
+- `NextBotAdapter/Services/OnlineTimeFileService.cs`
+- `NextBotAdapter/Services/OnlineTimeService.cs`
+- `NextBotAdapter.Tests/OnlineTimeServiceTests.cs`
+
+
+### Git Commits
+
+| Hash | Message |
+|------|---------|
+| `5b69b77` | (see git log) |
+
+### Testing
+
+- [OK] (Add test results)
+
+### Status
+
+[OK] **Completed**
+
+### Next Steps
+
+- None - task complete
