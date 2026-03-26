@@ -70,5 +70,16 @@ public sealed class UserDataService : IPlayerDataAccessor
             playerData = data;
             return true;
         }
+
+        public IReadOnlyList<(int AccountId, string Username)> GetAllUserAccounts()
+        {
+            var accounts = TShock.UserAccounts.GetUserAccounts();
+            if (accounts is null)
+            {
+                return [];
+            }
+
+            return accounts.Select(a => (a.ID, a.Name)).ToList();
+        }
     }
 }

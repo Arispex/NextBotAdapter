@@ -22,7 +22,8 @@ public sealed class EndpointBehaviorTests
             command => AssertRoute(command, EndpointRoutes.Whitelist, Permissions.WhitelistView),
             command => AssertRoute(command, EndpointRoutes.WhitelistAddUser, Permissions.WhitelistAdd),
             command => AssertRoute(command, EndpointRoutes.WhitelistRemoveUser, Permissions.WhitelistRemove),
-            command => AssertRoute(command, EndpointRoutes.ConfigReload, Permissions.ConfigReload));
+            command => AssertRoute(command, EndpointRoutes.ConfigReload, Permissions.ConfigReload),
+            command => AssertRoute(command, EndpointRoutes.LeaderboardDeaths, Permissions.LeaderboardDeaths));
     }
 
     private static void AssertRoute(RestCommand command, string expectedRoute, string expectedPermission)

@@ -316,6 +316,39 @@ GET /nextbot/users/Arispex/inventory?token=<token>
 
 ---
 
+## Leaderboards（排行榜）
+
+### GET `/nextbot/leaderboards/deaths`
+
+返回所有注册玩家的死亡排行榜，按死亡总数（PvE + PvP）降序排列。
+
+**权限：** `nextbot.leaderboards.deaths`
+
+**响应 200**
+
+```json
+{
+  "entries": [
+    { "username": "Arispex", "deaths": 15 },
+    { "username": "NextBot", "deaths": 8 }
+  ]
+}
+```
+
+| 字段                   | 类型    | 说明                          |
+|------------------------|---------|-------------------------------|
+| `entries`              | array   | 排行榜条目列表                |
+| `entries[].username`   | string  | 玩家用户名                    |
+| `entries[].deaths`     | integer | 死亡总次数（PvE + PvP）       |
+
+**说明**
+
+- 覆盖所有注册玩家，不限于在线玩家
+- 无角色存档数据的玩家不计入排行榜
+- 结果按 `deaths` 降序排列
+
+---
+
 ## Config（配置）
 
 ### GET `/nextbot/config/reload`

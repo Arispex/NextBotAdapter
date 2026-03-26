@@ -76,5 +76,7 @@ public sealed class UserDataServiceTests
             playerData = _playerData;
             return _playerDataLookupSucceeds;
         }
+
+        public IReadOnlyList<(int AccountId, string Username)> GetAllUserAccounts() => [];
     }
 }

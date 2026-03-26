@@ -121,6 +121,38 @@ public sealed class RestEndpointLogicTests
     }
 
     [Fact]
+    public void Deaths_ShouldReturnOkWithEntriesSortedByDeathsDescending()
+    {
+        var gateway = new FakeLeaderboardGateway(
+        [
+            (1, "alice", new FakePlayerData([new InventoryItemResponse(0, 1, 1, 0)], new UserInfoResponse(0, 0, 0, 0, 0, 1, 1))),
+            (2, "bob",   new FakePlayerData([new InventoryItemResponse(0, 1, 1, 0)], new UserInfoResponse(0, 0, 0, 0, 0, 5, 3)))
+        ]);
+
+        var result = Assert.IsType<RestObject>(LeaderboardEndpoints.Deaths(gateway));
+
+        Assert.Equal("200", result.Status);
+        var entries = Assert.IsAssignableFrom<IReadOnlyList<NextBotAdapter.Models.Responses.DeathLeaderboardEntryResponse>>(result["entries"]);
+        Assert.Equal(2, entries.Count);
+        Assert.Equal("bob",   entries[0].Username);
+        Assert.Equal(8,       entries[0].Deaths);
+        Assert.Equal("alice", entries[1].Username);
+        Assert.Equal(2,       entries[1].Deaths);
+    }
+
+    [Fact]
+    public void Deaths_ShouldReturnEmptyEntriesWhenNoPlayersExist()
+    {
+        var gateway = new FakeLeaderboardGateway([]);
+
+        var result = Assert.IsType<RestObject>(LeaderboardEndpoints.Deaths(gateway));
+
+        Assert.Equal("200", result.Status);
+        var entries = Assert.IsAssignableFrom<IReadOnlyList<NextBotAdapter.Models.Responses.DeathLeaderboardEntryResponse>>(result["entries"]);
+        Assert.Empty(entries);
+    }
+
+    [Fact]
     public void ReadRouteUser_ShouldPreferVerbParametersWhenProvided()
     {
         var args = new RestRequestArgs(new RestVerbs { [RequestParameters.User] = "verb-user" }, null!, null!, null!);
@@ -180,5 +212,33 @@ public sealed class RestEndpointLogicTests
     private sealed class FakeMapImageService((string FileName, byte[] Content) result) : IMapImageService
     {
         public (string FileName, byte[] Content) Generate() => result;
+    }
+
+    private sealed class FakeLeaderboardGateway(
+        IReadOnlyList<(int AccountId, string Username, FakePlayerData PlayerData)> accounts) : IUserDataGateway
+    {
+        public bool TryGetUserAccountId(string user, out int accountId)
+        {
+            accountId = default;
+            return false;
+        }
+
+        public bool TryGetPlayerData(int accountId, out object playerData)
+        {
+            foreach (var (id, _, data) in accounts)
+            {
+                if (id == accountId)
+                {
+                    playerData = data;
+                    return true;
+                }
+            }
+
+            playerData = null!;
+            return false;
+        }
+
+        public IReadOnlyList<(int AccountId, string Username)> GetAllUserAccounts()
+            => accounts.Select(a => (a.AccountId, a.Username)).ToList();
     }
 }
