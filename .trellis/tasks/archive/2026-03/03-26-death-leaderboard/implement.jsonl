@@ -1,0 +1,5 @@
+{"file": ".trellis/workflow.md", "reason": "Project workflow and conventions"}
+{"file": ".trellis/spec/backend/index.md", "reason": "Backend development guide"}
+{"file": ".trellis/spec/backend/directory-structure.md", "reason": "file placement conventions"}
+{"file": ".trellis/spec/backend/error-handling.md", "reason": "error response conventions"}
+{"file": "docs/REST_API.md", "reason": "existing API contract to follow and extend"}
