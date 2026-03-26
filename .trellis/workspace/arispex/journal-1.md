@@ -199,3 +199,53 @@
 ### Next Steps
 
 - None - task complete
+
+
+## Session 5: Add death leaderboard REST API
+
+**Date**: 2026-03-26
+**Task**: Add death leaderboard REST API
+
+### Summary
+
+(Add summary)
+
+### Main Changes
+
+## 完成内容
+
+新增 `GET /nextbot/leaderboards/deaths` endpoint，返回所有注册玩家的死亡排行榜（PvE + PvP 死亡总数降序）。
+
+| 变更类型 | 描述 |
+|----------|------|
+| 新增 endpoint | `GET /nextbot/leaderboards/deaths`，权限 `nextbot.leaderboards.deaths` |
+| 新增服务 | `DeathLeaderboardService` 遍历全部注册玩家并汇总死亡数 |
+| 扩展接口 | `IUserDataGateway` 新增 `GetAllUserAccounts()` |
+| 新增响应模型 | `DeathLeaderboardEntryResponse`（username, deaths） |
+| 文档更新 | `docs/REST_API.md` 补充新 endpoint 说明 |
+| 新增测试 | 9 个测试（服务层 5 个、endpoint 层 2 个、路由/权限注册 2 个） |
+
+**新增文件**:
+- `NextBotAdapter/Models/Responses/DeathLeaderboardEntryResponse.cs`
+- `NextBotAdapter/Services/DeathLeaderboardService.cs`
+- `NextBotAdapter/Rest/LeaderboardEndpoints.cs`
+- `NextBotAdapter.Tests/DeathLeaderboardServiceTests.cs`
+
+
+### Git Commits
+
+| Hash | Message |
+|------|---------|
+| `f74242c` | (see git log) |
+
+### Testing
+
+- [OK] (Add test results)
+
+### Status
+
+[OK] **Completed**
+
+### Next Steps
+
+- None - task complete
