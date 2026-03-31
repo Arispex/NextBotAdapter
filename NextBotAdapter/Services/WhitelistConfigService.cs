@@ -1,4 +1,5 @@
 using System.IO;
+using System.Text.Encodings.Web;
 using System.Text.Json;
 using NextBotAdapter.Models;
 
@@ -6,7 +7,11 @@ namespace NextBotAdapter.Services;
 
 public sealed class WhitelistConfigService
 {
-    private readonly JsonSerializerOptions _jsonOptions = new(JsonSerializerDefaults.Web) { WriteIndented = true };
+    private readonly JsonSerializerOptions _jsonOptions = new(JsonSerializerDefaults.Web)
+    {
+        WriteIndented = true,
+        Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping
+    };
     private readonly string _configDirectoryPath;
 
     public WhitelistConfigService()
@@ -22,6 +27,30 @@ public sealed class WhitelistConfigService
     public string ConfigDirectoryPath => _configDirectoryPath;
     public string SettingsFilePath => Path.Combine(ConfigDirectoryPath, "NextBotAdapter.json");
     public string WhitelistFilePath => Path.Combine(ConfigDirectoryPath, "Whitelist.json");
+
+    public void EnsureConfigComplete()
+    {
+        EnsureDirectory();
+        if (!File.Exists(SettingsFilePath)) return;
+
+        try
+        {
+            var originalText = File.ReadAllText(SettingsFilePath);
+            var config = JsonSerializer.Deserialize<NextBotAdapterConfig>(originalText, _jsonOptions);
+            var complete = (config ?? NextBotAdapterConfig.Default).WithDefaults();
+            var completeText = JsonSerializer.Serialize(complete, _jsonOptions);
+
+            if (originalText != completeText)
+            {
+                File.WriteAllText(SettingsFilePath, completeText);
+                PluginLogger.Info("配置文件已自动补全缺失字段。");
+            }
+        }
+        catch (Exception ex)
+        {
+            PluginLogger.Warn($"配置文件补全检查失败，原因：{ex.Message}");
+        }
+    }
 
     public WhitelistSettings LoadSettings()
     {

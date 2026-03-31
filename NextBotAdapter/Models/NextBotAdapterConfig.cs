@@ -7,4 +7,8 @@ public sealed record NextBotAdapterConfig(
     [property: JsonPropertyName("loginConfirmation")] LoginConfirmationSettings? LoginConfirmation = null)
 {
     public static NextBotAdapterConfig Default { get; } = new(WhitelistSettings.Default, LoginConfirmationSettings.Default);
+
+    public NextBotAdapterConfig WithDefaults() => new(
+        Whitelist ?? WhitelistSettings.Default,
+        LoginConfirmation ?? LoginConfirmationSettings.Default);
 }

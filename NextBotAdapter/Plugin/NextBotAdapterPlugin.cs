@@ -34,6 +34,7 @@ public sealed class NextBotAdapterPlugin(Main game) : TerrariaPlugin(game)
         AppDomain.CurrentDomain.AssemblyResolve += CurrentDomain_AssemblyResolve;
 
         var configService = new WhitelistConfigService();
+        configService.EnsureConfigComplete();
         _whitelistService = new PersistedWhitelistService(configService);
         WhitelistEndpoints.Service = _whitelistService;
         ConfigEndpoints.Service = new ConfigurationReloadService(_whitelistService);
