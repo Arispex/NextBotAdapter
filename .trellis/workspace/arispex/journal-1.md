@@ -384,3 +384,38 @@ Reverted login confirmation from OTAPI ClientUUIDReceived hook to PlayerHooks.Pl
 ### Next Steps
 
 - None - task complete
+
+
+## Session 9: Login confirmation security hardening + config auto-complete
+
+**Date**: 2026-03-31
+**Task**: Login confirmation security hardening + config auto-complete
+
+### Summary
+
+Reverted login confirmation to PlayerPreLogin hook. Fixed HasIpChanged to trigger on empty KnownIps. Hardened approval: mismatch no longer consumes approval, active approval blocks new approvals, active pending blocks override. Added HasActivePending check. Updated deviceMismatchMessage wording. Extracted 4 disconnect messages to configurable settings with {changed} placeholder. Added config auto-complete on startup with UnsafeRelaxedJsonEscaping for Chinese characters.
+
+### Main Changes
+
+
+
+### Git Commits
+
+| Hash | Message |
+|------|---------|
+| `b824783` | (see git log) |
+| `40946ee` | (see git log) |
+| `451de7c` | (see git log) |
+| `ff27fc6` | (see git log) |
+
+### Testing
+
+- [OK] (Add test results)
+
+### Status
+
+[OK] **Completed**
+
+### Next Steps
+
+- None - task complete

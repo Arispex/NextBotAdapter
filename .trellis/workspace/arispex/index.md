@@ -8,7 +8,7 @@
 
 <!-- @@@auto:current-status -->
 - **Active File**: `journal-1.md`
-- **Total Sessions**: 8
+- **Total Sessions**: 9
 - **Last Active**: 2026-03-31
 <!-- @@@/auto:current-status -->
 
@@ -19,7 +19,7 @@
 <!-- @@@auto:active-documents -->
 | File | Lines | Status |
 |------|-------|--------|
-| `journal-1.md` | ~386 | Active |
+| `journal-1.md` | ~421 | Active |
 <!-- @@@/auto:active-documents -->
 
 ---
@@ -29,6 +29,7 @@
 <!-- @@@auto:session-history -->
 | # | Date | Title | Commits |
 |---|------|-------|---------|
+| 9 | 2026-03-31 | Login confirmation security hardening + config auto-complete | `b824783`, `40946ee`, `451de7c`, `ff27fc6` |
 | 8 | 2026-03-31 | Login confirmation: PreLogin hook + security hardening + configurable messages | `451de7c` |
 | 7 | 2026-03-27 | Add player online time tracking | `5b69b77` |
 | 6 | 2026-03-26 | Add fishing quests leaderboard REST API | `8019d78` |
