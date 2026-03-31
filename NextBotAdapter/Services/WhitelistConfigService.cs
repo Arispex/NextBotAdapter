@@ -28,7 +28,7 @@ public sealed class WhitelistConfigService
         EnsureDirectory();
         if (!File.Exists(SettingsFilePath))
         {
-            WriteSettingsFile(WhitelistSettings.Default);
+            WriteConfigFile(NextBotAdapterConfig.Default);
             PluginLogger.Info("默认插件配置文件已创建。");
             return WhitelistSettings.Default;
         }
@@ -47,10 +47,29 @@ public sealed class WhitelistConfigService
         }
     }
 
+    public LoginConfirmationSettings LoadLoginConfirmationSettings()
+    {
+        EnsureDirectory();
+        if (!File.Exists(SettingsFilePath))
+        {
+            return LoginConfirmationSettings.Default;
+        }
+
+        try
+        {
+            var config = JsonSerializer.Deserialize<NextBotAdapterConfig>(File.ReadAllText(SettingsFilePath), _jsonOptions);
+            return config?.LoginConfirmation ?? LoginConfirmationSettings.Default;
+        }
+        catch
+        {
+            return LoginConfirmationSettings.Default;
+        }
+    }
+
     public void SaveSettings(WhitelistSettings settings)
     {
         EnsureDirectory();
-        WriteSettingsFile(settings);
+        WriteConfigFile(new NextBotAdapterConfig(settings));
         PluginLogger.Info($"白名单配置保存完成：启用状态：{settings.Enabled}，区分大小写：{settings.CaseSensitive}。");
     }
 
@@ -90,9 +109,8 @@ public sealed class WhitelistConfigService
         Directory.CreateDirectory(ConfigDirectoryPath);
     }
 
-    private void WriteSettingsFile(WhitelistSettings settings)
+    private void WriteConfigFile(NextBotAdapterConfig config)
     {
-        var config = new NextBotAdapterConfig(settings);
         File.WriteAllText(SettingsFilePath, JsonSerializer.Serialize(config, _jsonOptions));
     }
 

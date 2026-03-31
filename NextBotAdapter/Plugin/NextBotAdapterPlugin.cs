@@ -1,6 +1,7 @@
 using System;
 using System.Diagnostics.CodeAnalysis;
 using System.Reflection;
+using NextBotAdapter.Models;
 using NextBotAdapter.Rest;
 using NextBotAdapter.Services;
 using Terraria;
@@ -16,6 +17,8 @@ public sealed class NextBotAdapterPlugin(Main game) : TerrariaPlugin(game)
 {
     private PersistedWhitelistService? _whitelistService;
     private OnlineTimeService? _onlineTimeService;
+    private LoginConfirmationService? _loginConfirmationService;
+    private LoginConfirmationSettings _loginConfirmationSettings = LoginConfirmationSettings.Default;
 
     public override string Author => "Arispex";
 
@@ -42,9 +45,14 @@ public sealed class NextBotAdapterPlugin(Main game) : TerrariaPlugin(game)
         UserEndpoints.OnlineTimeService = _onlineTimeService;
         LeaderboardEndpoints.OnlineTimeService = _onlineTimeService;
 
+        _loginConfirmationSettings = configService.LoadLoginConfirmationSettings();
+        _loginConfirmationService = new LoginConfirmationService();
+        SecurityEndpoints.Service = _loginConfirmationService;
+
         EndpointRegistrar.Register(TShock.RestApi);
 
         GetDataHandlers.PlayerInfo.Register(OnPlayerInfo, HandlerPriority.Highest);
+        PlayerHooks.PlayerPreLogin += OnPlayerPreLogin;
         PlayerHooks.PlayerPostLogin += OnPlayerPostLogin;
         ServerApi.Hooks.ServerLeave.Register(this, OnServerLeave);
 
@@ -60,12 +68,31 @@ public sealed class NextBotAdapterPlugin(Main game) : TerrariaPlugin(game)
         {
             _onlineTimeService?.PersistAllSessions();
             GetDataHandlers.PlayerInfo.UnRegister(OnPlayerInfo);
+            PlayerHooks.PlayerPreLogin -= OnPlayerPreLogin;
             PlayerHooks.PlayerPostLogin -= OnPlayerPostLogin;
             ServerApi.Hooks.ServerLeave.Deregister(this, OnServerLeave);
             AppDomain.CurrentDomain.AssemblyResolve -= CurrentDomain_AssemblyResolve;
         }
 
         base.Dispose(disposing);
+    }
+
+    private static bool HasIpChanged(string? knownIps, string currentIp)
+    {
+        if (string.IsNullOrEmpty(knownIps))
+        {
+            return true;
+        }
+
+        try
+        {
+            var ips = System.Text.Json.JsonSerializer.Deserialize<string[]>(knownIps);
+            return ips is not { Length: > 0 } || ips[^1] != currentIp;
+        }
+        catch
+        {
+            return true;
+        }
     }
 
     private void OnPlayerPostLogin(PlayerPostLoginEventArgs args)
@@ -84,19 +111,68 @@ public sealed class NextBotAdapterPlugin(Main game) : TerrariaPlugin(game)
 
     private void OnPlayerInfo(object? _, GetDataHandlers.PlayerInfoEventArgs args)
     {
-        if (_whitelistService is null)
+        if (_whitelistService is not null && !_whitelistService.TryValidateJoin(args.Name, out var denialReason))
         {
+            PluginLogger.Warn($"玩家 {args.Name} 入服被拒绝，原因：{denialReason ?? "You are not on the whitelist."}");
+            args.Player?.Disconnect(denialReason ?? "You are not on the whitelist.");
+            args.Handled = true;
+        }
+    }
+
+    private void OnPlayerPreLogin(PlayerPreLoginEventArgs args)
+    {
+        if (!_loginConfirmationSettings.Enabled || _loginConfirmationService is null) return;
+
+        var player = args.Player;
+        var loginName = args.LoginName;
+        var uuid = player.UUID;
+
+        if (_loginConfirmationSettings.DetectUuid && string.IsNullOrEmpty(uuid))
+        {
+            args.Handled = true;
+            player.Disconnect("无法获取你的 UUID，请联系管理员。");
+            PluginLogger.Warn($"玩家 {loginName} 登入被拒绝：UUID 为空。");
             return;
         }
 
-        if (_whitelistService.TryValidateJoin(args.Name, out var denialReason))
+        var account = TShock.UserAccounts.GetUserAccountByName(loginName);
+        if (account is null) return;
+
+        string? detectedUuid = null;
+        string? detectedIp = null;
+
+        if (_loginConfirmationSettings.DetectUuid && account.UUID != uuid)
         {
+            detectedUuid = uuid;
+        }
+
+        if (_loginConfirmationSettings.DetectIp && HasIpChanged(account.KnownIps, player.IP))
+        {
+            detectedIp = player.IP;
+        }
+
+        if (detectedUuid is null && detectedIp is null) return;
+
+        if (_loginConfirmationService.ConsumeApproval(loginName, uuid, player.IP))
+        {
+            PluginLogger.Info($"玩家 {loginName} 通过二次确认登入，UUID 或 IP 已变更。");
             return;
         }
 
-        PluginLogger.Warn($"玩家 {args.Name} 入服被拒绝，原因：{denialReason ?? "You are not on the whitelist."}");
-        args.Player?.Disconnect(denialReason ?? "You are not on the whitelist.");
+        if (_loginConfirmationService.HasActiveApproval(loginName))
+        {
+            args.Handled = true;
+            player.Disconnect("该账号当前正在等待验证，请勿使用其他设备登入。");
+            PluginLogger.Warn($"玩家 {loginName} 登入被拒绝：存在有效审批但设备不匹配。");
+            return;
+        }
+
+        _loginConfirmationService.RecordBlockedLogin(loginName, uuid, player.IP);
+        var changed = detectedUuid != null && detectedIp != null ? "UUID 和 IP"
+            : detectedUuid != null ? "UUID" : "IP";
         args.Handled = true;
+        player.Disconnect($"你的 {changed} 发生变化，请在 QQ 群发送「登入」后重新连接。");
+        PluginLogger.Warn($"玩家 {loginName} 登入被拒绝：{changed} 发生变化。");
     }
 
     private Assembly? CurrentDomain_AssemblyResolve(object? sender, ResolveEventArgs args)

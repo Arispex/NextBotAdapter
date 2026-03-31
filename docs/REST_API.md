@@ -413,6 +413,41 @@ GET /nextbot/users/Arispex/inventory?token=<token>
 
 ---
 
+## Security（安全）
+
+### GET `/nextbot/security/confirm-login/{user}`
+
+为指定玩家创建一次性登录预批准，有效期 5 分钟。
+
+当玩家的 UUID 或 IP 与 TShock 数据库中的上次记录不一致时，插件会拒绝其登录并提示在 QQ 群发送「登入」。外部 Bot 收到消息后调用此接口完成二次确认，玩家在预批准窗口内重新连接即可正常登录。
+
+**权限：** `nextbot.security.confirm_login`
+
+**参数**
+
+| 名称   | 位置     | 说明           |
+|--------|----------|----------------|
+| `user` | 路由参数 | 要批准的用户名 |
+
+**响应 200**
+
+```json
+{
+  "response": "User 'Arispex' has been approved for next login."
+}
+```
+
+**错误**
+
+| 状态码 | `error`                                                          | 原因                                     |
+|--------|------------------------------------------------------------------|------------------------------------------|
+| 400    | `Missing required route parameter 'user'.`                       | `{user}` 为空                            |
+| 400    | `User was not found.`                                            | 找不到该账号                             |
+| 400    | `No pending login request found for user '{user}'.`              | 该玩家尚未被拦截，或拦截记录已过期（5 分钟）|
+| 400    | `An active approval already exists for user '{user}'.`           | 该玩家已有有效的预批准，无需重复确认     |
+
+---
+
 ## Config（配置）
 
 ### GET `/nextbot/config/reload`

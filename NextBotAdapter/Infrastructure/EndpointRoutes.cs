@@ -15,4 +15,5 @@ public static class EndpointRoutes
     public const string LeaderboardDeaths = "/nextbot/leaderboards/deaths";
     public const string LeaderboardFishingQuests = "/nextbot/leaderboards/fishing-quests";
     public const string LeaderboardOnlineTime = "/nextbot/leaderboards/online-time";
+    public const string SecurityConfirmLogin = "/nextbot/security/confirm-login/{user}";
 }
