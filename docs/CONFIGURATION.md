@@ -28,7 +28,11 @@ tshock/
   "loginConfirmation": {
     "enabled": true,
     "detectUuid": true,
-    "detectIp": true
+    "detectIp": true,
+    "emptyUuidMessage": "无法获取你的 UUID，请联系管理员。",
+    "changeDetectedMessage": "你的 {changed} 发生变化，请在 QQ 群发送「登入」后重新连接。",
+    "deviceMismatchMessage": "该账号已通过登入确认，但当前设备与确认时不一致，请使用原设备登入。",
+    "pendingExistsMessage": "该账号已有待确认的登入请求，请等待其过期后再试。"
   }
 }
 ```
@@ -43,11 +47,15 @@ tshock/
 
 ### `loginConfirmation`
 
-| 字段          | 类型    | 默认值 | 说明                                                               |
-|---------------|---------|--------|--------------------------------------------------------------------|
-| `enabled`     | boolean | `true` | 是否启用 UUID/IP 变更二次确认。`false` 时跳过所有检测             |
-| `detectUuid`  | boolean | `true` | 是否检测 UUID 变更                                                 |
-| `detectIp`    | boolean | `true` | 是否检测 IP 变更                                                   |
+| 字段                    | 类型    | 默认值                                                                         | 说明                                                               |
+|-------------------------|---------|--------------------------------------------------------------------------------|--------------------------------------------------------------------|
+| `enabled`               | boolean | `true`                                                                         | 是否启用 UUID/IP 变更二次确认。`false` 时跳过所有检测             |
+| `detectUuid`            | boolean | `true`                                                                         | 是否检测 UUID 变更                                                 |
+| `detectIp`              | boolean | `true`                                                                         | 是否检测 IP 变更                                                   |
+| `emptyUuidMessage`      | string  | `"无法获取你的 UUID，请联系管理员。"`                                          | UUID 为空时的拒绝提示                                              |
+| `changeDetectedMessage` | string  | `"你的 {changed} 发生变化，请在 QQ 群发送「登入」后重新连接。"`               | UUID/IP 变化时的拒绝提示。`{changed}` 会被替换为 `UUID`、`IP` 或 `UUID 和 IP` |
+| `deviceMismatchMessage` | string  | `"该账号已通过登入确认，但当前设备与确认时不一致，请使用原设备登入。"`         | 已有审批但设备不匹配时的拒绝提示                                   |
+| `pendingExistsMessage`  | string  | `"该账号已有待确认的登入请求，请等待其过期后再试。"`                           | 已有待确认请求时的拒绝提示                                         |
 
 UUID 或 IP 发生变化时，玩家登录会被拒绝，需通过 `GET /nextbot/security/confirm-login/{user}` 完成二次确认。
 

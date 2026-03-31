@@ -130,7 +130,7 @@ public sealed class NextBotAdapterPlugin(Main game) : TerrariaPlugin(game)
         if (_loginConfirmationSettings.DetectUuid && string.IsNullOrEmpty(uuid))
         {
             args.Handled = true;
-            player.Disconnect("无法获取你的 UUID，请联系管理员。");
+            player.Disconnect(_loginConfirmationSettings.EmptyUuidMessage);
             PluginLogger.Warn($"玩家 {loginName} 登入被拒绝：UUID 为空。");
             return;
         }
@@ -162,7 +162,7 @@ public sealed class NextBotAdapterPlugin(Main game) : TerrariaPlugin(game)
         if (_loginConfirmationService.HasActiveApproval(loginName))
         {
             args.Handled = true;
-            player.Disconnect("该账号当前正在等待验证，请勿使用其他设备登入。");
+            player.Disconnect(_loginConfirmationSettings.DeviceMismatchMessage);
             PluginLogger.Warn($"玩家 {loginName} 登入被拒绝：存在有效审批但设备不匹配。");
             return;
         }
@@ -170,7 +170,7 @@ public sealed class NextBotAdapterPlugin(Main game) : TerrariaPlugin(game)
         if (_loginConfirmationService.HasActivePending(loginName))
         {
             args.Handled = true;
-            player.Disconnect("该账号已有待确认的登入请求，请等待其过期后再试。");
+            player.Disconnect(_loginConfirmationSettings.PendingExistsMessage);
             PluginLogger.Warn($"玩家 {loginName} 登入被拒绝：已存在待确认的登入请求。");
             return;
         }
@@ -179,7 +179,7 @@ public sealed class NextBotAdapterPlugin(Main game) : TerrariaPlugin(game)
         var changed = detectedUuid != null && detectedIp != null ? "UUID 和 IP"
             : detectedUuid != null ? "UUID" : "IP";
         args.Handled = true;
-        player.Disconnect($"你的 {changed} 发生变化，请在 QQ 群发送「登入」后重新连接。");
+        player.Disconnect(_loginConfirmationSettings.ChangeDetectedMessage.Replace("{changed}", changed));
         PluginLogger.Warn($"玩家 {loginName} 登入被拒绝：{changed} 发生变化。");
     }
 
