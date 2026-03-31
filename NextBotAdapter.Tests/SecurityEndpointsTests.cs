@@ -63,6 +63,8 @@ public sealed class SecurityEndpointsTests
         public bool ConsumeApproval(string username, string? currentUuid, string? currentIp) => false;
 
         public bool HasActiveApproval(string username) => false;
+
+        public bool HasActivePending(string username) => false;
     }
 
     private sealed class FakeGateway(bool accountExists = true) : IUserDataGateway

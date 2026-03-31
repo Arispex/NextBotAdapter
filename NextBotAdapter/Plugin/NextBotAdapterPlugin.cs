@@ -167,6 +167,14 @@ public sealed class NextBotAdapterPlugin(Main game) : TerrariaPlugin(game)
             return;
         }
 
+        if (_loginConfirmationService.HasActivePending(loginName))
+        {
+            args.Handled = true;
+            player.Disconnect("该账号已有待确认的登入请求，请等待其过期后再试。");
+            PluginLogger.Warn($"玩家 {loginName} 登入被拒绝：已存在待确认的登入请求。");
+            return;
+        }
+
         _loginConfirmationService.RecordBlockedLogin(loginName, uuid, player.IP);
         var changed = detectedUuid != null && detectedIp != null ? "UUID 和 IP"
             : detectedUuid != null ? "UUID" : "IP";

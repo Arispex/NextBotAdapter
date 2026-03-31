@@ -9,4 +9,6 @@ public interface ILoginConfirmationService
     bool ConsumeApproval(string username, string? currentUuid, string? currentIp);
 
     bool HasActiveApproval(string username);
+
+    bool HasActivePending(string username);
 }

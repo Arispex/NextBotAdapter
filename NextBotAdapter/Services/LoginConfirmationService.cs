@@ -53,6 +53,14 @@ public sealed class LoginConfirmationService : ILoginConfirmationService
         }
     }
 
+    public bool HasActivePending(string username)
+    {
+        lock (_lock)
+        {
+            return _pendingLogins.TryGetValue(username, out var pending) && DateTime.UtcNow <= pending.ExpiresAt;
+        }
+    }
+
     public bool ConsumeApproval(string username, string? currentUuid, string? currentIp)
     {
         lock (_lock)

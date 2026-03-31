@@ -129,4 +129,31 @@ public sealed class LoginConfirmationServiceTests
         Assert.True(service.ConsumeApproval("alice", "uuid-a", null));
         Assert.False(service.ConsumeApproval("bob", "uuid-b", null));
     }
+
+    [Fact]
+    public void HasActivePending_ShouldReturnTrueAfterRecordBlockedLogin()
+    {
+        var service = new LoginConfirmationService();
+        service.RecordBlockedLogin("alice", "uuid", "1.2.3.4");
+
+        Assert.True(service.HasActivePending("alice"));
+    }
+
+    [Fact]
+    public void HasActivePending_ShouldReturnFalseWhenNoPendingExists()
+    {
+        var service = new LoginConfirmationService();
+
+        Assert.False(service.HasActivePending("alice"));
+    }
+
+    [Fact]
+    public void HasActivePending_ShouldReturnFalseAfterApproval()
+    {
+        var service = new LoginConfirmationService();
+        service.RecordBlockedLogin("alice", "uuid", "1.2.3.4");
+        service.TryApproveNextLogin("alice", out _);
+
+        Assert.False(service.HasActivePending("alice"));
+    }
 }
