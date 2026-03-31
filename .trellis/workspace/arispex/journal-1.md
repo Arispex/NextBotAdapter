@@ -352,3 +352,35 @@
 ### Next Steps
 
 - None - task complete
+
+
+## Session 8: Login confirmation: PreLogin hook + security hardening + configurable messages
+
+**Date**: 2026-03-31
+**Task**: Login confirmation: PreLogin hook + security hardening + configurable messages
+
+### Summary
+
+Reverted login confirmation from OTAPI ClientUUIDReceived hook to PlayerHooks.PlayerPreLogin (fires at /login time with UUID available). Fixed HasIpChanged to trigger on empty KnownIps. Hardened approval security: ConsumeApproval no longer consumed on mismatch, TryApproveNextLogin rejects when active approval exists, RecordBlockedLogin binds full UUID+IP. Added HasActivePending to prevent pending entry override. Updated deviceMismatchMessage wording. Extracted all 4 disconnect messages to configurable settings with {changed} placeholder support.
+
+### Main Changes
+
+
+
+### Git Commits
+
+| Hash | Message |
+|------|---------|
+| `451de7c` | (see git log) |
+
+### Testing
+
+- [OK] (Add test results)
+
+### Status
+
+[OK] **Completed**
+
+### Next Steps
+
+- None - task complete
