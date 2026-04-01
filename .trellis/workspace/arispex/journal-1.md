@@ -419,3 +419,63 @@ Reverted login confirmation to PlayerPreLogin hook. Fixed HasIpChanged to trigge
 ### Next Steps
 
 - None - task complete
+
+
+## Session 10: 添加配置 REST API 并迁移到 Newtonsoft.Json
+
+**Date**: 2026-04-01
+**Task**: 添加配置 REST API 并迁移到 Newtonsoft.Json
+
+### Summary
+
+(Add summary)
+
+### Main Changes
+
+## 主要变更
+
+1. **新增配置 REST API**
+   - GET /nextbot/config - 读取完整配置
+   - GET /nextbot/config/update - 使用点号路径更新配置（如 whitelist.enabled）
+   - 支持类型推断（bool/number/string）
+
+2. **迁移到 Newtonsoft.Json**
+   - 全量迁移 11 个 Model 文件
+   - 迁移 2 个 Service 文件
+   - 更新所有测试文件
+   - 修复 camelCase 属性命名问题
+
+3. **配置自动补全**
+   - 启动时自动补全缺失字段
+   - 保留现有配置值
+
+4. **测试覆盖**
+   - 新增 9 个测试
+   - 全部 136 个测试通过
+
+## 更新文件
+
+- NextBotAdapter/Rest/ConfigEndpoints.cs
+- NextBotAdapter/Services/WhitelistConfigService.cs
+- NextBotAdapter/Models/*.cs (11 个文件)
+- NextBotAdapter.Tests/*.cs (5 个文件)
+- docs/REST_API.md
+
+
+### Git Commits
+
+| Hash | Message |
+|------|---------|
+| `e11f728` | (see git log) |
+
+### Testing
+
+- [OK] (Add test results)
+
+### Status
+
+[OK] **Completed**
+
+### Next Steps
+
+- None - task complete
