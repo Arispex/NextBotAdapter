@@ -37,7 +37,8 @@ public sealed class NextBotAdapterPlugin(Main game) : TerrariaPlugin(game)
         configService.EnsureConfigComplete();
         _whitelistService = new PersistedWhitelistService(configService);
         WhitelistEndpoints.Service = _whitelistService;
-        ConfigEndpoints.Service = new ConfigurationReloadService(_whitelistService);
+        ConfigEndpoints.ReloadService = new ConfigurationReloadService(_whitelistService);
+        ConfigEndpoints.ConfigService = configService;
         MapEndpoints.Service = new MapImageService();
         WorldEndpoints.WorldFileService = new WorldFileService();
         WorldEndpoints.MapFileService = new MapFileService();
@@ -87,7 +88,7 @@ public sealed class NextBotAdapterPlugin(Main game) : TerrariaPlugin(game)
 
         try
         {
-            var ips = System.Text.Json.JsonSerializer.Deserialize<string[]>(knownIps);
+            var ips = Newtonsoft.Json.JsonConvert.DeserializeObject<string[]>(knownIps);
             return ips is not { Length: > 0 } || ips[^1] != currentIp;
         }
         catch

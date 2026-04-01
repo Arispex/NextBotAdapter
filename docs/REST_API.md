@@ -450,6 +450,66 @@ GET /nextbot/users/Arispex/inventory?token=<token>
 
 ## Config（配置）
 
+### GET `/nextbot/config`
+
+返回完整的插件配置。
+
+**权限：** `nextbot.config.read`
+
+**响应 200**
+
+```json
+{
+  "whitelist": {
+    "enabled": true,
+    "denyMessage": "You are not on the whitelist.",
+    "caseSensitive": true
+  },
+  "loginConfirmation": {
+    "enabled": true,
+    "detectUuid": true,
+    "detectIp": true,
+    "emptyUuidMessage": "无法获取你的 UUID，请联系管理员。",
+    "changeDetectedMessage": "你的 {changed} 发生变化，请在 QQ 群发送「登入」后重新连接。",
+    "deviceMismatchMessage": "该账号已通过登入确认，但当前设备与确认时不一致，请使用原设备登入。",
+    "pendingExistsMessage": "该账号已有待确认的登入请求，请等待其过期后再试。"
+  }
+}
+```
+
+---
+
+### GET `/nextbot/config/update`
+
+部分更新配置字段，使用点号分隔路径。更新后自动热重载。
+
+**权限：** `nextbot.config.update`
+
+**参数**
+
+通过 query string 传递，key 为点号分隔的字段路径，value 为新值。
+
+示例：`?whitelist.enabled=false&loginConfirmation.detectUuid=false`
+
+类型自动推断：`true`/`false` → bool，纯数字 → number，其余 → string。
+
+**响应 200**
+
+```json
+{
+  "response": "Updated 2 field(s) successfully."
+}
+```
+
+**错误**
+
+| 状态码 | `error`                              | 原因                 |
+|--------|--------------------------------------|----------------------|
+| 400    | `No fields specified for update.`    | 未提供任何更新字段   |
+| 400    | `Unknown config field '{path}'.`     | 字段路径不存在       |
+
+---
+
 ### GET `/nextbot/config/reload`
 
 从磁盘重新加载插件配置与白名单。

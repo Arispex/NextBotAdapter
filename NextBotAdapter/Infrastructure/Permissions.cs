@@ -12,6 +12,8 @@ public static class Permissions
     public const string WhitelistAdd = "nextbot.whitelist.add";
     public const string WhitelistRemove = "nextbot.whitelist.remove";
     public const string ConfigReload = "nextbot.config.reload";
+    public const string ConfigRead = "nextbot.config.read";
+    public const string ConfigUpdate = "nextbot.config.update";
     public const string LeaderboardDeaths = "nextbot.leaderboards.deaths";
     public const string LeaderboardFishingQuests = "nextbot.leaderboards.fishing_quests";
     public const string LeaderboardOnlineTime = "nextbot.leaderboards.online_time";

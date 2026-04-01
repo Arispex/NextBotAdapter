@@ -1,9 +1,9 @@
-using System.Text.Json.Serialization;
+using Newtonsoft.Json;
 
 namespace NextBotAdapter.Models;
 
 public sealed record OnlineTimeStore(
-    [property: JsonPropertyName("records")] IReadOnlyDictionary<string, long> Records)
+    [property: JsonProperty("records")] IReadOnlyDictionary<string, long> Records)
 {
     public static OnlineTimeStore Empty { get; } = new(new Dictionary<string, long>());
 }

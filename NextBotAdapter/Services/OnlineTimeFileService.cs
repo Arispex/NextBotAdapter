@@ -1,12 +1,12 @@
 using System.IO;
-using System.Text.Json;
+using Newtonsoft.Json;
 using NextBotAdapter.Models;
 
 namespace NextBotAdapter.Services;
 
 public sealed class OnlineTimeFileService : IOnlineTimeFileService
 {
-    private readonly JsonSerializerOptions _jsonOptions = new(JsonSerializerDefaults.Web) { WriteIndented = true };
+    private static readonly JsonSerializerSettings JsonSettings = new() { Formatting = Formatting.Indented };
     private readonly string _filePath;
 
     public OnlineTimeFileService()
@@ -34,7 +34,7 @@ public sealed class OnlineTimeFileService : IOnlineTimeFileService
 
         try
         {
-            var store = JsonSerializer.Deserialize<OnlineTimeStore>(File.ReadAllText(_filePath), _jsonOptions);
+            var store = JsonConvert.DeserializeObject<OnlineTimeStore>(File.ReadAllText(_filePath), JsonSettings);
             var result = store ?? OnlineTimeStore.Empty;
             PluginLogger.Info($"在线时长数据加载完成，共 {result.Records.Count} 条记录。");
             return result;
@@ -49,7 +49,7 @@ public sealed class OnlineTimeFileService : IOnlineTimeFileService
     public void Save(OnlineTimeStore store)
     {
         EnsureDirectory();
-        File.WriteAllText(_filePath, JsonSerializer.Serialize(store, _jsonOptions));
+        File.WriteAllText(_filePath, JsonConvert.SerializeObject(store, JsonSettings));
     }
 
     private void EnsureDirectory()

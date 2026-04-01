@@ -1,10 +1,10 @@
-using System.Text.Json.Serialization;
+using Newtonsoft.Json;
 
 namespace NextBotAdapter.Models;
 
 public sealed record NextBotAdapterConfig(
-    WhitelistSettings Whitelist,
-    [property: JsonPropertyName("loginConfirmation")] LoginConfirmationSettings? LoginConfirmation = null)
+    [property: JsonProperty("whitelist")] WhitelistSettings Whitelist,
+    [property: JsonProperty("loginConfirmation")] LoginConfirmationSettings? LoginConfirmation = null)
 {
     public static NextBotAdapterConfig Default { get; } = new(WhitelistSettings.Default, LoginConfirmationSettings.Default);
 

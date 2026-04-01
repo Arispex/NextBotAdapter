@@ -33,6 +33,8 @@ public sealed class EndpointRegistrarTests
             command => AssertRoute(command, EndpointRoutes.WhitelistAddUser, NextBotAdapter.Infrastructure.Permissions.WhitelistAdd),
             command => AssertRoute(command, EndpointRoutes.WhitelistRemoveUser, NextBotAdapter.Infrastructure.Permissions.WhitelistRemove),
             command => AssertRoute(command, EndpointRoutes.ConfigReload, NextBotAdapter.Infrastructure.Permissions.ConfigReload),
+            command => AssertRoute(command, EndpointRoutes.ConfigRead, NextBotAdapter.Infrastructure.Permissions.ConfigRead),
+            command => AssertRoute(command, EndpointRoutes.ConfigUpdate, NextBotAdapter.Infrastructure.Permissions.ConfigUpdate),
             command => AssertRoute(command, EndpointRoutes.LeaderboardDeaths, NextBotAdapter.Infrastructure.Permissions.LeaderboardDeaths),
             command => AssertRoute(command, EndpointRoutes.LeaderboardFishingQuests, NextBotAdapter.Infrastructure.Permissions.LeaderboardFishingQuests),
             command => AssertRoute(command, EndpointRoutes.LeaderboardOnlineTime, NextBotAdapter.Infrastructure.Permissions.LeaderboardOnlineTime),

@@ -1,6 +1,5 @@
 using System.IO;
-using System.Text.Encodings.Web;
-using System.Text.Json;
+using Newtonsoft.Json;
 using NextBotAdapter.Models;
 using NextBotAdapter.Services;
 
@@ -8,6 +7,8 @@ namespace NextBotAdapter.Tests;
 
 public sealed class WhitelistConfigServiceTests
 {
+    private static readonly JsonSerializerSettings JsonSettings = new() { Formatting = Formatting.Indented };
+
     [Fact]
     public void LoadSettings_ShouldFallbackToDefaultWhenJsonIsInvalid()
     {
@@ -51,7 +52,7 @@ public sealed class WhitelistConfigServiceTests
         var raw = File.ReadAllText(service.SettingsFilePath);
         Assert.Contains("\"whitelist\"", raw);
 
-        var config = JsonSerializer.Deserialize<NextBotAdapterConfig>(raw, new JsonSerializerOptions(JsonSerializerDefaults.Web));
+        var config = JsonConvert.DeserializeObject<NextBotAdapterConfig>(raw, JsonSettings);
         Assert.NotNull(config);
         Assert.Equal(WhitelistSettings.Default, config!.Whitelist);
     }
@@ -68,10 +69,9 @@ public sealed class WhitelistConfigServiceTests
     public void EnsureConfigComplete_ShouldAddMissingTopLevelSection()
     {
         var service = CreateService();
-        var partial = new JsonSerializerOptions(JsonSerializerDefaults.Web) { WriteIndented = true };
         // Config with only whitelist, no loginConfirmation
         File.WriteAllText(service.SettingsFilePath,
-            JsonSerializer.Serialize(new { whitelist = WhitelistSettings.Default }, partial));
+            JsonConvert.SerializeObject(new { whitelist = WhitelistSettings.Default }, JsonSettings));
 
         service.EnsureConfigComplete();
 
@@ -84,16 +84,15 @@ public sealed class WhitelistConfigServiceTests
     public void EnsureConfigComplete_ShouldNotOverwriteExistingValues()
     {
         var service = CreateService();
-        var options = new JsonSerializerOptions(JsonSerializerDefaults.Web) { WriteIndented = true };
         var config = new NextBotAdapterConfig(
             new WhitelistSettings(false, "Custom deny", false),
             new LoginConfirmationSettings(false, false, true));
-        File.WriteAllText(service.SettingsFilePath, JsonSerializer.Serialize(config, options));
+        File.WriteAllText(service.SettingsFilePath, JsonConvert.SerializeObject(config, JsonSettings));
 
         service.EnsureConfigComplete();
 
-        var result = JsonSerializer.Deserialize<NextBotAdapterConfig>(
-            File.ReadAllText(service.SettingsFilePath), options);
+        var result = JsonConvert.DeserializeObject<NextBotAdapterConfig>(
+            File.ReadAllText(service.SettingsFilePath), JsonSettings);
         Assert.NotNull(result);
         Assert.False(result!.Whitelist.Enabled);
         Assert.Equal("Custom deny", result.Whitelist.DenyMessage);
@@ -105,17 +104,11 @@ public sealed class WhitelistConfigServiceTests
     public void EnsureConfigComplete_ShouldNotRewriteWhenAlreadyComplete()
     {
         var service = CreateService();
-        var options = new JsonSerializerOptions(JsonSerializerDefaults.Web)
-        {
-            WriteIndented = true,
-            Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping
-        };
         var config = NextBotAdapterConfig.Default;
-        var fullText = JsonSerializer.Serialize(config, options);
+        var fullText = JsonConvert.SerializeObject(config, JsonSettings);
         File.WriteAllText(service.SettingsFilePath, fullText);
         var lastWrite = File.GetLastWriteTimeUtc(service.SettingsFilePath);
 
-        // Small delay to detect write time change
         System.Threading.Thread.Sleep(50);
         service.EnsureConfigComplete();
 
@@ -127,7 +120,6 @@ public sealed class WhitelistConfigServiceTests
     {
         var service = CreateService();
 
-        // Should not throw, and should not create the file
         service.EnsureConfigComplete();
 
         Assert.False(File.Exists(service.SettingsFilePath));

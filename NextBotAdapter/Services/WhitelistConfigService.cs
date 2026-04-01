@@ -1,16 +1,15 @@
 using System.IO;
-using System.Text.Encodings.Web;
-using System.Text.Json;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 using NextBotAdapter.Models;
 
 namespace NextBotAdapter.Services;
 
 public sealed class WhitelistConfigService
 {
-    private readonly JsonSerializerOptions _jsonOptions = new(JsonSerializerDefaults.Web)
+    private static readonly JsonSerializerSettings JsonSettings = new()
     {
-        WriteIndented = true,
-        Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping
+        Formatting = Formatting.Indented
     };
     private readonly string _configDirectoryPath;
 
@@ -36,9 +35,9 @@ public sealed class WhitelistConfigService
         try
         {
             var originalText = File.ReadAllText(SettingsFilePath);
-            var config = JsonSerializer.Deserialize<NextBotAdapterConfig>(originalText, _jsonOptions);
+            var config = JsonConvert.DeserializeObject<NextBotAdapterConfig>(originalText, JsonSettings);
             var complete = (config ?? NextBotAdapterConfig.Default).WithDefaults();
-            var completeText = JsonSerializer.Serialize(complete, _jsonOptions);
+            var completeText = JsonConvert.SerializeObject(complete, JsonSettings);
 
             if (originalText != completeText)
             {
@@ -64,7 +63,7 @@ public sealed class WhitelistConfigService
 
         try
         {
-            var config = JsonSerializer.Deserialize<NextBotAdapterConfig>(File.ReadAllText(SettingsFilePath), _jsonOptions);
+            var config = JsonConvert.DeserializeObject<NextBotAdapterConfig>(File.ReadAllText(SettingsFilePath), JsonSettings);
             var settings = config?.Whitelist ?? WhitelistSettings.Default;
             PluginLogger.Info($"白名单配置加载完成：启用状态：{settings.Enabled}，区分大小写：{settings.CaseSensitive}。");
             return settings;
@@ -86,7 +85,7 @@ public sealed class WhitelistConfigService
 
         try
         {
-            var config = JsonSerializer.Deserialize<NextBotAdapterConfig>(File.ReadAllText(SettingsFilePath), _jsonOptions);
+            var config = JsonConvert.DeserializeObject<NextBotAdapterConfig>(File.ReadAllText(SettingsFilePath), JsonSettings);
             return config?.LoginConfirmation ?? LoginConfirmationSettings.Default;
         }
         catch
@@ -114,7 +113,7 @@ public sealed class WhitelistConfigService
 
         try
         {
-            var store = JsonSerializer.Deserialize<WhitelistStore>(File.ReadAllText(WhitelistFilePath), _jsonOptions);
+            var store = JsonConvert.DeserializeObject<WhitelistStore>(File.ReadAllText(WhitelistFilePath), JsonSettings);
             var whitelist = store ?? WhitelistStore.Empty;
             PluginLogger.Info($"白名单数据加载完成，共 {whitelist.Users.Count} 个条目。");
             return whitelist;
@@ -133,6 +132,48 @@ public sealed class WhitelistConfigService
         PluginLogger.Info($"白名单数据保存完成，共 {store.Users.Count} 个条目。");
     }
 
+    public string ReadConfigRaw()
+    {
+        EnsureDirectory();
+        return File.Exists(SettingsFilePath)
+            ? File.ReadAllText(SettingsFilePath)
+            : JsonConvert.SerializeObject(NextBotAdapterConfig.Default, JsonSettings);
+    }
+
+    public bool TryUpdateConfig(IEnumerable<KeyValuePair<string, string>> fields, out string? error)
+    {
+        EnsureDirectory();
+        var text = File.Exists(SettingsFilePath)
+            ? File.ReadAllText(SettingsFilePath)
+            : JsonConvert.SerializeObject(NextBotAdapterConfig.Default, JsonSettings);
+
+        var root = JObject.Parse(text);
+
+        foreach (var (path, value) in fields)
+        {
+            var token = root.SelectToken(path);
+            if (token is null)
+            {
+                error = $"Unknown config field '{path}'.";
+                return false;
+            }
+
+            token.Replace(ParseValue(value));
+        }
+
+        File.WriteAllText(SettingsFilePath, root.ToString(Formatting.Indented));
+        error = null;
+        return true;
+    }
+
+    private static JToken ParseValue(string value)
+    {
+        if (bool.TryParse(value, out var b)) return new JValue(b);
+        if (long.TryParse(value, out var l)) return new JValue(l);
+        if (double.TryParse(value, out var d)) return new JValue(d);
+        return new JValue(value);
+    }
+
     private void EnsureDirectory()
     {
         Directory.CreateDirectory(ConfigDirectoryPath);
@@ -140,11 +181,11 @@ public sealed class WhitelistConfigService
 
     private void WriteConfigFile(NextBotAdapterConfig config)
     {
-        File.WriteAllText(SettingsFilePath, JsonSerializer.Serialize(config, _jsonOptions));
+        File.WriteAllText(SettingsFilePath, JsonConvert.SerializeObject(config, JsonSettings));
     }
 
     private void WriteWhitelistFile(WhitelistStore store)
     {
-        File.WriteAllText(WhitelistFilePath, JsonSerializer.Serialize(store, _jsonOptions));
+        File.WriteAllText(WhitelistFilePath, JsonConvert.SerializeObject(store, JsonSettings));
     }
 }
