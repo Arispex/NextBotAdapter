@@ -479,3 +479,60 @@ Reverted login confirmation to PlayerPreLogin hook. Fixed HasIpChanged to trigge
 ### Next Steps
 
 - None - task complete
+
+
+## Session 11: Rename WhitelistConfigService and extract WhitelistFileService
+
+**Date**: 2026-04-07
+**Task**: Rename WhitelistConfigService and extract WhitelistFileService
+
+### Summary
+
+(Add summary)
+
+### Main Changes
+
+## 概要
+
+将命名不当的 `WhitelistConfigService` 重构为职责明确的两个类：
+
+| 变更 | 说明 |
+|------|------|
+| `WhitelistConfigService` → `PluginConfigService` | 管理全局插件配置文件 `NextBotAdapter.json` |
+| 新增 `WhitelistFileService` | 管理白名单数据文件 `Whitelist.json` |
+| 配置文件创建逻辑迁移 | 从 `LoadWhitelistSettings()` 移至 `EnsureConfigComplete()` |
+| 删除 `SaveWhitelistSettings()` | 无调用方的死代码 |
+| 补充日志 | `LoadLoginConfirmationSettings()` 加载失败时记录 Warn 日志 |
+
+## 变更文件
+
+- NextBotAdapter/Services/PluginConfigService.cs (新)
+- NextBotAdapter/Services/WhitelistFileService.cs (新)
+- NextBotAdapter/Services/WhitelistConfigService.cs (删)
+- NextBotAdapter/Services/PersistedWhitelistService.cs
+- NextBotAdapter/Plugin/NextBotAdapterPlugin.cs
+- NextBotAdapter/Rest/ConfigEndpoints.cs
+- NextBotAdapter.Tests/PluginConfigServiceTests.cs (新)
+- NextBotAdapter.Tests/WhitelistFileServiceTests.cs (新)
+- NextBotAdapter.Tests/WhitelistConfigServiceTests.cs (删)
+- NextBotAdapter.Tests/ConfigEndpointsTests.cs
+- .trellis/spec/ 下 6 个文档引用更新
+
+
+### Git Commits
+
+| Hash | Message |
+|------|---------|
+| `10bb2ed` | (see git log) |
+
+### Testing
+
+- [OK] (Add test results)
+
+### Status
+
+[OK] **Completed**
+
+### Next Steps
+
+- None - task complete

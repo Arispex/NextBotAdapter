@@ -8,8 +8,8 @@
 
 <!-- @@@auto:current-status -->
 - **Active File**: `journal-1.md`
-- **Total Sessions**: 10
-- **Last Active**: 2026-04-01
+- **Total Sessions**: 11
+- **Last Active**: 2026-04-07
 <!-- @@@/auto:current-status -->
 
 ---
@@ -19,7 +19,7 @@
 <!-- @@@auto:active-documents -->
 | File | Lines | Status |
 |------|-------|--------|
-| `journal-1.md` | ~481 | Active |
+| `journal-1.md` | ~538 | Active |
 <!-- @@@/auto:active-documents -->
 
 ---
@@ -29,6 +29,7 @@
 <!-- @@@auto:session-history -->
 | # | Date | Title | Commits |
 |---|------|-------|---------|
+| 11 | 2026-04-07 | Rename WhitelistConfigService and extract WhitelistFileService | `10bb2ed` |
 | 10 | 2026-04-01 | 添加配置 REST API 并迁移到 Newtonsoft.Json | `e11f728` |
 | 9 | 2026-03-31 | Login confirmation security hardening + config auto-complete | `b824783`, `40946ee`, `451de7c`, `ff27fc6` |
 | 8 | 2026-03-31 | Login confirmation: PreLogin hook + security hardening + configurable messages | `451de7c` |
