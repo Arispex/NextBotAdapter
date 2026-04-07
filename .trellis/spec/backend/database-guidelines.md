@@ -45,10 +45,11 @@ Examples:
 
 ### Plugin-owned persistence is file-backed
 
-Whitelist state and plugin settings are stored as JSON files through `WhitelistConfigService`, not in a database table.
+Whitelist state and plugin settings are stored as JSON files through `PluginConfigService` and `WhitelistFileService`, not in a database table.
 
 Examples:
-- `NextBotAdapter/Services/WhitelistConfigService.cs`
+- `NextBotAdapter/Services/PluginConfigService.cs`
+- `NextBotAdapter/Services/WhitelistFileService.cs`
 - `docs/CONFIGURATION.md`
 
 ---
@@ -65,7 +66,7 @@ If you need to add new persistent plugin-owned data:
 - do not silently overwrite corrupted files during recovery
 
 Existing examples:
-- missing settings file -> create defaults: `WhitelistConfigService.LoadSettings()`
+- missing settings file -> create defaults: `PluginConfigService.LoadWhitelistSettings()`
 - invalid settings JSON -> log and use defaults without overwriting the bad file
 - invalid whitelist JSON -> log and use an empty in-memory whitelist without overwriting the bad file
 

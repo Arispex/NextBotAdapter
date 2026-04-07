@@ -37,7 +37,7 @@ Because this is a plugin project, avoid importing large web-framework habits tha
 - Prefer `Try*` service methods for expected business outcomes.
 - Centralize stable contract strings in `Infrastructure/`.
 - Use `record` types for response and config models.
-- Keep plugin-owned persistence behind `WhitelistConfigService`-style classes.
+- Keep plugin-owned persistence behind `PluginConfigService`-style classes.
 - Add or update tests when changing route definitions, error behavior, config contracts, response shapes, or logger behavior.
 - Preserve readable, explicit code over generic abstractions.
 
@@ -58,7 +58,7 @@ Current testing style includes:
 - endpoint contract tests: `RestEndpointLogicTests.cs`, `WhitelistEndpointsTests.cs`, `ConfigEndpointsTests.cs`
 - helper and factory tests: `EndpointResponseFactoryTests.cs`, `PluginLoggerTests.cs`
 - route and permission constant tests: `EndpointRouteDefinitionsTests.cs`
-- service behavior tests: `ServiceBehaviorTests.cs`, `WhitelistConfigServiceTests.cs`
+- service behavior tests: `ServiceBehaviorTests.cs`, `PluginConfigServiceTests.cs`, `WhitelistFileServiceTests.cs`
 
 When backend behavior changes, update or add tests close to the affected concept.
 

@@ -34,7 +34,7 @@ Use for successful lifecycle and state-change events.
 
 Current examples:
 - plugin startup and teardown: `NextBotAdapter/Plugin/NextBotAdapterPlugin.cs`
-- config file creation, loading, saving: `NextBotAdapter/Services/WhitelistConfigService.cs`
+- config file creation, loading, saving: `NextBotAdapter/Services/PluginConfigService.cs`
 - whitelist reload and successful mutations: `NextBotAdapter/Services/PersistedWhitelistService.cs`
 
 ### `Warn`
@@ -43,7 +43,7 @@ Use when the plugin can continue safely but behavior is degraded or a request is
 
 Current examples:
 - whitelist feature disabled during startup: `NextBotAdapter/Plugin/NextBotAdapterPlugin.cs`
-- malformed config fallback: `NextBotAdapter/Services/WhitelistConfigService.cs`
+- malformed config fallback: `NextBotAdapter/Services/PluginConfigService.cs`
 - failed whitelist add / remove attempts: `NextBotAdapter/Services/PersistedWhitelistService.cs`
 - denied player join: `NextBotAdapter/Plugin/NextBotAdapterPlugin.cs`
 
@@ -102,7 +102,7 @@ Log state changes and operationally important boundaries:
 
 Good examples:
 - `NextBotAdapter/Plugin/NextBotAdapterPlugin.cs`
-- `NextBotAdapter/Services/WhitelistConfigService.cs`
+- `NextBotAdapter/Services/PluginConfigService.cs`
 - `NextBotAdapter/Services/PersistedWhitelistService.cs`
 - `NextBotAdapter/Rest/ConfigEndpoints.cs`
 

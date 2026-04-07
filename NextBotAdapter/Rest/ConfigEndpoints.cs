@@ -8,7 +8,7 @@ namespace NextBotAdapter.Rest;
 public static class ConfigEndpoints
 {
     public static IConfigurationReloadService ReloadService { get; set; } = null!;
-    public static WhitelistConfigService ConfigService { get; set; } = null!;
+    public static PluginConfigService ConfigService { get; set; } = null!;
 
     public static object Reload(RestRequestArgs _)
         => Reload(ReloadService);
@@ -30,7 +30,7 @@ public static class ConfigEndpoints
     public static object Read(RestRequestArgs _)
         => Read(ConfigService);
 
-    public static object Read(WhitelistConfigService service)
+    public static object Read(PluginConfigService service)
     {
         try
         {
@@ -54,7 +54,7 @@ public static class ConfigEndpoints
 
     public static object Update(
         EscapedParameterCollection? parameters,
-        WhitelistConfigService configService,
+        PluginConfigService configService,
         IConfigurationReloadService reloadService)
     {
         var fields = new List<KeyValuePair<string, string>>();

@@ -82,8 +82,9 @@ Examples:
 Current boundary catches in the codebase:
 
 - `ConfigEndpoints.Reload(...)` catches unexpected reload failures, logs them, and returns `500`
-- `WhitelistConfigService.LoadSettings()` catches malformed JSON and falls back to defaults
-- `WhitelistConfigService.LoadWhitelist()` catches malformed JSON and falls back to an empty whitelist
+- `PluginConfigService.LoadWhitelistSettings()` catches malformed JSON and falls back to defaults
+- `PluginConfigService.LoadLoginConfirmationSettings()` catches malformed JSON and falls back to defaults
+- `WhitelistFileService.LoadWhitelist()` catches malformed JSON and falls back to an empty whitelist
 
 If a failure is expected and part of normal business flow, prefer an error value over `throw`.
 

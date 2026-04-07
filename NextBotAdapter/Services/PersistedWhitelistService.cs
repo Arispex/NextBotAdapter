@@ -5,13 +5,15 @@ namespace NextBotAdapter.Services;
 
 public sealed class PersistedWhitelistService : IWhitelistService
 {
-    private readonly WhitelistConfigService _configService;
+    private readonly PluginConfigService _configService;
+    private readonly WhitelistFileService _fileService;
     private WhitelistService _inner;
 
-    public PersistedWhitelistService(WhitelistConfigService configService)
+    public PersistedWhitelistService(PluginConfigService configService, WhitelistFileService fileService)
     {
         _configService = configService;
-        _inner = new WhitelistService(_configService.LoadSettings(), _configService.LoadWhitelist());
+        _fileService = fileService;
+        _inner = new WhitelistService(_configService.LoadWhitelistSettings(), _fileService.LoadWhitelist());
     }
 
     public WhitelistSettings Settings => _inner.Settings;
@@ -57,11 +59,11 @@ public sealed class PersistedWhitelistService : IWhitelistService
 
     public void Reload()
     {
-        _inner = new WhitelistService(_configService.LoadSettings(), _configService.LoadWhitelist());
+        _inner = new WhitelistService(_configService.LoadWhitelistSettings(), _fileService.LoadWhitelist());
     }
 
     private void Persist()
     {
-        _configService.SaveWhitelist(new WhitelistStore(_inner.GetAll()));
+        _fileService.SaveWhitelist(new WhitelistStore(_inner.GetAll()));
     }
 }

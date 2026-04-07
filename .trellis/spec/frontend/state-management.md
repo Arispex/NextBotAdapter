@@ -11,7 +11,7 @@ There is currently no frontend state-management layer in this repository.
 The runtime state that exists today is backend plugin state, for example:
 
 - in-memory whitelist state inside `PersistedWhitelistService`
-- plugin configuration loaded from JSON files by `WhitelistConfigService`
+- plugin configuration loaded from JSON files by `PluginConfigService`
 - TShock / Terraria runtime state accessed through service adapters
 
 Those patterns are backend concerns and are documented in the backend guidelines, not here.

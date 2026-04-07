@@ -52,7 +52,8 @@ NextBotAdapter/
     ├── PersistedWhitelistService.cs
     ├── PluginLogger.cs
     ├── UserDataService.cs
-    ├── WhitelistConfigService.cs
+    ├── PluginConfigService.cs
+    ├── WhitelistFileService.cs
     ├── WorldProgressMapper.cs
     └── WorldProgressService.cs
 
@@ -61,7 +62,8 @@ NextBotAdapter.Tests/
 ├── EndpointResponseFactoryTests.cs
 ├── PluginLoggerTests.cs
 ├── RestEndpointLogicTests.cs
-├── WhitelistConfigServiceTests.cs
+├── PluginConfigServiceTests.cs
+├── WhitelistFileServiceTests.cs
 └── WhitelistEndpointsTests.cs
 ```
 
@@ -105,7 +107,7 @@ Common service roles already present in the codebase:
 - mappers: `WorldProgressMapper.cs`, `UserInfoMapper.cs`, `PlayerInventoryMapper.cs`
 - domain services: `UserInfoService.cs`, `UserInventoryService.cs`, `WorldProgressService.cs`
 - adapters and gateways: `UserDataService.cs`, `WorldProgressSourceAdapter.cs`
-- persistence services: `WhitelistConfigService.cs`, `PersistedWhitelistService.cs`
+- persistence services: `PluginConfigService.cs`, `WhitelistFileService.cs`, `PersistedWhitelistService.cs`
 - logging: `PluginLogger.cs`
 
 ### Infrastructure
@@ -148,7 +150,8 @@ Good reference files for this structure:
 
 - `NextBotAdapter/Plugin/NextBotAdapterPlugin.cs` - plugin lifecycle composition root
 - `NextBotAdapter/Rest/UserEndpoints.cs` - thin endpoint layer with input validation
-- `NextBotAdapter/Services/WhitelistConfigService.cs` - file-backed persistence service
+- `NextBotAdapter/Services/PluginConfigService.cs` - file-backed plugin configuration service
+- `NextBotAdapter/Services/WhitelistFileService.cs` - whitelist data file persistence
 - `NextBotAdapter/Infrastructure/EndpointResponseFactory.cs` - centralized REST response creation
 - `NextBotAdapter/Models/Responses/WorldProgressResponse.cs` - immutable response DTO
 - `NextBotAdapter.Tests/RestEndpointLogicTests.cs` - test project mirroring backend behavior

@@ -89,7 +89,7 @@ public sealed class ConfigEndpointsTests
         var ok = configService.TryUpdateConfig(fields, out _);
         Assert.True(ok);
 
-        var raw = File.ReadAllText(configService.SettingsFilePath);
+        var raw = File.ReadAllText(configService.ConfigFilePath);
         var config = JsonConvert.DeserializeObject<NextBotAdapterConfig>(raw, JsonSettings);
         Assert.False(config!.Whitelist.Enabled);
     }
@@ -107,18 +107,18 @@ public sealed class ConfigEndpointsTests
         var ok = configService.TryUpdateConfig(fields, out _);
         Assert.True(ok);
 
-        var raw = File.ReadAllText(configService.SettingsFilePath);
+        var raw = File.ReadAllText(configService.ConfigFilePath);
         var config = JsonConvert.DeserializeObject<NextBotAdapterConfig>(raw, JsonSettings);
         Assert.False(config!.LoginConfirmation!.DetectUuid);
         Assert.Equal("Custom message", config.Whitelist.DenyMessage);
     }
 
-    private static WhitelistConfigService CreateConfigService()
+    private static PluginConfigService CreateConfigService()
     {
         var root = Path.Combine(Path.GetTempPath(), "NextBotAdapter.Tests", Guid.NewGuid().ToString("N"));
         Directory.CreateDirectory(root);
-        var service = new WhitelistConfigService(root);
-        File.WriteAllText(service.SettingsFilePath,
+        var service = new PluginConfigService(root);
+        File.WriteAllText(service.ConfigFilePath,
             JsonConvert.SerializeObject(NextBotAdapterConfig.Default, JsonSettings));
         return service;
     }
