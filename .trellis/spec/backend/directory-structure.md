@@ -48,14 +48,41 @@ NextBotAdapter/
 │   ├── WhitelistEndpoints.cs
 │   └── WorldEndpoints.cs
 └── Services/
-    ├── ConfigurationReloadService.cs
-    ├── PersistedWhitelistService.cs
-    ├── PluginLogger.cs
-    ├── UserDataService.cs
-    ├── PluginConfigService.cs
-    ├── WhitelistFileService.cs
-    ├── WorldProgressMapper.cs
-    └── WorldProgressService.cs
+    ├── Common/
+    │   └── PluginLogger.cs
+    ├── Configuration/
+    │   ├── ConfigurationReloadService.cs
+    │   ├── IConfigurationReloadService.cs
+    │   └── PluginConfigService.cs
+    ├── Leaderboards/
+    │   ├── DeathLeaderboardService.cs
+    │   └── FishingQuestsLeaderboardService.cs
+    ├── Security/
+    │   ├── ILoginConfirmationService.cs
+    │   ├── IWhitelistService.cs
+    │   ├── LoginConfirmationService.cs
+    │   └── WhitelistService.cs
+    ├── UserData/
+    │   ├── IOnlineTimeService.cs
+    │   ├── IPlayerDataAccessor.cs
+    │   ├── IUserDataGateway.cs
+    │   ├── OnlineTimeService.cs
+    │   ├── PlayerInventoryMapper.cs
+    │   ├── PlayerStatisticsReader.cs
+    │   ├── UserDataService.cs
+    │   ├── UserInfoMapper.cs
+    │   ├── UserInfoService.cs
+    │   └── UserInventoryService.cs
+    └── World/
+        ├── IMapFileService.cs
+        ├── IMapImageService.cs
+        ├── IWorldFileService.cs
+        ├── IWorldProgressSource.cs
+        ├── MapFileService.cs
+        ├── MapImageService.cs
+        ├── WorldFileService.cs
+        ├── WorldProgressService.cs
+        └── WorldProgressSourceAdapter.cs
 
 NextBotAdapter.Tests/
 ├── ConfigEndpointsTests.cs
@@ -102,13 +129,16 @@ Examples:
 
 `Services/` contains most implementation logic. Keep logic here instead of in endpoint methods.
 
+Group files under `Services/` by domain instead of keeping every service in a single flat directory.
+
 Common service roles already present in the codebase:
 
-- mappers: `WorldProgressMapper.cs`, `UserInfoMapper.cs`, `PlayerInventoryMapper.cs`
-- domain services: `UserInfoService.cs`, `UserInventoryService.cs`, `WorldProgressService.cs`
-- adapters and gateways: `UserDataService.cs`, `WorldProgressSourceAdapter.cs`
-- persistence services: `PluginConfigService.cs`, `WhitelistFileService.cs`, `PersistedWhitelistService.cs`
-- logging: `PluginLogger.cs`
+- configuration: `Configuration/PluginConfigService.cs`, `Configuration/ConfigurationReloadService.cs`
+- security: `Security/WhitelistService.cs`, `Security/LoginConfirmationService.cs`
+- user data: `UserData/UserInfoService.cs`, `UserData/OnlineTimeService.cs`
+- world: `World/WorldProgressService.cs`, `World/WorldProgressSourceAdapter.cs`
+- leaderboards: `Leaderboards/DeathLeaderboardService.cs`, `Leaderboards/FishingQuestsLeaderboardService.cs`
+- logging: `Common/PluginLogger.cs`
 
 ### Infrastructure
 
@@ -150,8 +180,8 @@ Good reference files for this structure:
 
 - `NextBotAdapter/Plugin/NextBotAdapterPlugin.cs` - plugin lifecycle composition root
 - `NextBotAdapter/Rest/UserEndpoints.cs` - thin endpoint layer with input validation
-- `NextBotAdapter/Services/PluginConfigService.cs` - file-backed plugin configuration service
-- `NextBotAdapter/Services/WhitelistFileService.cs` - whitelist data file persistence
+- `NextBotAdapter/Services/Configuration/PluginConfigService.cs` - file-backed plugin configuration service
+- `NextBotAdapter/Services/Security/WhitelistService.cs` - whitelist rules and persistence
 - `NextBotAdapter/Infrastructure/EndpointResponseFactory.cs` - centralized REST response creation
 - `NextBotAdapter/Models/Responses/WorldProgressResponse.cs` - immutable response DTO
 - `NextBotAdapter.Tests/RestEndpointLogicTests.cs` - test project mirroring backend behavior
