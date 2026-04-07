@@ -101,6 +101,16 @@ public sealed class PluginConfigServiceTests
         Assert.Equal(LoginConfirmationSettings.Default, config.LoginConfirmation);
     }
 
+    [Fact]
+    public void EnsureConfigComplete_ShouldCreateDataDirectory()
+    {
+        var service = CreateService();
+
+        service.EnsureConfigComplete();
+
+        Assert.True(Directory.Exists(service.DataDirectoryPath));
+    }
+
     private static PluginConfigService CreateService()
     {
         var root = Path.Combine(Path.GetTempPath(), "NextBotAdapter.Tests", Guid.NewGuid().ToString("N"));

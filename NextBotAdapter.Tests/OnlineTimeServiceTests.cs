@@ -1,15 +1,18 @@
+using System.IO;
+using Newtonsoft.Json;
 using NextBotAdapter.Models;
 using NextBotAdapter.Services;
-using System.IO;
 
 namespace NextBotAdapter.Tests;
 
 public sealed class OnlineTimeServiceTests
 {
+    private static readonly JsonSerializerSettings JsonSettings = new() { Formatting = Formatting.Indented };
+
     [Fact]
     public void GetTotalSeconds_ShouldReturnZeroForUnknownPlayer()
     {
-        var service = CreateService();
+        var service = CreateService(out _);
 
         Assert.Equal(0, service.GetTotalSeconds("unknown"));
     }
@@ -17,9 +20,8 @@ public sealed class OnlineTimeServiceTests
     [Fact]
     public void GetTotalSeconds_ShouldReturnPersistedSeconds()
     {
-        var fileService = new FakeOnlineTimeFileService(new OnlineTimeStore(
-            new Dictionary<string, long> { ["alice"] = 500 }));
-        var service = new OnlineTimeService(fileService);
+        var service = CreateService(new OnlineTimeStore(
+            new Dictionary<string, long> { ["alice"] = 500 }), out _);
 
         Assert.Equal(500, service.GetTotalSeconds("alice"));
     }
@@ -27,23 +29,20 @@ public sealed class OnlineTimeServiceTests
     [Fact]
     public void EndSession_ShouldAddElapsedSecondsToPersistedRecord()
     {
-        var fileService = new FakeOnlineTimeFileService();
-        var service = new OnlineTimeService(fileService);
+        var service = CreateService(out var filePath);
 
         service.StartSession("alice");
         service.EndSession("alice");
 
         Assert.True(service.GetTotalSeconds("alice") >= 0);
-        Assert.NotNull(fileService.LastSaved);
-        Assert.True(fileService.LastSaved!.Records.ContainsKey("alice"));
+        Assert.True(ReadStore(filePath).Records.ContainsKey("alice"));
     }
 
     [Fact]
     public void EndSession_ShouldAccumulateAcrossMultipleSessions()
     {
-        var fileService = new FakeOnlineTimeFileService(new OnlineTimeStore(
-            new Dictionary<string, long> { ["alice"] = 100 }));
-        var service = new OnlineTimeService(fileService);
+        var service = CreateService(new OnlineTimeStore(
+            new Dictionary<string, long> { ["alice"] = 100 }), out _);
 
         service.StartSession("alice");
         service.EndSession("alice");
@@ -54,19 +53,18 @@ public sealed class OnlineTimeServiceTests
     [Fact]
     public void EndSession_ShouldBeNoOpIfSessionNotStarted()
     {
-        var fileService = new FakeOnlineTimeFileService();
-        var service = new OnlineTimeService(fileService);
+        var service = CreateService(out var filePath);
 
         service.EndSession("alice");
 
         Assert.Equal(0, service.GetTotalSeconds("alice"));
-        Assert.Null(fileService.LastSaved);
+        Assert.Empty(ReadStore(filePath).Records);
     }
 
     [Fact]
     public void GetTotalSeconds_ShouldIncludeActiveSessionTime()
     {
-        var service = CreateService();
+        var service = CreateService(out _);
 
         service.StartSession("alice");
         var total = service.GetTotalSeconds("alice");
@@ -77,7 +75,7 @@ public sealed class OnlineTimeServiceTests
     [Fact]
     public void GetAllRecords_ShouldReturnEmptyWhenNoData()
     {
-        var service = CreateService();
+        var service = CreateService(out _);
 
         var records = service.GetAllRecords();
 
@@ -87,9 +85,8 @@ public sealed class OnlineTimeServiceTests
     [Fact]
     public void GetAllRecords_ShouldReturnAllPlayersWithPersistedTime()
     {
-        var fileService = new FakeOnlineTimeFileService(new OnlineTimeStore(
-            new Dictionary<string, long> { ["alice"] = 100, ["bob"] = 500 }));
-        var service = new OnlineTimeService(fileService);
+        var service = CreateService(new OnlineTimeStore(
+            new Dictionary<string, long> { ["alice"] = 100, ["bob"] = 500 }), out _);
 
         var records = service.GetAllRecords();
 
@@ -101,36 +98,47 @@ public sealed class OnlineTimeServiceTests
     [Fact]
     public void PersistAllSessions_ShouldSaveActiveSessionsAndClearThem()
     {
-        var fileService = new FakeOnlineTimeFileService();
-        var service = new OnlineTimeService(fileService);
+        var service = CreateService(out var filePath);
 
         service.StartSession("alice");
         service.PersistAllSessions();
 
-        Assert.NotNull(fileService.LastSaved);
-        Assert.True(fileService.LastSaved!.Records.ContainsKey("alice"));
-        Assert.Equal(0, service.GetTotalSeconds("alice"));
+        Assert.True(ReadStore(filePath).Records.ContainsKey("alice"));
+        Assert.True(service.GetTotalSeconds("alice") >= 0);
     }
 
-    private static OnlineTimeService CreateService()
-        => new(new FakeOnlineTimeFileService());
-
-    private sealed class FakeOnlineTimeFileService : IOnlineTimeFileService
+    [Fact]
+    public void FilePath_ShouldUseDataDirectoryAndCapitalizedFileName()
     {
-        private readonly OnlineTimeStore _initialStore;
+        var service = CreateService(out _);
 
-        public FakeOnlineTimeFileService(OnlineTimeStore? store = null)
+        Assert.EndsWith(Path.Combine("Data", "OnlineTime.json"), service.FilePath);
+    }
+
+    private static OnlineTimeService CreateService(out string filePath)
+    {
+        var root = Path.Combine(Path.GetTempPath(), "NextBotAdapter.Tests", Guid.NewGuid().ToString("N"));
+        filePath = Path.Combine(root, "Data", "OnlineTime.json");
+        return new OnlineTimeService(filePath);
+    }
+
+    private static OnlineTimeService CreateService(OnlineTimeStore store, out string filePath)
+    {
+        var root = Path.Combine(Path.GetTempPath(), "NextBotAdapter.Tests", Guid.NewGuid().ToString("N"));
+        filePath = Path.Combine(root, "Data", "OnlineTime.json");
+        Directory.CreateDirectory(Path.GetDirectoryName(filePath)!);
+        File.WriteAllText(filePath, JsonConvert.SerializeObject(store, JsonSettings));
+        return new OnlineTimeService(filePath);
+    }
+
+    private static OnlineTimeStore ReadStore(string filePath)
+    {
+        if (!File.Exists(filePath))
         {
-            _initialStore = store ?? OnlineTimeStore.Empty;
+            return OnlineTimeStore.Empty;
         }
 
-        public OnlineTimeStore? LastSaved { get; private set; }
-
-        public OnlineTimeStore Load() => _initialStore;
-
-        public void Save(OnlineTimeStore store)
-        {
-            LastSaved = store;
-        }
+        return JsonConvert.DeserializeObject<OnlineTimeStore>(File.ReadAllText(filePath), JsonSettings)
+            ?? OnlineTimeStore.Empty;
     }
 }

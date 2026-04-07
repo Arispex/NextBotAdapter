@@ -15,10 +15,10 @@ namespace NextBotAdapter.Plugin;
 [ApiVersion(2, 1)]
 public sealed class NextBotAdapterPlugin(Main game) : TerrariaPlugin(game)
 {
-    private PersistedWhitelistService? _whitelistService;
+    private PluginConfigService? _configService;
+    private WhitelistService? _whitelistService;
     private OnlineTimeService? _onlineTimeService;
     private LoginConfirmationService? _loginConfirmationService;
-    private LoginConfirmationSettings _loginConfirmationSettings = LoginConfirmationSettings.Default;
 
     public override string Author => "Arispex";
 
@@ -33,22 +33,20 @@ public sealed class NextBotAdapterPlugin(Main game) : TerrariaPlugin(game)
         PluginLogger.Info("插件开始初始化。");
         AppDomain.CurrentDomain.AssemblyResolve += CurrentDomain_AssemblyResolve;
 
-        var configService = new PluginConfigService();
-        configService.EnsureConfigComplete();
-        var whitelistFileService = new WhitelistFileService(configService.ConfigDirectoryPath);
-        _whitelistService = new PersistedWhitelistService(configService, whitelistFileService);
+        _configService = new PluginConfigService();
+        _configService.EnsureConfigComplete();
+        _whitelistService = new WhitelistService(_configService);
+        _onlineTimeService = new OnlineTimeService();
         WhitelistEndpoints.Service = _whitelistService;
-        ConfigEndpoints.ReloadService = new ConfigurationReloadService(_whitelistService);
-        ConfigEndpoints.ConfigService = configService;
+        ConfigEndpoints.ReloadService = new ConfigurationReloadService(_configService, _whitelistService, _onlineTimeService);
+        ConfigEndpoints.ConfigService = _configService;
         MapEndpoints.Service = new MapImageService();
         WorldEndpoints.WorldFileService = new WorldFileService();
         WorldEndpoints.MapFileService = new MapFileService();
 
-        _onlineTimeService = new OnlineTimeService(new OnlineTimeFileService());
         UserEndpoints.OnlineTimeService = _onlineTimeService;
         LeaderboardEndpoints.OnlineTimeService = _onlineTimeService;
 
-        _loginConfirmationSettings = configService.LoadLoginConfirmationSettings();
         _loginConfirmationService = new LoginConfirmationService();
         SecurityEndpoints.Service = _loginConfirmationService;
 
@@ -124,16 +122,17 @@ public sealed class NextBotAdapterPlugin(Main game) : TerrariaPlugin(game)
 
     private void OnPlayerPreLogin(PlayerPreLoginEventArgs args)
     {
-        if (!_loginConfirmationSettings.Enabled || _loginConfirmationService is null) return;
+        var loginConfirmationSettings = _configService?.LoadLoginConfirmationSettings() ?? LoginConfirmationSettings.Default;
+        if (!loginConfirmationSettings.Enabled || _loginConfirmationService is null) return;
 
         var player = args.Player;
         var loginName = args.LoginName;
         var uuid = player.UUID;
 
-        if (_loginConfirmationSettings.DetectUuid && string.IsNullOrEmpty(uuid))
+        if (loginConfirmationSettings.DetectUuid && string.IsNullOrEmpty(uuid))
         {
             args.Handled = true;
-            player.Disconnect(_loginConfirmationSettings.EmptyUuidMessage);
+            player.Disconnect(loginConfirmationSettings.EmptyUuidMessage);
             PluginLogger.Warn($"玩家 {loginName} 登入被拒绝：UUID 为空。");
             return;
         }
@@ -144,12 +143,12 @@ public sealed class NextBotAdapterPlugin(Main game) : TerrariaPlugin(game)
         string? detectedUuid = null;
         string? detectedIp = null;
 
-        if (_loginConfirmationSettings.DetectUuid && account.UUID != uuid)
+        if (loginConfirmationSettings.DetectUuid && account.UUID != uuid)
         {
             detectedUuid = uuid;
         }
 
-        if (_loginConfirmationSettings.DetectIp && HasIpChanged(account.KnownIps, player.IP))
+        if (loginConfirmationSettings.DetectIp && HasIpChanged(account.KnownIps, player.IP))
         {
             detectedIp = player.IP;
         }
@@ -165,7 +164,7 @@ public sealed class NextBotAdapterPlugin(Main game) : TerrariaPlugin(game)
         if (_loginConfirmationService.HasActiveApproval(loginName))
         {
             args.Handled = true;
-            player.Disconnect(_loginConfirmationSettings.DeviceMismatchMessage);
+            player.Disconnect(loginConfirmationSettings.DeviceMismatchMessage);
             PluginLogger.Warn($"玩家 {loginName} 登入被拒绝：存在有效审批但设备不匹配。");
             return;
         }
@@ -173,7 +172,7 @@ public sealed class NextBotAdapterPlugin(Main game) : TerrariaPlugin(game)
         if (_loginConfirmationService.HasActivePending(loginName))
         {
             args.Handled = true;
-            player.Disconnect(_loginConfirmationSettings.PendingExistsMessage);
+            player.Disconnect(loginConfirmationSettings.PendingExistsMessage);
             PluginLogger.Warn($"玩家 {loginName} 登入被拒绝：已存在待确认的登入请求。");
             return;
         }
@@ -182,7 +181,7 @@ public sealed class NextBotAdapterPlugin(Main game) : TerrariaPlugin(game)
         var changed = detectedUuid != null && detectedIp != null ? "UUID 和 IP"
             : detectedUuid != null ? "UUID" : "IP";
         args.Handled = true;
-        player.Disconnect(_loginConfirmationSettings.ChangeDetectedMessage.Replace("{changed}", changed));
+        player.Disconnect(loginConfirmationSettings.ChangeDetectedMessage.Replace("{changed}", changed));
         PluginLogger.Warn($"玩家 {loginName} 登入被拒绝：{changed} 发生变化。");
     }
 

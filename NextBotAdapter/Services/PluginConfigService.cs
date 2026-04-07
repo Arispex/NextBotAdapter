@@ -24,14 +24,15 @@ public sealed class PluginConfigService
     }
 
     public string ConfigDirectoryPath => _configDirectoryPath;
+    public string DataDirectoryPath => Path.Combine(ConfigDirectoryPath, "Data");
     public string ConfigFilePath => Path.Combine(ConfigDirectoryPath, "NextBotAdapter.json");
 
     public void EnsureConfigComplete()
     {
-        EnsureDirectory();
+        EnsureDirectories();
         if (!File.Exists(ConfigFilePath))
         {
-            WriteConfigFile(NextBotAdapterConfig.Default);
+            Save(NextBotAdapterConfig.Default);
             PluginLogger.Info("默认插件配置文件已创建。");
             return;
         }
@@ -55,47 +56,44 @@ public sealed class PluginConfigService
         }
     }
 
-    public WhitelistSettings LoadWhitelistSettings()
+    public NextBotAdapterConfig Load()
     {
+        EnsureDirectories();
         if (!File.Exists(ConfigFilePath))
         {
-            return WhitelistSettings.Default;
+            return NextBotAdapterConfig.Default;
         }
 
         try
         {
             var config = JsonConvert.DeserializeObject<NextBotAdapterConfig>(File.ReadAllText(ConfigFilePath), JsonSettings);
-            return config?.Whitelist ?? WhitelistSettings.Default;
+            return (config ?? NextBotAdapterConfig.Default).WithDefaults();
         }
         catch (Exception ex)
         {
-            PluginLogger.Warn($"白名单配置加载失败，已回退到默认配置，原因：{ex.Message}");
-            return WhitelistSettings.Default;
+            PluginLogger.Warn($"插件配置加载失败，已回退到默认配置，原因：{ex.Message}");
+            return NextBotAdapterConfig.Default;
         }
     }
+
+    public NextBotAdapterConfig Reload()
+        => Load();
+
+    public void Save(NextBotAdapterConfig config)
+    {
+        EnsureDirectories();
+        WriteConfigFile(config.WithDefaults());
+    }
+
+    public WhitelistSettings LoadWhitelistSettings()
+        => Load().Whitelist;
 
     public LoginConfirmationSettings LoadLoginConfirmationSettings()
-    {
-        if (!File.Exists(ConfigFilePath))
-        {
-            return LoginConfirmationSettings.Default;
-        }
-
-        try
-        {
-            var config = JsonConvert.DeserializeObject<NextBotAdapterConfig>(File.ReadAllText(ConfigFilePath), JsonSettings);
-            return config?.LoginConfirmation ?? LoginConfirmationSettings.Default;
-        }
-        catch (Exception ex)
-        {
-            PluginLogger.Warn($"登入确认配置加载失败，已回退到默认配置，原因：{ex.Message}");
-            return LoginConfirmationSettings.Default;
-        }
-    }
+        => Load().LoginConfirmation ?? LoginConfirmationSettings.Default;
 
     public string ReadConfigRaw()
     {
-        EnsureDirectory();
+        EnsureDirectories();
         return File.Exists(ConfigFilePath)
             ? File.ReadAllText(ConfigFilePath)
             : JsonConvert.SerializeObject(NextBotAdapterConfig.Default, JsonSettings);
@@ -103,7 +101,7 @@ public sealed class PluginConfigService
 
     public bool TryUpdateConfig(IEnumerable<KeyValuePair<string, string>> fields, out string? error)
     {
-        EnsureDirectory();
+        EnsureDirectories();
         var text = File.Exists(ConfigFilePath)
             ? File.ReadAllText(ConfigFilePath)
             : JsonConvert.SerializeObject(NextBotAdapterConfig.Default, JsonSettings);
@@ -127,9 +125,10 @@ public sealed class PluginConfigService
         return true;
     }
 
-    internal void EnsureDirectory()
+    internal void EnsureDirectories()
     {
         Directory.CreateDirectory(ConfigDirectoryPath);
+        Directory.CreateDirectory(DataDirectoryPath);
     }
 
     private static JToken ParseValue(string value)

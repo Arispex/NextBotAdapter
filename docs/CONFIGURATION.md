@@ -5,9 +5,10 @@
 ```
 tshock/
 └── NextBotAdapter/
-    ├── NextBotAdapter.json   # 插件配置
-    ├── Whitelist.json        # 白名单数据
-    └── OnlineTime.json       # 玩家在线时长数据
+    ├── NextBotAdapter.json      # 插件配置
+    └── Data/
+        ├── Whitelist.json       # 白名单数据
+        └── OnlineTime.json      # 玩家在线时长数据
 ```
 
 首次启动时所有文件均会自动创建。
@@ -61,7 +62,7 @@ UUID 或 IP 发生变化时，玩家登录会被拒绝，需通过 `GET /nextbot
 
 ---
 
-## Whitelist.json
+## Data/Whitelist.json
 
 白名单玩家名称列表，由插件通过 API 自动维护，通常不需要手动编辑。
 
@@ -80,7 +81,7 @@ UUID 或 IP 发生变化时，玩家登录会被拒绝，需通过 `GET /nextbot
 
 ---
 
-## OnlineTime.json
+## Data/OnlineTime.json
 
 玩家在线时长累计数据，由插件自动维护，通常不需要手动编辑。
 
@@ -118,7 +119,7 @@ UUID 或 IP 发生变化时，玩家登录会被拒绝，需通过 `GET /nextbot
 GET /nextbot/config/reload?token=<token>
 ```
 
-两个文件均会重新从磁盘读取。
+三个文件均会重新从磁盘读取。
 
 ---
 
