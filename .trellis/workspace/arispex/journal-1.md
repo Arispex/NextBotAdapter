@@ -702,3 +702,54 @@ Reverted login confirmation to PlayerPreLogin hook. Fixed HasIpChanged to trigge
 ### Next Steps
 
 - None - task complete
+
+
+## Session 15: 白名单本地化 + NextBot 登入通知
+
+**Date**: 2026-04-08
+**Task**: 白名单本地化 + NextBot 登入通知
+
+### Summary
+
+(Add summary)
+
+### Main Changes
+
+| Feature | Description |
+|---------|-------------|
+| 白名单默认文案 | `WhitelistSettings.Default.DenyMessage` 改为中文「你不在白名单中，请在 QQ 群发送「注册账号 {playerName}」后重新连接」|
+| `{playerName}` 占位符 | `WhitelistService.TryValidateJoin` 按入服玩家名替换，跟 `{changed}` 同模式；插件兜底字符串同步成「你不在白名单中」|
+| NextBot 登入通知 | `INextBotSessionProbeService.NotifyLoginRequestAsync(settings, playerName, ct)` 新接口方法；POST `{baseUrl}/webui/api/login-requests?token=<token>`，body `{"name": playerName}` |
+| 状态码映射 | 201 → 成功；401 → "token 错误"；其他 → 解析 `{error:{code,message}}` → `"{code}: {message} (HTTP {status})"`；网络异常/超时统一兜底 |
+| 触发时机 | `EvaluateLoginConfirmation` 里 `RecordBlockedLogin` 之后 `_ = Task.Run(...)` fire-and-forget 调用；仅 UUID/IP 真正变更且无已有 pending/approval 的分支触发，不重复；失败只打 WARN，不影响玩家收到的 `ChangeDetectedMessage` |
+| 测试 | `ValidateJoin_ShouldReplacePlayerNamePlaceholderInDenyMessage`、`NotifyLoginRequest_*` ×5（未配置 / 201 + 断言 query token + path / 401 / 404 解析 error.code+message / 网络异常）；167/167 通过 |
+
+**Updated Files**:
+- `NextBotAdapter/Models/WhitelistSettings.cs`
+- `NextBotAdapter/Services/Security/WhitelistService.cs`
+- `NextBotAdapter/Services/NextBot/NextBotSessionProbeService.cs`
+- `NextBotAdapter/Plugin/NextBotAdapterPlugin.cs`
+- `NextBotAdapter.Tests/WhitelistServiceTests.cs`
+- `NextBotAdapter.Tests/NextBotSessionProbeServiceTests.cs`
+- `NextBotAdapter.Tests/ConfigEndpointsTests.cs`（FakeProbeService 补实现 NotifyLoginRequestAsync）
+- `docs/CONFIGURATION.md` / `docs/REST_API.md`（denyMessage 默认值 + 占位符说明）
+
+
+### Git Commits
+
+| Hash | Message |
+|------|---------|
+| `230c792` | (see git log) |
+| `6ddea0f` | (see git log) |
+
+### Testing
+
+- [OK] (Add test results)
+
+### Status
+
+[OK] **Completed**
+
+### Next Steps
+
+- None - task complete
