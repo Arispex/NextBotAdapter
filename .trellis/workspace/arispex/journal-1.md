@@ -536,3 +536,61 @@ Reverted login confirmation to PlayerPreLogin hook. Fixed HasIpChanged to trigge
 ### Next Steps
 
 - None - task complete
+
+
+## Session 12: NextBot 上游连接验证
+
+**Date**: 2026-04-08
+**Task**: NextBot 上游连接验证
+
+### Summary
+
+(Add summary)
+
+### Main Changes
+
+| Feature | Description |
+|---------|-------------|
+| 文档同步 | `docs/CONFIGURATION.md` / `docs/REST_API.md` 补上 `nextbot` 配置段（baseUrl/token）|
+| 探针服务 | 新增 `NextBotSessionProbeService`，`POST {baseUrl}/webui/api/session` 验证 token；枚举 Skipped/Ok/Unauthorized/InvalidToken/Unreachable |
+| 启动验证 | 插件 `Initialize()` fire-and-forget 调用一次探针，按结果打日志（成功/跳过/失败）|
+| REST 端点 | 新增 `GET /nextbot/config/verify-nextbot`（权限 `nextbot.config.verify_nextbot`），返回 probeStatus/message/baseUrl/httpStatus |
+| 测试 | 新增 `NextBotSessionProbeServiceTests`（8 条，FakeHttpMessageHandler 覆盖全部分支）+ `ConfigEndpointsTests.VerifyNextBot_*` 2 条；同步更新 EndpointBehaviorTests / EndpointRegistrarTests；全量 153/153 通过 |
+
+**Updated Files**:
+- `NextBotAdapter/Services/NextBot/NextBotSessionProbeService.cs`（新增）
+- `NextBotAdapter/Plugin/NextBotAdapterPlugin.cs`
+- `NextBotAdapter/Rest/ConfigEndpoints.cs`
+- `NextBotAdapter/Rest/EndpointRegistrar.cs`
+- `NextBotAdapter/Infrastructure/EndpointRoutes.cs`
+- `NextBotAdapter/Infrastructure/Permissions.cs`
+- `NextBotAdapter.Tests/NextBotSessionProbeServiceTests.cs`（新增）
+- `NextBotAdapter.Tests/ConfigEndpointsTests.cs`
+- `NextBotAdapter.Tests/EndpointBehaviorTests.cs`
+- `NextBotAdapter.Tests/EndpointRegistrarTests.cs`
+- `docs/CONFIGURATION.md`
+- `docs/REST_API.md`
+
+**Notes**:
+- `RestObject` 构造器已占用 `status` key，响应里改用 `probeStatus` 字段避免 Dictionary 冲突
+- 探针超时 5s，使用 static HttpClient 避免 socket 耗尽；启动时 try/catch 包住 fire-and-forget Task
+
+
+### Git Commits
+
+| Hash | Message |
+|------|---------|
+| `785a5ce` | (see git log) |
+| `366f819` | (see git log) |
+
+### Testing
+
+- [OK] (Add test results)
+
+### Status
+
+[OK] **Completed**
+
+### Next Steps
+
+- None - task complete
