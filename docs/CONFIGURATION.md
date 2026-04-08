@@ -88,7 +88,6 @@ UUID 或 IP 发生变化时，玩家登录会被拒绝，需通过 `GET /nextbot
 
 - Terraria UUID 是客户端可控、非秘密的标识，同机器 / 同局域网 / 服务器日志都可能泄漏；一旦泄漏，攻击者可以在同 IP 下冒充
 - 账号第一次被成功 `autoLogin` 的设备，会被 `SetUserAccountUUID` / `UpdateLogin` 写入为新的信任基线；这意味着**任一次鉴权失误都会被沉淀为合法凭据**
-- 攻击者以目标用户名连入会产生 pending 记录，期间合法用户的 `autoLogin` 与手动 `/login` 都会被 `pendingExistsMessage` 拒绝（最长 5 分钟）
 
 **建议**：
 
