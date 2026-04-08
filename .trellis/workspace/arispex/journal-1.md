@@ -594,3 +594,58 @@ Reverted login confirmation to PlayerPreLogin hook. Fixed HasIpChanged to trigge
 ### Next Steps
 
 - None - task complete
+
+
+## Session 13: loginConfirmation.autoLogin 配置项
+
+**Date**: 2026-04-08
+**Task**: loginConfirmation.autoLogin 配置项
+
+### Summary
+
+(Add summary)
+
+### Main Changes
+
+| Feature | Description |
+|---------|-------------|
+| 配置字段 | `LoginConfirmationSettings` 新增 `autoLogin: bool`（默认 false）|
+| 触发时机 | 新增 `ServerApi.Hooks.NetGreetPlayer` 钩子，玩家进服后查找同名账号并自动登入 |
+| 共享校验 | 抽取 `EvaluateLoginConfirmation` 私有方法，手动 `/login`（PreLogin）与 autoLogin 复用同一份 UUID/IP 校验逻辑 |
+| 登入实现 | `PerformAutoLogin` 设置 `Account`/`IsLoggedIn`/`Group`、SSC 下恢复角色；调用 `TShock.UserAccounts.SetUserAccountUUID` + `UpdateLogin` 同步账号 UUID/KnownIps/LastAccessed 基线（避免下次合法登入被误判为设备变更）|
+| 安全硬化 | `IsAutoLoginConfigurationSafe` 前置断言：autoLogin 必须与 `enabled=true` + (`detectUuid` 或 `detectIp`) 并存，否则静默跳过；`Initialize()` 启动时按配置分两种 WARN 提醒 |
+| 文档 | `CONFIGURATION.md` 新增 "autoLogin 安全说明" 小节（生效前置条件 / UUID 非秘密 / 信任基线覆写 / pending DoS 窗口 / 建议配合 detectUuid+detectIp）；REST_API.md 同步字段 |
+| 测试 | `LoginConfirmationDefault_AutoLoginDisabled`、`EnsureConfigComplete_*` 加 AutoLogin=false 断言、`Update_ShouldSupportDotNotationForNestedFields` 覆盖 `loginConfirmation.autoLogin` 路径；154/154 通过 |
+
+**Updated Files**:
+- `NextBotAdapter/Models/LoginConfirmationSettings.cs`
+- `NextBotAdapter/Plugin/NextBotAdapterPlugin.cs`
+- `NextBotAdapter.Tests/ConfigEndpointsTests.cs`
+- `NextBotAdapter.Tests/PluginConfigServiceTests.cs`
+- `docs/CONFIGURATION.md`
+- `docs/REST_API.md`
+
+**Security Notes**:
+- autoLogin 把鉴权从"密码"降级为"设备指纹 (UUID + 上次登录 IP)"，其中 UUID 为客户端可控、非秘密字段
+- 一次成功 autoLogin 会通过 `SetUserAccountUUID`/`UpdateLogin` 沉淀为新信任基线，意味着任一次鉴权失误都会变成合法凭据
+- 因此加了硬性前置断言：`enabled=false` 或 `detectUuid/detectIp` 全关 时，autoLogin 静默跳过，退化为正常手动 /login
+- 未实现"管理员账号禁用 autoLogin"的强制机制，按用户要求暂不写入文档
+
+
+### Git Commits
+
+| Hash | Message |
+|------|---------|
+| `8482087` | (see git log) |
+
+### Testing
+
+- [OK] (Add test results)
+
+### Status
+
+[OK] **Completed**
+
+### Next Steps
+
+- None - task complete
