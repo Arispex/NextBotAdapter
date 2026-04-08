@@ -8,7 +8,7 @@
 
 <!-- @@@auto:current-status -->
 - **Active File**: `journal-1.md`
-- **Total Sessions**: 13
+- **Total Sessions**: 14
 - **Last Active**: 2026-04-08
 <!-- @@@/auto:current-status -->
 
@@ -19,7 +19,7 @@
 <!-- @@@auto:active-documents -->
 | File | Lines | Status |
 |------|-------|--------|
-| `journal-1.md` | ~651 | Active |
+| `journal-1.md` | ~704 | Active |
 <!-- @@@/auto:active-documents -->
 
 ---
@@ -29,6 +29,7 @@
 <!-- @@@auto:session-history -->
 | # | Date | Title | Commits |
 |---|------|-------|---------|
+| 14 | 2026-04-08 | 新增 reject-login 端点 | `bd0d931` |
 | 13 | 2026-04-08 | loginConfirmation.autoLogin 配置项 | `8482087` |
 | 12 | 2026-04-08 | NextBot 上游连接验证 | `785a5ce`, `366f819` |
 | 11 | 2026-04-07 | Rename WhitelistConfigService and extract WhitelistFileService | `10bb2ed` |

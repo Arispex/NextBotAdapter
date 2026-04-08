@@ -649,3 +649,56 @@ Reverted login confirmation to PlayerPreLogin hook. Fixed HasIpChanged to trigge
 ### Next Steps
 
 - None - task complete
+
+
+## Session 14: 新增 reject-login 端点
+
+**Date**: 2026-04-08
+**Task**: 新增 reject-login 端点
+
+### Summary
+
+(Add summary)
+
+### Main Changes
+
+| Feature | Description |
+|---------|-------------|
+| Service | `ILoginConfirmationService.TryRejectPendingLogin(username, out error)` 接口 + 实现 |
+| 语义 | 仅作用于 `_pendingLogins`，不动 `_approvals`；pending 不存在/已过期 → 400 + "No pending login request" |
+| REST | 新增 `GET /nextbot/security/reject-login/{user}`，权限 `nextbot.security.reject_login` |
+| 端点实现 | `SecurityEndpoints.RejectLogin` 对称 `ConfirmLogin`（空 user / 用户不存在 / 无 pending / 成功）|
+| 测试 | Service 3 条 + Endpoint 4 条（含 Fake 扩展 `rejectSucceeds/rejectError`）+ EndpointRegistrar/Behavior 路由对齐 2 条；161/161 通过 |
+| 文档 | `docs/REST_API.md` 在 confirm-login 之后追加对称 reject-login 章节，明确"不撤销 approval"语义 |
+
+**Updated Files**:
+- `NextBotAdapter/Services/Security/ILoginConfirmationService.cs`
+- `NextBotAdapter/Services/Security/LoginConfirmationService.cs`
+- `NextBotAdapter/Rest/SecurityEndpoints.cs`
+- `NextBotAdapter/Rest/EndpointRegistrar.cs`
+- `NextBotAdapter/Infrastructure/EndpointRoutes.cs`
+- `NextBotAdapter/Infrastructure/Permissions.cs`
+- `NextBotAdapter.Tests/LoginConfirmationServiceTests.cs`
+- `NextBotAdapter.Tests/SecurityEndpointsTests.cs`
+- `NextBotAdapter.Tests/EndpointBehaviorTests.cs`
+- `NextBotAdapter.Tests/EndpointRegistrarTests.cs`
+- `docs/REST_API.md`
+
+
+### Git Commits
+
+| Hash | Message |
+|------|---------|
+| `bd0d931` | (see git log) |
+
+### Testing
+
+- [OK] (Add test results)
+
+### Status
+
+[OK] **Completed**
+
+### Next Steps
+
+- None - task complete
