@@ -111,6 +111,112 @@ public sealed class PluginConfigServiceTests
         Assert.True(Directory.Exists(service.DataDirectoryPath));
     }
 
+    [Fact]
+    public void EnsureConfigComplete_ShouldFillMissingNestedStringFieldWithDefault()
+    {
+        var service = CreateService();
+        const string partialJson = """
+            {
+              "whitelist": {
+                "enabled": true,
+                "caseSensitive": false
+              }
+            }
+            """;
+        File.WriteAllText(service.ConfigFilePath, partialJson);
+
+        service.EnsureConfigComplete();
+
+        var result = JsonConvert.DeserializeObject<NextBotAdapterConfig>(
+            File.ReadAllText(service.ConfigFilePath), JsonSettings);
+        Assert.NotNull(result);
+        Assert.Equal(WhitelistSettings.Default.DenyMessage, result!.Whitelist.DenyMessage);
+        Assert.True(result.Whitelist.Enabled);
+        Assert.False(result.Whitelist.CaseSensitive);
+    }
+
+    [Fact]
+    public void EnsureConfigComplete_ShouldFillMissingNestedBoolFieldWithDefault()
+    {
+        var service = CreateService();
+        const string partialJson = """
+            {
+              "whitelist": {
+                "enabled": true,
+                "denyMessage": "xxxx"
+              }
+            }
+            """;
+        File.WriteAllText(service.ConfigFilePath, partialJson);
+
+        service.EnsureConfigComplete();
+
+        var result = JsonConvert.DeserializeObject<NextBotAdapterConfig>(
+            File.ReadAllText(service.ConfigFilePath), JsonSettings);
+        Assert.NotNull(result);
+        Assert.Equal(WhitelistSettings.Default.CaseSensitive, result!.Whitelist.CaseSensitive);
+        Assert.Equal("xxxx", result.Whitelist.DenyMessage);
+        Assert.True(result.Whitelist.Enabled);
+    }
+
+    [Fact]
+    public void EnsureConfigComplete_ShouldPreserveUserProvidedNestedValuesWhenCompletingSiblings()
+    {
+        var service = CreateService();
+        const string partialJson = """
+            {
+              "whitelist": {
+                "denyMessage": "xxxx"
+              },
+              "loginConfirmation": {
+                "enabled": false
+              }
+            }
+            """;
+        File.WriteAllText(service.ConfigFilePath, partialJson);
+
+        service.EnsureConfigComplete();
+
+        var result = JsonConvert.DeserializeObject<NextBotAdapterConfig>(
+            File.ReadAllText(service.ConfigFilePath), JsonSettings);
+        Assert.NotNull(result);
+        Assert.Equal("xxxx", result!.Whitelist.DenyMessage);
+        Assert.Equal(WhitelistSettings.Default.Enabled, result.Whitelist.Enabled);
+        Assert.Equal(WhitelistSettings.Default.CaseSensitive, result.Whitelist.CaseSensitive);
+        Assert.NotNull(result.LoginConfirmation);
+        Assert.False(result.LoginConfirmation!.Enabled);
+        Assert.Equal(LoginConfirmationSettings.Default.DetectUuid, result.LoginConfirmation.DetectUuid);
+        Assert.Equal(LoginConfirmationSettings.Default.DetectIp, result.LoginConfirmation.DetectIp);
+        Assert.Equal(LoginConfirmationSettings.Default.EmptyUuidMessage, result.LoginConfirmation.EmptyUuidMessage);
+        Assert.Equal(LoginConfirmationSettings.Default.ChangeDetectedMessage, result.LoginConfirmation.ChangeDetectedMessage);
+        Assert.Equal(LoginConfirmationSettings.Default.DeviceMismatchMessage, result.LoginConfirmation.DeviceMismatchMessage);
+        Assert.Equal(LoginConfirmationSettings.Default.PendingExistsMessage, result.LoginConfirmation.PendingExistsMessage);
+    }
+
+    [Fact]
+    public void EnsureConfigComplete_ShouldIgnoreExplicitNullFromUser()
+    {
+        var service = CreateService();
+        const string partialJson = """
+            {
+              "whitelist": {
+                "enabled": true,
+                "denyMessage": null,
+                "caseSensitive": false
+              }
+            }
+            """;
+        File.WriteAllText(service.ConfigFilePath, partialJson);
+
+        service.EnsureConfigComplete();
+
+        var result = JsonConvert.DeserializeObject<NextBotAdapterConfig>(
+            File.ReadAllText(service.ConfigFilePath), JsonSettings);
+        Assert.NotNull(result);
+        Assert.Equal(WhitelistSettings.Default.DenyMessage, result!.Whitelist.DenyMessage);
+        Assert.False(result.Whitelist.CaseSensitive);
+    }
+
     private static PluginConfigService CreateService()
     {
         var root = Path.Combine(Path.GetTempPath(), "NextBotAdapter.Tests", Guid.NewGuid().ToString("N"));
