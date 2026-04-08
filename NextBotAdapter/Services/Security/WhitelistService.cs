@@ -221,7 +221,7 @@ public sealed class WhitelistService : IWhitelistService
                 return true;
             }
 
-            denialReason = _settings.DenyMessage;
+            denialReason = _settings.DenyMessage.Replace("{playerName}", user);
             return false;
         }
     }

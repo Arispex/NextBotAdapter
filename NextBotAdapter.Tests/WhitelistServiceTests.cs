@@ -82,6 +82,19 @@ public sealed class WhitelistServiceTests
     }
 
     [Fact]
+    public void ValidateJoin_ShouldReplacePlayerNamePlaceholderInDenyMessage()
+    {
+        var service = new WhitelistService(
+            new WhitelistSettings(true, "请发送「注册账号 {playerName}」", true),
+            new WhitelistStore(["Arispex"]));
+
+        var allowed = service.TryValidateJoin("NextBot", out var denialReason);
+
+        Assert.False(allowed);
+        Assert.Equal("请发送「注册账号 NextBot」", denialReason);
+    }
+
+    [Fact]
     public void ValidateJoin_ShouldAllowWhenWhitelistDisabled()
     {
         var service = new WhitelistService(new WhitelistSettings(false, "Access denied", true), new WhitelistStore([]));

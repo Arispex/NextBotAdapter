@@ -496,7 +496,7 @@ GET /nextbot/users/Arispex/inventory?token=<token>
   },
   "whitelist": {
     "enabled": true,
-    "denyMessage": "You are not on the whitelist.",
+    "denyMessage": "你不在白名单中，请在 QQ 群发送「注册账号 {playerName}」后重新连接",
     "caseSensitive": true
   },
   "loginConfirmation": {

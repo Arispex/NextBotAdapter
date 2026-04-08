@@ -137,8 +137,8 @@ public sealed class NextBotAdapterPlugin(Main game) : TerrariaPlugin(game)
     {
         if (_whitelistService is not null && !_whitelistService.TryValidateJoin(args.Name, out var denialReason))
         {
-            PluginLogger.Warn($"玩家 {args.Name} 入服被拒绝，原因：{denialReason ?? "You are not on the whitelist."}");
-            args.Player?.Disconnect(denialReason ?? "You are not on the whitelist.");
+            PluginLogger.Warn($"玩家 {args.Name} 入服被拒绝，原因：{denialReason ?? "你不在白名单中"}");
+            args.Player?.Disconnect(denialReason ?? "你不在白名单中");
             args.Handled = true;
         }
     }

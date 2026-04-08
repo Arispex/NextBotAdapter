@@ -27,7 +27,7 @@ tshock/
   },
   "whitelist": {
     "enabled": true,
-    "denyMessage": "You are not on the whitelist.",
+    "denyMessage": "你不在白名单中，请在 QQ 群发送「注册账号 {playerName}」后重新连接",
     "caseSensitive": true
   },
   "loginConfirmation": {
@@ -55,7 +55,7 @@ tshock/
 | 字段            | 类型    | 默认值                              | 说明                                         |
 |-----------------|---------|-------------------------------------|----------------------------------------------|
 | `enabled`       | boolean | `true`                              | 是否启用白名单。`false` 时所有玩家均可入服   |
-| `denyMessage`   | string  | `"You are not on the whitelist."`   | 玩家不在白名单时的拒绝提示                   |
+| `denyMessage`   | string  | `"你不在白名单中，请在 QQ 群发送「注册账号 {playerName}」后重新连接"` | 玩家不在白名单时的拒绝提示。`{playerName}` 会被替换为当前尝试入服的玩家用户名 |
 | `caseSensitive` | boolean | `true`                              | 玩家名称比较是否区分大小写                   |
 
 ### `loginConfirmation`
