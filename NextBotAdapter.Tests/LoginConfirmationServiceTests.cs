@@ -148,6 +148,46 @@ public sealed class LoginConfirmationServiceTests
     }
 
     [Fact]
+    public void TryRejectPendingLogin_ShouldFailWhenNoPending()
+    {
+        var service = new LoginConfirmationService();
+
+        var result = service.TryRejectPendingLogin("alice", out var error);
+
+        Assert.False(result);
+        Assert.NotNull(error);
+        Assert.Contains("alice", error);
+    }
+
+    [Fact]
+    public void TryRejectPendingLogin_ShouldRemovePendingAndBlockFutureApproval()
+    {
+        var service = new LoginConfirmationService();
+        service.RecordBlockedLogin("alice", "uuid", "1.2.3.4");
+
+        Assert.True(service.TryRejectPendingLogin("alice", out _));
+        Assert.False(service.HasActivePending("alice"));
+
+        var approveResult = service.TryApproveNextLogin("alice", out var approveError);
+        Assert.False(approveResult);
+        Assert.Contains("No pending login", approveError);
+    }
+
+    [Fact]
+    public void TryRejectPendingLogin_ShouldNotAffectExistingApproval()
+    {
+        var service = new LoginConfirmationService();
+        service.RecordBlockedLogin("alice", "uuid", "1.2.3.4");
+        service.TryApproveNextLogin("alice", out _);
+
+        var result = service.TryRejectPendingLogin("alice", out _);
+
+        Assert.False(result);
+        Assert.True(service.HasActiveApproval("alice"));
+        Assert.True(service.ConsumeApproval("alice", "uuid", "1.2.3.4"));
+    }
+
+    [Fact]
     public void HasActivePending_ShouldReturnFalseAfterApproval()
     {
         var service = new LoginConfirmationService();

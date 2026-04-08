@@ -29,7 +29,8 @@ public sealed class EndpointBehaviorTests
             command => AssertRoute(command, EndpointRoutes.LeaderboardDeaths, Permissions.LeaderboardDeaths),
             command => AssertRoute(command, EndpointRoutes.LeaderboardFishingQuests, Permissions.LeaderboardFishingQuests),
             command => AssertRoute(command, EndpointRoutes.LeaderboardOnlineTime, Permissions.LeaderboardOnlineTime),
-            command => AssertRoute(command, EndpointRoutes.SecurityConfirmLogin, Permissions.SecurityConfirmLogin));
+            command => AssertRoute(command, EndpointRoutes.SecurityConfirmLogin, Permissions.SecurityConfirmLogin),
+            command => AssertRoute(command, EndpointRoutes.SecurityRejectLogin, Permissions.SecurityRejectLogin));
     }
 
     private static void AssertRoute(RestCommand command, string expectedRoute, string expectedPermission)

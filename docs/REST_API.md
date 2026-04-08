@@ -448,6 +448,36 @@ GET /nextbot/users/Arispex/inventory?token=<token>
 
 ---
 
+### GET `/nextbot/security/reject-login/{user}`
+
+拒绝指定玩家当前待确认（pending）的登入请求。**仅作用于 pending 状态**——若该用户已经被 confirm（存在有效 approval），此端点不会撤销 approval，而是返回 400。
+
+**权限：** `nextbot.security.reject_login`
+
+**参数**
+
+| 名称   | 位置     | 说明             |
+|--------|----------|------------------|
+| `user` | 路由参数 | 要拒绝的用户名   |
+
+**响应 200**
+
+```json
+{
+  "response": "User 'Arispex' login request has been rejected."
+}
+```
+
+**错误**
+
+| 状态码 | `error`                                                  | 原因                                                      |
+|--------|----------------------------------------------------------|-----------------------------------------------------------|
+| 400    | `Missing required route parameter 'user'.`               | `{user}` 为空                                             |
+| 400    | `User was not found.`                                    | 找不到该账号                                              |
+| 400    | `No pending login request found for user '{user}'.`     | 无待处理 pending（不存在 / 已过期 / 已被 confirm 消耗）   |
+
+---
+
 ## Config（配置）
 
 ### GET `/nextbot/config`

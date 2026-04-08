@@ -24,7 +24,8 @@ public static class EndpointRegistrar
             new SecureRestCommand(Infrastructure.EndpointRoutes.LeaderboardDeaths, LeaderboardEndpoints.Deaths, Infrastructure.Permissions.LeaderboardDeaths),
             new SecureRestCommand(Infrastructure.EndpointRoutes.LeaderboardFishingQuests, LeaderboardEndpoints.FishingQuests, Infrastructure.Permissions.LeaderboardFishingQuests),
             new SecureRestCommand(Infrastructure.EndpointRoutes.LeaderboardOnlineTime, LeaderboardEndpoints.OnlineTime, Infrastructure.Permissions.LeaderboardOnlineTime),
-            new SecureRestCommand(Infrastructure.EndpointRoutes.SecurityConfirmLogin, SecurityEndpoints.ConfirmLogin, Infrastructure.Permissions.SecurityConfirmLogin)
+            new SecureRestCommand(Infrastructure.EndpointRoutes.SecurityConfirmLogin, SecurityEndpoints.ConfirmLogin, Infrastructure.Permissions.SecurityConfirmLogin),
+            new SecureRestCommand(Infrastructure.EndpointRoutes.SecurityRejectLogin, SecurityEndpoints.RejectLogin, Infrastructure.Permissions.SecurityRejectLogin)
         ];
     }
 

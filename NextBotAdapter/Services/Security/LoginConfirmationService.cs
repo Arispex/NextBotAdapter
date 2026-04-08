@@ -20,6 +20,25 @@ public sealed class LoginConfirmationService : ILoginConfirmationService
         }
     }
 
+    public bool TryRejectPendingLogin(string username, out string? error)
+    {
+        lock (_lock)
+        {
+            if (!_pendingLogins.TryGetValue(username, out var pending) || DateTime.UtcNow > pending.ExpiresAt)
+            {
+                _pendingLogins.Remove(username);
+                error = $"No pending login request found for user '{username}'.";
+                return false;
+            }
+
+            _pendingLogins.Remove(username);
+        }
+
+        PluginLogger.Info($"玩家 {username} 的待确认登入请求已被拒绝。");
+        error = null;
+        return true;
+    }
+
     public bool TryApproveNextLogin(string username, out string? error)
     {
         lock (_lock)

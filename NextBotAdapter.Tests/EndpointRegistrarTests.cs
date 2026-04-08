@@ -39,7 +39,8 @@ public sealed class EndpointRegistrarTests
             command => AssertRoute(command, EndpointRoutes.LeaderboardDeaths, NextBotAdapter.Infrastructure.Permissions.LeaderboardDeaths),
             command => AssertRoute(command, EndpointRoutes.LeaderboardFishingQuests, NextBotAdapter.Infrastructure.Permissions.LeaderboardFishingQuests),
             command => AssertRoute(command, EndpointRoutes.LeaderboardOnlineTime, NextBotAdapter.Infrastructure.Permissions.LeaderboardOnlineTime),
-            command => AssertRoute(command, EndpointRoutes.SecurityConfirmLogin, NextBotAdapter.Infrastructure.Permissions.SecurityConfirmLogin));
+            command => AssertRoute(command, EndpointRoutes.SecurityConfirmLogin, NextBotAdapter.Infrastructure.Permissions.SecurityConfirmLogin),
+            command => AssertRoute(command, EndpointRoutes.SecurityRejectLogin, NextBotAdapter.Infrastructure.Permissions.SecurityRejectLogin));
     }
 
     private static void AssertRoute(RestCommand command, string expectedRoute, string expectedPermission)

@@ -50,7 +50,55 @@ public sealed class SecurityEndpointsTests
         Assert.Contains("alice", result["response"]?.ToString());
     }
 
-    private sealed class FakeLoginConfirmationService(bool approveSucceeds = true, string? approveError = null) : ILoginConfirmationService
+    [Fact]
+    public void RejectLogin_ShouldReturnBadRequestWhenUserIsBlank()
+    {
+        var result = Assert.IsType<RestObject>(
+            SecurityEndpoints.RejectLogin(" ", new FakeLoginConfirmationService(), new FakeGateway()));
+
+        Assert.Equal("400", result.Status);
+        Assert.Equal("Missing required route parameter 'user'.", result.Error);
+    }
+
+    [Fact]
+    public void RejectLogin_ShouldReturnBadRequestWhenUserNotFound()
+    {
+        var result = Assert.IsType<RestObject>(
+            SecurityEndpoints.RejectLogin("alice", new FakeLoginConfirmationService(), new FakeGateway(accountExists: false)));
+
+        Assert.Equal("400", result.Status);
+        Assert.Equal("User was not found.", result.Error);
+    }
+
+    [Fact]
+    public void RejectLogin_ShouldReturnBadRequestWhenNoPendingLogin()
+    {
+        var service = new FakeLoginConfirmationService(rejectSucceeds: false, rejectError: "No pending login request found for user 'alice'.");
+
+        var result = Assert.IsType<RestObject>(
+            SecurityEndpoints.RejectLogin("alice", service, new FakeGateway()));
+
+        Assert.Equal("400", result.Status);
+        Assert.Contains("alice", result.Error ?? "");
+    }
+
+    [Fact]
+    public void RejectLogin_ShouldReturnOkWhenRejectSucceeds()
+    {
+        var service = new FakeLoginConfirmationService(rejectSucceeds: true);
+
+        var result = Assert.IsType<RestObject>(
+            SecurityEndpoints.RejectLogin("alice", service, new FakeGateway()));
+
+        Assert.Equal("200", result.Status);
+        Assert.Contains("alice", result["response"]?.ToString());
+    }
+
+    private sealed class FakeLoginConfirmationService(
+        bool approveSucceeds = true,
+        string? approveError = null,
+        bool rejectSucceeds = true,
+        string? rejectError = null) : ILoginConfirmationService
     {
         public void RecordBlockedLogin(string username, string? detectedUuid, string? detectedIp) { }
 
@@ -58,6 +106,12 @@ public sealed class SecurityEndpointsTests
         {
             error = approveSucceeds ? null : approveError;
             return approveSucceeds;
+        }
+
+        public bool TryRejectPendingLogin(string username, out string? error)
+        {
+            error = rejectSucceeds ? null : rejectError;
+            return rejectSucceeds;
         }
 
         public bool ConsumeApproval(string username, string? currentUuid, string? currentIp) => false;
