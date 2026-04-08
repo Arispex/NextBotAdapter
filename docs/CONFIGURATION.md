@@ -34,6 +34,7 @@ tshock/
     "enabled": true,
     "detectUuid": true,
     "detectIp": true,
+    "autoLogin": false,
     "emptyUuidMessage": "无法获取你的 UUID，请联系管理员。",
     "changeDetectedMessage": "你的 {changed} 发生变化，请在 QQ 群发送「登入」后重新连接。",
     "deviceMismatchMessage": "该账号已通过登入确认，但当前设备与确认时不一致，请使用原设备登入。",
@@ -64,12 +65,34 @@ tshock/
 | `enabled`               | boolean | `true`                                                                         | 是否启用 UUID/IP 变更二次确认。`false` 时跳过所有检测             |
 | `detectUuid`            | boolean | `true`                                                                         | 是否检测 UUID 变更                                                 |
 | `detectIp`              | boolean | `true`                                                                         | 是否检测 IP 变更                                                   |
+| `autoLogin`             | boolean | `false`                                                                        | 玩家进入服务器后，自动登入与其用户名匹配的 TShock 账号，无需手动 `/login`。详见下方"autoLogin 安全说明" |
 | `emptyUuidMessage`      | string  | `"无法获取你的 UUID，请联系管理员。"`                                          | UUID 为空时的拒绝提示                                              |
 | `changeDetectedMessage` | string  | `"你的 {changed} 发生变化，请在 QQ 群发送「登入」后重新连接。"`               | UUID/IP 变化时的拒绝提示。`{changed}` 会被替换为 `UUID`、`IP` 或 `UUID 和 IP` |
 | `deviceMismatchMessage` | string  | `"该账号已通过登入确认，但当前设备与确认时不一致，请使用原设备登入。"`         | 已有审批但设备不匹配时的拒绝提示                                   |
 | `pendingExistsMessage`  | string  | `"该账号已有待确认的登入请求，请等待其过期后再试。"`                           | 已有待确认请求时的拒绝提示                                         |
 
 UUID 或 IP 发生变化时，玩家登录会被拒绝，需通过 `GET /nextbot/security/confirm-login/{user}` 完成二次确认。
+
+### autoLogin 安全说明
+
+启用 `autoLogin` 后，密码不再参与鉴权，**账号鉴权完全依赖设备指纹**（Terraria 客户端 UUID + 账号 `KnownIps` 中最近一次登录 IP）。插件在登入成功后会同步调用 TShock 的 `SetUserAccountUUID` / `UpdateLogin`，更新账号 UUID 和 IP 基线。
+
+**生效前置条件（由插件强制）**：
+
+- `enabled` 必须为 `true`
+- `detectUuid` 和 `detectIp` 至少一个为 `true`
+
+任一条件不满足时，`autoLogin` 会被静默跳过，玩家正常进服后需手动 `/login`，以避免出现"任何人只要用目标用户名连入就能登入"的裸奔场景。
+
+**已知风险**：
+
+- Terraria UUID 是客户端可控、非秘密的标识，同机器 / 同局域网 / 服务器日志都可能泄漏；一旦泄漏，攻击者可以在同 IP 下冒充
+- 账号第一次被成功 `autoLogin` 的设备，会被 `SetUserAccountUUID` / `UpdateLogin` 写入为新的信任基线；这意味着**任一次鉴权失误都会被沉淀为合法凭据**
+- 攻击者以目标用户名连入会产生 pending 记录，期间合法用户的 `autoLogin` 与手动 `/login` 都会被 `pendingExistsMessage` 拒绝（最长 5 分钟）
+
+**建议**：
+
+- 与 `loginConfirmation.enabled=true` + `detectUuid=true` + `detectIp=true` 同时使用，提高攻破门槛
 
 ---
 

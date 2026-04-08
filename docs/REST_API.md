@@ -473,6 +473,7 @@ GET /nextbot/users/Arispex/inventory?token=<token>
     "enabled": true,
     "detectUuid": true,
     "detectIp": true,
+    "autoLogin": false,
     "emptyUuidMessage": "无法获取你的 UUID，请联系管理员。",
     "changeDetectedMessage": "你的 {changed} 发生变化，请在 QQ 群发送「登入」后重新连接。",
     "deviceMismatchMessage": "该账号已通过登入确认，但当前设备与确认时不一致，请使用原设备登入。",

@@ -201,6 +201,13 @@ public sealed class PluginConfigServiceTests
         Assert.Equal(LoginConfirmationSettings.Default.ChangeDetectedMessage, result.LoginConfirmation.ChangeDetectedMessage);
         Assert.Equal(LoginConfirmationSettings.Default.DeviceMismatchMessage, result.LoginConfirmation.DeviceMismatchMessage);
         Assert.Equal(LoginConfirmationSettings.Default.PendingExistsMessage, result.LoginConfirmation.PendingExistsMessage);
+        Assert.False(result.LoginConfirmation.AutoLogin);
+    }
+
+    [Fact]
+    public void LoginConfirmationDefault_AutoLoginDisabled()
+    {
+        Assert.False(LoginConfirmationSettings.Default.AutoLogin);
     }
 
     [Fact]

@@ -8,6 +8,7 @@ using NextBotAdapter.Services;
 using Terraria;
 using TerrariaApi.Server;
 using TShockAPI;
+using TShockAPI.DB;
 using TShockAPI.Hooks;
 
 namespace NextBotAdapter.Plugin;
@@ -63,10 +64,24 @@ public sealed class NextBotAdapterPlugin(Main game) : TerrariaPlugin(game)
         PlayerHooks.PlayerPreLogin += OnPlayerPreLogin;
         PlayerHooks.PlayerPostLogin += OnPlayerPostLogin;
         ServerApi.Hooks.ServerLeave.Register(this, OnServerLeave);
+        ServerApi.Hooks.NetGreetPlayer.Register(this, OnNetGreetPlayer);
 
         if (!_whitelistService.Settings.Enabled)
         {
             PluginLogger.Warn("白名单功能未启用，玩家入服时将跳过白名单校验。");
+        }
+
+        var initialLoginSettings = _configService.LoadLoginConfirmationSettings();
+        if (initialLoginSettings.AutoLogin)
+        {
+            if (!IsAutoLoginConfigurationSafe(initialLoginSettings))
+            {
+                PluginLogger.Warn("autoLogin 已启用但 loginConfirmation.enabled 为 false 或 detectUuid/detectIp 全为 false，自动登入将被跳过以防止任意账号冒充。");
+            }
+            else
+            {
+                PluginLogger.Warn("autoLogin 已启用：设备指纹 (UUID + 上次登录 IP) 将替代密码作为唯一鉴权因素。");
+            }
         }
     }
 
@@ -79,6 +94,7 @@ public sealed class NextBotAdapterPlugin(Main game) : TerrariaPlugin(game)
             PlayerHooks.PlayerPreLogin -= OnPlayerPreLogin;
             PlayerHooks.PlayerPostLogin -= OnPlayerPostLogin;
             ServerApi.Hooks.ServerLeave.Deregister(this, OnServerLeave);
+            ServerApi.Hooks.NetGreetPlayer.Deregister(this, OnNetGreetPlayer);
             AppDomain.CurrentDomain.AssemblyResolve -= CurrentDomain_AssemblyResolve;
         }
 
@@ -129,67 +145,165 @@ public sealed class NextBotAdapterPlugin(Main game) : TerrariaPlugin(game)
 
     private void OnPlayerPreLogin(PlayerPreLoginEventArgs args)
     {
-        var loginConfirmationSettings = _configService?.LoadLoginConfirmationSettings() ?? LoginConfirmationSettings.Default;
-        if (!loginConfirmationSettings.Enabled || _loginConfirmationService is null) return;
+        var settings = _configService?.LoadLoginConfirmationSettings() ?? LoginConfirmationSettings.Default;
+        if (!settings.Enabled || _loginConfirmationService is null) return;
 
         var player = args.Player;
         var loginName = args.LoginName;
-        var uuid = player.UUID;
+        var account = TShock.UserAccounts.GetUserAccountByName(loginName);
 
-        if (loginConfirmationSettings.DetectUuid && string.IsNullOrEmpty(uuid))
+        if (EvaluateLoginConfirmation(player, loginName, account, settings, out var denialReason))
         {
-            args.Handled = true;
-            player.Disconnect(loginConfirmationSettings.EmptyUuidMessage);
-            PluginLogger.Warn($"玩家 {loginName} 登入被拒绝：UUID 为空。");
+            return;
+        }
+
+        args.Handled = true;
+        player.Disconnect(denialReason!);
+    }
+
+    private void OnNetGreetPlayer(GreetPlayerEventArgs args)
+    {
+        var player = TShock.Players[args.Who];
+        if (player is null || player.IsLoggedIn)
+        {
+            return;
+        }
+
+        var settings = _configService?.LoadLoginConfirmationSettings() ?? LoginConfirmationSettings.Default;
+        if (!settings.AutoLogin)
+        {
+            return;
+        }
+
+        if (!IsAutoLoginConfigurationSafe(settings))
+        {
+            return;
+        }
+
+        var loginName = player.Name;
+        if (string.IsNullOrEmpty(loginName))
+        {
             return;
         }
 
         var account = TShock.UserAccounts.GetUserAccountByName(loginName);
-        if (account is null) return;
+        if (account is null)
+        {
+            return;
+        }
+
+        if (settings.Enabled && _loginConfirmationService is not null)
+        {
+            if (!EvaluateLoginConfirmation(player, loginName, account, settings, out var denialReason))
+            {
+                player.Disconnect(denialReason!);
+                return;
+            }
+        }
+
+        PerformAutoLogin(player, account);
+    }
+
+    // Returns true if login should be allowed; false if rejected (denialReason set).
+    // Safe to call with account == null (returns true — nothing to check).
+    private bool EvaluateLoginConfirmation(
+        TSPlayer player,
+        string loginName,
+        UserAccount? account,
+        LoginConfirmationSettings settings,
+        out string? denialReason)
+    {
+        denialReason = null;
+        var uuid = player.UUID ?? string.Empty;
+
+        if (settings.DetectUuid && string.IsNullOrEmpty(uuid))
+        {
+            denialReason = settings.EmptyUuidMessage;
+            PluginLogger.Warn($"玩家 {loginName} 登入被拒绝：UUID 为空。");
+            return false;
+        }
+
+        if (account is null)
+        {
+            return true;
+        }
 
         string? detectedUuid = null;
         string? detectedIp = null;
 
-        if (loginConfirmationSettings.DetectUuid && account.UUID != uuid)
+        if (settings.DetectUuid && account.UUID != uuid)
         {
             detectedUuid = uuid;
         }
 
-        if (loginConfirmationSettings.DetectIp && HasIpChanged(account.KnownIps, player.IP))
+        if (settings.DetectIp && HasIpChanged(account.KnownIps, player.IP))
         {
             detectedIp = player.IP;
         }
 
-        if (detectedUuid is null && detectedIp is null) return;
+        if (detectedUuid is null && detectedIp is null)
+        {
+            return true;
+        }
 
-        if (_loginConfirmationService.ConsumeApproval(loginName, uuid, player.IP))
+        if (_loginConfirmationService!.ConsumeApproval(loginName, uuid, player.IP))
         {
             PluginLogger.Info($"玩家 {loginName} 通过二次确认登入，UUID 或 IP 已变更。");
-            return;
+            return true;
         }
 
         if (_loginConfirmationService.HasActiveApproval(loginName))
         {
-            args.Handled = true;
-            player.Disconnect(loginConfirmationSettings.DeviceMismatchMessage);
+            denialReason = settings.DeviceMismatchMessage;
             PluginLogger.Warn($"玩家 {loginName} 登入被拒绝：存在有效审批但设备不匹配。");
-            return;
+            return false;
         }
 
         if (_loginConfirmationService.HasActivePending(loginName))
         {
-            args.Handled = true;
-            player.Disconnect(loginConfirmationSettings.PendingExistsMessage);
+            denialReason = settings.PendingExistsMessage;
             PluginLogger.Warn($"玩家 {loginName} 登入被拒绝：已存在待确认的登入请求。");
-            return;
+            return false;
         }
 
         _loginConfirmationService.RecordBlockedLogin(loginName, uuid, player.IP);
         var changed = detectedUuid != null && detectedIp != null ? "UUID 和 IP"
             : detectedUuid != null ? "UUID" : "IP";
-        args.Handled = true;
-        player.Disconnect(loginConfirmationSettings.ChangeDetectedMessage.Replace("{changed}", changed));
+        denialReason = settings.ChangeDetectedMessage.Replace("{changed}", changed);
         PluginLogger.Warn($"玩家 {loginName} 登入被拒绝：{changed} 发生变化。");
+        return false;
+    }
+
+    private static bool IsAutoLoginConfigurationSafe(LoginConfirmationSettings settings)
+        => settings.Enabled && (settings.DetectUuid || settings.DetectIp);
+
+    private void PerformAutoLogin(TSPlayer player, UserAccount account)
+    {
+        try
+        {
+            player.Group = TShock.Groups.GetGroupByName(account.Group);
+            player.tempGroup = null;
+            player.Account = account;
+            player.IsLoggedIn = true;
+            player.IsDisabledForSSC = false;
+
+            if (Main.ServerSideCharacter)
+            {
+                player.PlayerData = TShock.CharacterDB.GetPlayerData(player, account.ID);
+                player.PlayerData?.RestoreCharacter(player);
+            }
+
+            TShock.UserAccounts.SetUserAccountUUID(account, player.UUID ?? string.Empty);
+            TShock.UserAccounts.UpdateLogin(account);
+
+            _onlineTimeService?.StartSession(account.Name);
+            player.SendSuccessMessage($"已自动登入账号 {account.Name}。");
+            PluginLogger.Info($"玩家 {account.Name} 已自动登入。");
+        }
+        catch (Exception ex)
+        {
+            PluginLogger.Warn($"玩家 {account.Name} 自动登入失败，原因：{ex.Message}");
+        }
     }
 
     private async Task VerifyNextBotConnectionAsync()

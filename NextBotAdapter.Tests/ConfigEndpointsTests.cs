@@ -104,6 +104,7 @@ public sealed class ConfigEndpointsTests
         var fields = new List<KeyValuePair<string, string>>
         {
             new("loginConfirmation.detectUuid", "false"),
+            new("loginConfirmation.autoLogin", "true"),
             new("whitelist.denyMessage", "Custom message"),
             new("nextbot.baseUrl", "https://example.com/api"),
             new("nextbot.token", "secret-token")
@@ -115,6 +116,7 @@ public sealed class ConfigEndpointsTests
         var raw = File.ReadAllText(configService.ConfigFilePath);
         var config = JsonConvert.DeserializeObject<NextBotAdapterConfig>(raw, JsonSettings);
         Assert.False(config!.LoginConfirmation!.DetectUuid);
+        Assert.True(config.LoginConfirmation.AutoLogin);
         Assert.Equal("Custom message", config.Whitelist.DenyMessage);
         Assert.Equal("https://example.com/api", config.NextBot.BaseUrl);
         Assert.Equal("secret-token", config.NextBot.Token);
