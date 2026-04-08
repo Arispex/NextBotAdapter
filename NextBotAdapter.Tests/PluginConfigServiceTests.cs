@@ -43,6 +43,8 @@ public sealed class PluginConfigServiceTests
         service.EnsureConfigComplete();
 
         var raw = File.ReadAllText(service.ConfigFilePath);
+        Assert.Contains("\"nextbot\"", raw);
+        Assert.Contains("\"baseUrl\"", raw);
         Assert.Contains("\"loginConfirmation\"", raw);
         Assert.Contains("\"detectUuid\"", raw);
     }
@@ -52,6 +54,7 @@ public sealed class PluginConfigServiceTests
     {
         var service = CreateService();
         var config = new NextBotAdapterConfig(
+            new NextBotSettings("https://example.com", "secret"),
             new WhitelistSettings(false, "Custom deny", false),
             new LoginConfirmationSettings(false, false, true));
         File.WriteAllText(service.ConfigFilePath, JsonConvert.SerializeObject(config, JsonSettings));
@@ -61,7 +64,9 @@ public sealed class PluginConfigServiceTests
         var result = JsonConvert.DeserializeObject<NextBotAdapterConfig>(
             File.ReadAllText(service.ConfigFilePath), JsonSettings);
         Assert.NotNull(result);
-        Assert.False(result!.Whitelist.Enabled);
+        Assert.Equal("https://example.com", result!.NextBot.BaseUrl);
+        Assert.Equal("secret", result.NextBot.Token);
+        Assert.False(result.Whitelist.Enabled);
         Assert.Equal("Custom deny", result.Whitelist.DenyMessage);
         Assert.False(result.LoginConfirmation!.Enabled);
         Assert.False(result.LoginConfirmation.DetectUuid);
@@ -92,12 +97,17 @@ public sealed class PluginConfigServiceTests
         Assert.True(File.Exists(service.ConfigFilePath));
 
         var raw = File.ReadAllText(service.ConfigFilePath);
+        Assert.Contains("\"nextbot\"", raw);
+        Assert.Contains("\"baseUrl\"", raw);
         Assert.Contains("\"whitelist\"", raw);
         Assert.Contains("\"loginConfirmation\"", raw);
+        Assert.True(raw.IndexOf("\"nextbot\"", StringComparison.Ordinal) < raw.IndexOf("\"whitelist\"", StringComparison.Ordinal),
+            "nextbot section should serialize before whitelist section.");
 
         var config = JsonConvert.DeserializeObject<NextBotAdapterConfig>(raw, JsonSettings);
         Assert.NotNull(config);
-        Assert.Equal(WhitelistSettings.Default, config!.Whitelist);
+        Assert.Equal(NextBotSettings.Default, config!.NextBot);
+        Assert.Equal(WhitelistSettings.Default, config.Whitelist);
         Assert.Equal(LoginConfirmationSettings.Default, config.LoginConfirmation);
     }
 
