@@ -753,3 +753,35 @@ Reverted login confirmation to PlayerPreLogin hook. Fixed HasIpChanged to trigge
 ### Next Steps
 
 - None - task complete
+
+
+## Session 16: changeDetectedMessage 文案调整
+
+**Date**: 2026-04-08
+**Task**: changeDetectedMessage 文案调整
+
+### Summary
+
+LoginConfirmationSettings.ChangeDetectedMessage 默认值中「发送「登入」」改为「发送「允许登入」」，CONFIGURATION.md / REST_API.md 同步更新；纯文案改动，无测试受影响。
+
+### Main Changes
+
+
+
+### Git Commits
+
+| Hash | Message |
+|------|---------|
+| `7467be8` | (see git log) |
+
+### Testing
+
+- [OK] (Add test results)
+
+### Status
+
+[OK] **Completed**
+
+### Next Steps
+
+- None - task complete
