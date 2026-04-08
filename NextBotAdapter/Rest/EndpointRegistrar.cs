@@ -20,6 +20,7 @@ public static class EndpointRegistrar
             new SecureRestCommand(Infrastructure.EndpointRoutes.ConfigReload, ConfigEndpoints.Reload, Infrastructure.Permissions.ConfigReload),
             new SecureRestCommand(Infrastructure.EndpointRoutes.ConfigRead, ConfigEndpoints.Read, Infrastructure.Permissions.ConfigRead),
             new SecureRestCommand(Infrastructure.EndpointRoutes.ConfigUpdate, ConfigEndpoints.Update, Infrastructure.Permissions.ConfigUpdate),
+            new SecureRestCommand(Infrastructure.EndpointRoutes.ConfigVerifyNextBot, ConfigEndpoints.VerifyNextBot, Infrastructure.Permissions.ConfigVerifyNextBot),
             new SecureRestCommand(Infrastructure.EndpointRoutes.LeaderboardDeaths, LeaderboardEndpoints.Deaths, Infrastructure.Permissions.LeaderboardDeaths),
             new SecureRestCommand(Infrastructure.EndpointRoutes.LeaderboardFishingQuests, LeaderboardEndpoints.FishingQuests, Infrastructure.Permissions.LeaderboardFishingQuests),
             new SecureRestCommand(Infrastructure.EndpointRoutes.LeaderboardOnlineTime, LeaderboardEndpoints.OnlineTime, Infrastructure.Permissions.LeaderboardOnlineTime),

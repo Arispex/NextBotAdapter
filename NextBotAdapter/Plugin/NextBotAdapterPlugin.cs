@@ -1,6 +1,7 @@
 using System;
 using System.Diagnostics.CodeAnalysis;
 using System.Reflection;
+using System.Threading.Tasks;
 using NextBotAdapter.Models;
 using NextBotAdapter.Rest;
 using NextBotAdapter.Services;
@@ -19,6 +20,7 @@ public sealed class NextBotAdapterPlugin(Main game) : TerrariaPlugin(game)
     private WhitelistService? _whitelistService;
     private OnlineTimeService? _onlineTimeService;
     private LoginConfirmationService? _loginConfirmationService;
+    private NextBotSessionProbeService? _nextBotProbeService;
 
     public override string Author => "Arispex";
 
@@ -50,7 +52,12 @@ public sealed class NextBotAdapterPlugin(Main game) : TerrariaPlugin(game)
         _loginConfirmationService = new LoginConfirmationService();
         SecurityEndpoints.Service = _loginConfirmationService;
 
+        _nextBotProbeService = new NextBotSessionProbeService();
+        ConfigEndpoints.NextBotProbeService = _nextBotProbeService;
+
         EndpointRegistrar.Register(TShock.RestApi);
+
+        _ = Task.Run(VerifyNextBotConnectionAsync);
 
         GetDataHandlers.PlayerInfo.Register(OnPlayerInfo, HandlerPriority.Highest);
         PlayerHooks.PlayerPreLogin += OnPlayerPreLogin;
@@ -183,6 +190,37 @@ public sealed class NextBotAdapterPlugin(Main game) : TerrariaPlugin(game)
         args.Handled = true;
         player.Disconnect(loginConfirmationSettings.ChangeDetectedMessage.Replace("{changed}", changed));
         PluginLogger.Warn($"玩家 {loginName} 登入被拒绝：{changed} 发生变化。");
+    }
+
+    private async Task VerifyNextBotConnectionAsync()
+    {
+        try
+        {
+            if (_configService is null || _nextBotProbeService is null)
+            {
+                return;
+            }
+
+            var settings = _configService.Load().NextBot;
+            var result = await _nextBotProbeService.ProbeAsync(settings).ConfigureAwait(false);
+
+            switch (result.Status)
+            {
+                case NextBotProbeStatus.Ok:
+                    PluginLogger.Info("连接 NextBot 成功");
+                    break;
+                case NextBotProbeStatus.Skipped:
+                    PluginLogger.Info($"连接 NextBot 跳过：{result.Message}");
+                    break;
+                default:
+                    PluginLogger.Warn($"连接 NextBot 失败：{result.Message}");
+                    break;
+            }
+        }
+        catch (Exception ex)
+        {
+            PluginLogger.Warn($"连接 NextBot 失败：{ex.Message}");
+        }
     }
 
     private Assembly? CurrentDomain_AssemblyResolve(object? sender, ResolveEventArgs args)

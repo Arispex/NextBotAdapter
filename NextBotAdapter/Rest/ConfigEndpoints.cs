@@ -9,6 +9,7 @@ public static class ConfigEndpoints
 {
     public static IConfigurationReloadService ReloadService { get; set; } = null!;
     public static PluginConfigService ConfigService { get; set; } = null!;
+    public static INextBotSessionProbeService NextBotProbeService { get; set; } = null!;
 
     public static object Reload(RestRequestArgs _)
         => Reload(ReloadService);
@@ -87,5 +88,34 @@ public static class ConfigEndpoints
         }
 
         return new RestObject("200") { { "response", $"Updated {fields.Count} field(s) successfully." } };
+    }
+
+    public static object VerifyNextBot(RestRequestArgs _)
+        => VerifyNextBot(ConfigService, NextBotProbeService);
+
+    public static object VerifyNextBot(PluginConfigService configService, INextBotSessionProbeService probe)
+    {
+        try
+        {
+            var settings = configService.Load().NextBot;
+            var result = probe.ProbeAsync(settings).GetAwaiter().GetResult();
+
+            var obj = new RestObject("200")
+            {
+                { "probeStatus", result.Status.ToString() },
+                { "message", result.Message },
+                { "baseUrl", settings.BaseUrl },
+            };
+            if (result.HttpStatus is int code)
+            {
+                obj["httpStatus"] = code;
+            }
+            return obj;
+        }
+        catch (Exception ex)
+        {
+            PluginLogger.Error($"NextBot 连接验证端点调用失败，原因：{ex.Message}");
+            return EndpointResponseFactory.Error(ex.Message, "500");
+        }
     }
 }

@@ -25,6 +25,7 @@ public sealed class EndpointBehaviorTests
             command => AssertRoute(command, EndpointRoutes.ConfigReload, Permissions.ConfigReload),
             command => AssertRoute(command, EndpointRoutes.ConfigRead, Permissions.ConfigRead),
             command => AssertRoute(command, EndpointRoutes.ConfigUpdate, Permissions.ConfigUpdate),
+            command => AssertRoute(command, EndpointRoutes.ConfigVerifyNextBot, Permissions.ConfigVerifyNextBot),
             command => AssertRoute(command, EndpointRoutes.LeaderboardDeaths, Permissions.LeaderboardDeaths),
             command => AssertRoute(command, EndpointRoutes.LeaderboardFishingQuests, Permissions.LeaderboardFishingQuests),
             command => AssertRoute(command, EndpointRoutes.LeaderboardOnlineTime, Permissions.LeaderboardOnlineTime),

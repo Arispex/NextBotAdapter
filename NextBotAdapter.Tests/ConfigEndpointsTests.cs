@@ -1,4 +1,6 @@
 using System.IO;
+using System.Threading;
+using System.Threading.Tasks;
 using Newtonsoft.Json;
 using NextBotAdapter.Infrastructure;
 using NextBotAdapter.Models;
@@ -116,6 +118,44 @@ public sealed class ConfigEndpointsTests
         Assert.Equal("Custom message", config.Whitelist.DenyMessage);
         Assert.Equal("https://example.com/api", config.NextBot.BaseUrl);
         Assert.Equal("secret-token", config.NextBot.Token);
+    }
+
+    [Fact]
+    public void VerifyNextBot_ReturnsProbeStatus()
+    {
+        var configService = CreateConfigService();
+        configService.TryUpdateConfig(new List<KeyValuePair<string, string>>
+        {
+            new("nextbot.baseUrl", "https://example.com"),
+            new("nextbot.token", "secret"),
+        }, out _);
+
+        var probe = new FakeProbeService(new NextBotProbeResult(NextBotProbeStatus.Ok, 201, "上游返回 201 Created，token 有效"));
+
+        var result = Assert.IsType<RestObject>(ConfigEndpoints.VerifyNextBot(configService, probe));
+
+        Assert.Equal("200", result.Status);
+        Assert.Equal("Ok", result["probeStatus"]);
+        Assert.Equal("https://example.com", result["baseUrl"]);
+        Assert.Equal(201, result["httpStatus"]);
+    }
+
+    [Fact]
+    public void VerifyNextBot_ReturnsSkippedWhenNotConfigured()
+    {
+        var configService = CreateConfigService();
+        var probe = new FakeProbeService(new NextBotProbeResult(NextBotProbeStatus.Skipped, null, "未配置 baseUrl 或 token"));
+
+        var result = Assert.IsType<RestObject>(ConfigEndpoints.VerifyNextBot(configService, probe));
+
+        Assert.Equal("200", result.Status);
+        Assert.Equal("Skipped", result["probeStatus"]);
+    }
+
+    private sealed class FakeProbeService(NextBotProbeResult result) : INextBotSessionProbeService
+    {
+        public Task<NextBotProbeResult> ProbeAsync(NextBotSettings settings, CancellationToken ct = default)
+            => Task.FromResult(result);
     }
 
     private static PluginConfigService CreateConfigService()

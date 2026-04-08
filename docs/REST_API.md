@@ -533,3 +533,68 @@ GET /nextbot/users/Arispex/inventory?token=<token>
 | 状态码 | `error`               | 原因           |
 |--------|-----------------------|----------------|
 | 500    | `<异常信息>`          | 配置重载失败   |
+
+---
+
+### GET `/nextbot/config/verify-nextbot`
+
+按需触发一次与 NextBot 上游的连接验证，调用 `POST {baseUrl}/webui/api/session` 探测 token 是否有效。插件启动时也会自动执行一次同样的验证并写入日志。
+
+**权限：** `nextbot.config.verify_nextbot`
+
+**响应 200**
+
+| 字段          | 类型           | 说明                                                                                              |
+|---------------|----------------|---------------------------------------------------------------------------------------------------|
+| `probeStatus` | string         | `Ok` / `Skipped` / `Unauthorized` / `InvalidToken` / `Unreachable`                                |
+| `message`     | string         | 结果描述                                                                                          |
+| `baseUrl`     | string         | 当前配置的 NextBot baseUrl                                                                        |
+| `httpStatus`  | number \| 缺失 | 上游返回的 HTTP 状态码；`Skipped` 和部分 `Unreachable`（如非法 URL / 网络异常）场景下不返回此字段 |
+
+成功示例：
+
+```json
+{
+  "probeStatus": "Ok",
+  "message": "上游返回 201 Created，token 有效",
+  "baseUrl": "https://example.com",
+  "httpStatus": 201
+}
+```
+
+未配置示例：
+
+```json
+{
+  "probeStatus": "Skipped",
+  "message": "未配置 baseUrl 或 token",
+  "baseUrl": ""
+}
+```
+
+Token 错误示例：
+
+```json
+{
+  "probeStatus": "Unauthorized",
+  "message": "token 错误",
+  "baseUrl": "https://example.com",
+  "httpStatus": 401
+}
+```
+
+网络不可达示例：
+
+```json
+{
+  "probeStatus": "Unreachable",
+  "message": "网络异常：No such host is known.",
+  "baseUrl": "https://not-exist.example"
+}
+```
+
+**错误**
+
+| 状态码 | `error`      | 原因                   |
+|--------|--------------|------------------------|
+| 500    | `<异常信息>` | 读取配置或调用探针失败 |
