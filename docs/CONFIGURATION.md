@@ -21,6 +21,10 @@ tshock/
 
 ```json
 {
+  "nextbot": {
+    "baseUrl": "",
+    "token": ""
+  },
   "whitelist": {
     "enabled": true,
     "denyMessage": "You are not on the whitelist.",
@@ -37,6 +41,13 @@ tshock/
   }
 }
 ```
+
+### `nextbot`
+
+| 字段       | 类型   | 默认值 | 说明                                    |
+|------------|--------|--------|-----------------------------------------|
+| `baseUrl`  | string | `""`   | NextBot 上游服务的基础 URL              |
+| `token`    | string | `""`   | 调用 NextBot 上游服务使用的鉴权 token   |
 
 ### `whitelist`
 

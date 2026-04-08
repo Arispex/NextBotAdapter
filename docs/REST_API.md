@@ -460,6 +460,10 @@ GET /nextbot/users/Arispex/inventory?token=<token>
 
 ```json
 {
+  "nextbot": {
+    "baseUrl": "",
+    "token": ""
+  },
   "whitelist": {
     "enabled": true,
     "denyMessage": "You are not on the whitelist.",
@@ -489,7 +493,7 @@ GET /nextbot/users/Arispex/inventory?token=<token>
 
 通过 query string 传递，key 为点号分隔的字段路径，value 为新值。
 
-示例：`?whitelist.enabled=false&loginConfirmation.detectUuid=false`
+示例：`?whitelist.enabled=false&loginConfirmation.detectUuid=false&nextbot.baseUrl=https://example.com`
 
 类型自动推断：`true`/`false` → bool，纯数字 → number，其余 → string。
 
