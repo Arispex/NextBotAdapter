@@ -36,7 +36,7 @@ tshock/
     "detectIp": true,
     "autoLogin": false,
     "emptyUuidMessage": "无法获取你的 UUID，请联系管理员。",
-    "changeDetectedMessage": "你的 {changed} 发生变化，请在 QQ 群发送「登入」后重新连接。",
+    "changeDetectedMessage": "你的 {changed} 发生变化，请在 QQ 群发送「允许登入」后重新连接。",
     "deviceMismatchMessage": "该账号已通过登入确认，但当前设备与确认时不一致，请使用原设备登入。",
     "pendingExistsMessage": "该账号已有待确认的登入请求，请等待其过期后再试。"
   }
@@ -67,7 +67,7 @@ tshock/
 | `detectIp`              | boolean | `true`                                                                         | 是否检测 IP 变更                                                   |
 | `autoLogin`             | boolean | `false`                                                                        | 玩家进入服务器后，自动登入与其用户名匹配的 TShock 账号，无需手动 `/login`。详见下方"autoLogin 安全说明" |
 | `emptyUuidMessage`      | string  | `"无法获取你的 UUID，请联系管理员。"`                                          | UUID 为空时的拒绝提示                                              |
-| `changeDetectedMessage` | string  | `"你的 {changed} 发生变化，请在 QQ 群发送「登入」后重新连接。"`               | UUID/IP 变化时的拒绝提示。`{changed}` 会被替换为 `UUID`、`IP` 或 `UUID 和 IP` |
+| `changeDetectedMessage` | string  | `"你的 {changed} 发生变化，请在 QQ 群发送「允许登入」后重新连接。"`               | UUID/IP 变化时的拒绝提示。`{changed}` 会被替换为 `UUID`、`IP` 或 `UUID 和 IP` |
 | `deviceMismatchMessage` | string  | `"该账号已通过登入确认，但当前设备与确认时不一致，请使用原设备登入。"`         | 已有审批但设备不匹配时的拒绝提示                                   |
 | `pendingExistsMessage`  | string  | `"该账号已有待确认的登入请求，请等待其过期后再试。"`                           | 已有待确认请求时的拒绝提示                                         |
 

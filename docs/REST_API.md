@@ -419,7 +419,7 @@ GET /nextbot/users/Arispex/inventory?token=<token>
 
 为指定玩家创建一次性登录预批准，有效期 5 分钟。
 
-当玩家的 UUID 或 IP 与 TShock 数据库中的上次记录不一致时，插件会拒绝其登录并提示在 QQ 群发送「登入」。外部 Bot 收到消息后调用此接口完成二次确认，玩家在预批准窗口内重新连接即可正常登录。
+当玩家的 UUID 或 IP 与 TShock 数据库中的上次记录不一致时，插件会拒绝其登录并提示在 QQ 群发送「允许登入」。外部 Bot 收到消息后调用此接口完成二次确认，玩家在预批准窗口内重新连接即可正常登录。
 
 **权限：** `nextbot.security.confirm_login`
 
@@ -505,7 +505,7 @@ GET /nextbot/users/Arispex/inventory?token=<token>
     "detectIp": true,
     "autoLogin": false,
     "emptyUuidMessage": "无法获取你的 UUID，请联系管理员。",
-    "changeDetectedMessage": "你的 {changed} 发生变化，请在 QQ 群发送「登入」后重新连接。",
+    "changeDetectedMessage": "你的 {changed} 发生变化，请在 QQ 群发送「允许登入」后重新连接。",
     "deviceMismatchMessage": "该账号已通过登入确认，但当前设备与确认时不一致，请使用原设备登入。",
     "pendingExistsMessage": "该账号已有待确认的登入请求，请等待其过期后再试。"
   }
