@@ -11,6 +11,11 @@ public sealed class PluginConfigService
     {
         Formatting = Formatting.Indented
     };
+    private static readonly JsonMergeSettings MergeSettings = new()
+    {
+        MergeArrayHandling = MergeArrayHandling.Replace,
+        MergeNullValueHandling = MergeNullValueHandling.Ignore
+    };
     private readonly string _configDirectoryPath;
 
     public PluginConfigService()
@@ -40,9 +45,8 @@ public sealed class PluginConfigService
         try
         {
             var originalText = File.ReadAllText(ConfigFilePath);
-            var config = JsonConvert.DeserializeObject<NextBotAdapterConfig>(originalText, JsonSettings);
-            var complete = (config ?? NextBotAdapterConfig.Default).WithDefaults();
-            var completeText = JsonConvert.SerializeObject(complete, JsonSettings);
+            var completed = BuildCompletedJson(originalText);
+            var completeText = completed.ToString(Formatting.Indented);
 
             if (originalText != completeText)
             {
@@ -66,7 +70,8 @@ public sealed class PluginConfigService
 
         try
         {
-            var config = JsonConvert.DeserializeObject<NextBotAdapterConfig>(File.ReadAllText(ConfigFilePath), JsonSettings);
+            var completed = BuildCompletedJson(File.ReadAllText(ConfigFilePath));
+            var config = completed.ToObject<NextBotAdapterConfig>(JsonSerializer.Create(JsonSettings));
             return (config ?? NextBotAdapterConfig.Default).WithDefaults();
         }
         catch (Exception ex)
@@ -129,6 +134,16 @@ public sealed class PluginConfigService
     {
         Directory.CreateDirectory(ConfigDirectoryPath);
         Directory.CreateDirectory(DataDirectoryPath);
+    }
+
+    private static JObject BuildCompletedJson(string userText)
+    {
+        var userJson = JObject.Parse(userText);
+        var completed = JObject.FromObject(
+            NextBotAdapterConfig.Default,
+            JsonSerializer.Create(JsonSettings));
+        completed.Merge(userJson, MergeSettings);
+        return completed;
     }
 
     private static JToken ParseValue(string value)

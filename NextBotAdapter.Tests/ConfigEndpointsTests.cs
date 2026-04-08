@@ -43,6 +43,7 @@ public sealed class ConfigEndpointsTests
         var result = Assert.IsType<RestObject>(ConfigEndpoints.Read(configService));
 
         Assert.Equal("200", result.Status);
+        Assert.NotNull(result["nextbot"]);
         Assert.NotNull(result["whitelist"]);
         Assert.NotNull(result["loginConfirmation"]);
     }
@@ -101,7 +102,9 @@ public sealed class ConfigEndpointsTests
         var fields = new List<KeyValuePair<string, string>>
         {
             new("loginConfirmation.detectUuid", "false"),
-            new("whitelist.denyMessage", "Custom message")
+            new("whitelist.denyMessage", "Custom message"),
+            new("nextbot.baseUrl", "https://example.com/api"),
+            new("nextbot.token", "secret-token")
         };
 
         var ok = configService.TryUpdateConfig(fields, out _);
@@ -111,6 +114,8 @@ public sealed class ConfigEndpointsTests
         var config = JsonConvert.DeserializeObject<NextBotAdapterConfig>(raw, JsonSettings);
         Assert.False(config!.LoginConfirmation!.DetectUuid);
         Assert.Equal("Custom message", config.Whitelist.DenyMessage);
+        Assert.Equal("https://example.com/api", config.NextBot.BaseUrl);
+        Assert.Equal("secret-token", config.NextBot.Token);
     }
 
     private static PluginConfigService CreateConfigService()
