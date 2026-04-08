@@ -267,11 +267,39 @@ public sealed class NextBotAdapterPlugin(Main game) : TerrariaPlugin(game)
         }
 
         _loginConfirmationService.RecordBlockedLogin(loginName, uuid, player.IP);
+        _ = Task.Run(() => NotifyNextBotLoginRequestAsync(loginName));
         var changed = detectedUuid != null && detectedIp != null ? "UUID 和 IP"
             : detectedUuid != null ? "UUID" : "IP";
         denialReason = settings.ChangeDetectedMessage.Replace("{changed}", changed);
         PluginLogger.Warn($"玩家 {loginName} 登入被拒绝：{changed} 发生变化。");
         return false;
+    }
+
+    private async Task NotifyNextBotLoginRequestAsync(string playerName)
+    {
+        try
+        {
+            if (_configService is null || _nextBotProbeService is null)
+            {
+                return;
+            }
+
+            var settings = _configService.Load().NextBot;
+            var result = await _nextBotProbeService.NotifyLoginRequestAsync(settings, playerName).ConfigureAwait(false);
+
+            if (result.Success)
+            {
+                PluginLogger.Info($"NextBot 已接收玩家 {playerName} 的登入请求通知");
+            }
+            else
+            {
+                PluginLogger.Warn($"通知 NextBot 玩家 {playerName} 的登入请求失败：{result.Message}");
+            }
+        }
+        catch (Exception ex)
+        {
+            PluginLogger.Warn($"通知 NextBot 玩家 {playerName} 的登入请求异常：{ex.Message}");
+        }
     }
 
     private static bool IsAutoLoginConfigurationSafe(LoginConfirmationSettings settings)

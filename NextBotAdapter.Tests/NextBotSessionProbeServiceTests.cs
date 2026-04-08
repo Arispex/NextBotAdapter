@@ -100,6 +100,84 @@ public sealed class NextBotSessionProbeServiceTests
         Assert.Contains("不是合法", result.Message);
     }
 
+    [Fact]
+    public async Task NotifyLoginRequest_ReturnsFailure_WhenNotConfigured()
+    {
+        var probe = new NextBotSessionProbeService(new HttpClient(new FakeHandler(_ =>
+            throw new InvalidOperationException("should not be called"))));
+
+        var result = await probe.NotifyLoginRequestAsync(new NextBotSettings(string.Empty, "t"), "Arispex");
+
+        Assert.False(result.Success);
+        Assert.Null(result.HttpStatus);
+        Assert.Contains("未配置", result.Message);
+    }
+
+    [Fact]
+    public async Task NotifyLoginRequest_ReturnsSuccess_On201()
+    {
+        HttpRequestMessage? captured = null;
+        var probe = new NextBotSessionProbeService(new HttpClient(new FakeHandler(req =>
+        {
+            captured = req;
+            return new HttpResponseMessage(HttpStatusCode.Created)
+            {
+                Content = new StringContent("{\"data\":{\"name\":\"Arispex\"}}"),
+            };
+        })));
+
+        var result = await probe.NotifyLoginRequestAsync(new NextBotSettings("https://example.com/", "secret"), "Arispex");
+
+        Assert.True(result.Success);
+        Assert.Equal(201, result.HttpStatus);
+        Assert.NotNull(captured);
+        Assert.Contains("token=secret", captured!.RequestUri!.Query);
+        Assert.EndsWith("/webui/api/login-requests", captured.RequestUri!.AbsolutePath);
+    }
+
+    [Fact]
+    public async Task NotifyLoginRequest_ReturnsFailure_OnUnauthorized()
+    {
+        var probe = new NextBotSessionProbeService(new HttpClient(new FakeHandler(_ =>
+            new HttpResponseMessage(HttpStatusCode.Unauthorized))));
+
+        var result = await probe.NotifyLoginRequestAsync(new NextBotSettings("https://example.com", "bad"), "Arispex");
+
+        Assert.False(result.Success);
+        Assert.Equal(401, result.HttpStatus);
+        Assert.Contains("token 错误", result.Message);
+    }
+
+    [Fact]
+    public async Task NotifyLoginRequest_ParsesErrorBodyForStructuredFailures()
+    {
+        var probe = new NextBotSessionProbeService(new HttpClient(new FakeHandler(_ =>
+            new HttpResponseMessage(HttpStatusCode.NotFound)
+            {
+                Content = new StringContent("{\"error\":{\"code\":\"not_found\",\"message\":\"用户不存在\"}}"),
+            })));
+
+        var result = await probe.NotifyLoginRequestAsync(new NextBotSettings("https://example.com", "t"), "Arispex");
+
+        Assert.False(result.Success);
+        Assert.Equal(404, result.HttpStatus);
+        Assert.Contains("not_found", result.Message);
+        Assert.Contains("用户不存在", result.Message);
+    }
+
+    [Fact]
+    public async Task NotifyLoginRequest_ReturnsFailure_OnNetworkException()
+    {
+        var probe = new NextBotSessionProbeService(new HttpClient(new FakeHandler(_ =>
+            throw new HttpRequestException("dns failure"))));
+
+        var result = await probe.NotifyLoginRequestAsync(new NextBotSettings("https://example.com", "t"), "Arispex");
+
+        Assert.False(result.Success);
+        Assert.Null(result.HttpStatus);
+        Assert.Contains("dns failure", result.Message);
+    }
+
     private sealed class FakeHandler(Func<HttpRequestMessage, HttpResponseMessage> responder) : HttpMessageHandler
     {
         protected override Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)

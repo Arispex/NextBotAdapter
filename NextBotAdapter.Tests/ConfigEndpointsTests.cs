@@ -158,6 +158,9 @@ public sealed class ConfigEndpointsTests
     {
         public Task<NextBotProbeResult> ProbeAsync(NextBotSettings settings, CancellationToken ct = default)
             => Task.FromResult(result);
+
+        public Task<NextBotLoginRequestResult> NotifyLoginRequestAsync(NextBotSettings settings, string playerName, CancellationToken ct = default)
+            => Task.FromResult(new NextBotLoginRequestResult(true, 201, "ok"));
     }
 
     private static PluginConfigService CreateConfigService()
