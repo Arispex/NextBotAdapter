@@ -321,6 +321,13 @@ public sealed class NextBotAdapterPlugin(Main game) : TerrariaPlugin(game)
                 player.PlayerData?.RestoreCharacter(player);
             }
 
+            var knownIps = Newtonsoft.Json.JsonConvert.DeserializeObject<List<string>>(account.KnownIps ?? "[]") ?? [];
+            if (!knownIps.Contains(player.IP))
+            {
+                knownIps.Add(player.IP);
+                account.KnownIps = Newtonsoft.Json.JsonConvert.SerializeObject(knownIps);
+            }
+
             TShock.UserAccounts.SetUserAccountUUID(account, player.UUID ?? string.Empty);
             TShock.UserAccounts.UpdateLogin(account);
 
