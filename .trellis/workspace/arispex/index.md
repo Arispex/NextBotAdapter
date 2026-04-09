@@ -8,7 +8,7 @@
 
 <!-- @@@auto:current-status -->
 - **Active File**: `journal-1.md`
-- **Total Sessions**: 17
+- **Total Sessions**: 18
 - **Last Active**: 2026-04-09
 <!-- @@@/auto:current-status -->
 
@@ -19,7 +19,7 @@
 <!-- @@@auto:active-documents -->
 | File | Lines | Status |
 |------|-------|--------|
-| `journal-1.md` | ~819 | Active |
+| `journal-1.md` | ~852 | Active |
 <!-- @@@/auto:active-documents -->
 
 ---
@@ -29,6 +29,7 @@
 <!-- @@@auto:session-history -->
 | # | Date | Title | Commits |
 |---|------|-------|---------|
+| 18 | 2026-04-09 | autoLogin IP 检测修复 + TShock UUID 自动登入禁用 | `3ca54c6`, `5f281e4` |
 | 17 | 2026-04-09 | login-requests API 适配 newDevice/newLocation | `f36c3d6` |
 | 16 | 2026-04-08 | changeDetectedMessage 文案调整 | `7467be8` |
 | 15 | 2026-04-08 | 白名单本地化 + NextBot 登入通知 | `230c792`, `6ddea0f` |
