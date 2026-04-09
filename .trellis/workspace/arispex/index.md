@@ -8,8 +8,8 @@
 
 <!-- @@@auto:current-status -->
 - **Active File**: `journal-1.md`
-- **Total Sessions**: 16
-- **Last Active**: 2026-04-08
+- **Total Sessions**: 17
+- **Last Active**: 2026-04-09
 <!-- @@@/auto:current-status -->
 
 ---
@@ -19,7 +19,7 @@
 <!-- @@@auto:active-documents -->
 | File | Lines | Status |
 |------|-------|--------|
-| `journal-1.md` | ~787 | Active |
+| `journal-1.md` | ~819 | Active |
 <!-- @@@/auto:active-documents -->
 
 ---
@@ -29,6 +29,7 @@
 <!-- @@@auto:session-history -->
 | # | Date | Title | Commits |
 |---|------|-------|---------|
+| 17 | 2026-04-09 | login-requests API 适配 newDevice/newLocation | `f36c3d6` |
 | 16 | 2026-04-08 | changeDetectedMessage 文案调整 | `7467be8` |
 | 15 | 2026-04-08 | 白名单本地化 + NextBot 登入通知 | `230c792`, `6ddea0f` |
 | 14 | 2026-04-08 | 新增 reject-login 端点 | `bd0d931` |

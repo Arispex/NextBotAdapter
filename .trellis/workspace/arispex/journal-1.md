@@ -785,3 +785,35 @@ LoginConfirmationSettings.ChangeDetectedMessage 默认值中「发送「登入�
 ### Next Steps
 
 - None - task complete
+
+
+## Session 17: login-requests API 适配 newDevice/newLocation
+
+**Date**: 2026-04-09
+**Task**: login-requests API 适配 newDevice/newLocation
+
+### Summary
+
+NotifyLoginRequestAsync 签名加 bool newDevice / bool newLocation，body 序列化补两个字段；调用处从 EvaluateLoginConfirmation 的 detectedUuid/detectedIp 透传；测试断言 body 包含新字段。167/167 通过。
+
+### Main Changes
+
+
+
+### Git Commits
+
+| Hash | Message |
+|------|---------|
+| `f36c3d6` | (see git log) |
+
+### Testing
+
+- [OK] (Add test results)
+
+### Status
+
+[OK] **Completed**
+
+### Next Steps
+
+- None - task complete
