@@ -32,7 +32,7 @@ public interface INextBotSessionProbeService
 {
     Task<NextBotProbeResult> ProbeAsync(NextBotSettings settings, CancellationToken ct = default);
 
-    Task<NextBotLoginRequestResult> NotifyLoginRequestAsync(NextBotSettings settings, string playerName, CancellationToken ct = default);
+    Task<NextBotLoginRequestResult> NotifyLoginRequestAsync(NextBotSettings settings, string playerName, bool newDevice = false, bool newLocation = false, CancellationToken ct = default);
 }
 
 public sealed class NextBotSessionProbeService : INextBotSessionProbeService
@@ -118,6 +118,8 @@ public sealed class NextBotSessionProbeService : INextBotSessionProbeService
     public async Task<NextBotLoginRequestResult> NotifyLoginRequestAsync(
         NextBotSettings settings,
         string playerName,
+        bool newDevice = false,
+        bool newLocation = false,
         CancellationToken ct = default)
     {
         if (string.IsNullOrWhiteSpace(settings.BaseUrl) || string.IsNullOrWhiteSpace(settings.Token))
@@ -131,7 +133,7 @@ public sealed class NextBotSessionProbeService : INextBotSessionProbeService
             return new NextBotLoginRequestResult(false, null, $"baseUrl 不是合法的 URL：{settings.BaseUrl}");
         }
 
-        var body = JsonConvert.SerializeObject(new { name = playerName });
+        var body = JsonConvert.SerializeObject(new { name = playerName, newDevice, newLocation });
         using var request = new HttpRequestMessage(HttpMethod.Post, uri)
         {
             Content = new StringContent(body, Encoding.UTF8, "application/json"),

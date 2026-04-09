@@ -116,23 +116,28 @@ public sealed class NextBotSessionProbeServiceTests
     [Fact]
     public async Task NotifyLoginRequest_ReturnsSuccess_On201()
     {
-        HttpRequestMessage? captured = null;
+        string? capturedUri = null;
+        string? capturedBody = null;
         var probe = new NextBotSessionProbeService(new HttpClient(new FakeHandler(req =>
         {
-            captured = req;
+            capturedUri = req.RequestUri?.ToString();
+            capturedBody = req.Content?.ReadAsStringAsync().Result;
             return new HttpResponseMessage(HttpStatusCode.Created)
             {
                 Content = new StringContent("{\"data\":{\"name\":\"Arispex\"}}"),
             };
         })));
 
-        var result = await probe.NotifyLoginRequestAsync(new NextBotSettings("https://example.com/", "secret"), "Arispex");
+        var result = await probe.NotifyLoginRequestAsync(new NextBotSettings("https://example.com/", "secret"), "Arispex", newDevice: true, newLocation: false);
 
         Assert.True(result.Success);
         Assert.Equal(201, result.HttpStatus);
-        Assert.NotNull(captured);
-        Assert.Contains("token=secret", captured!.RequestUri!.Query);
-        Assert.EndsWith("/webui/api/login-requests", captured.RequestUri!.AbsolutePath);
+        Assert.NotNull(capturedUri);
+        Assert.Contains("token=secret", capturedUri);
+        Assert.Contains("/webui/api/login-requests", capturedUri);
+        Assert.NotNull(capturedBody);
+        Assert.Contains("\"newDevice\":true", capturedBody);
+        Assert.Contains("\"newLocation\":false", capturedBody);
     }
 
     [Fact]

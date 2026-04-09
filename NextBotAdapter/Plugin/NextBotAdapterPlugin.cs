@@ -267,7 +267,7 @@ public sealed class NextBotAdapterPlugin(Main game) : TerrariaPlugin(game)
         }
 
         _loginConfirmationService.RecordBlockedLogin(loginName, uuid, player.IP);
-        _ = Task.Run(() => NotifyNextBotLoginRequestAsync(loginName));
+        _ = Task.Run(() => NotifyNextBotLoginRequestAsync(loginName, detectedUuid != null, detectedIp != null));
         var changed = detectedUuid != null && detectedIp != null ? "UUID 和 IP"
             : detectedUuid != null ? "UUID" : "IP";
         denialReason = settings.ChangeDetectedMessage.Replace("{changed}", changed);
@@ -275,7 +275,7 @@ public sealed class NextBotAdapterPlugin(Main game) : TerrariaPlugin(game)
         return false;
     }
 
-    private async Task NotifyNextBotLoginRequestAsync(string playerName)
+    private async Task NotifyNextBotLoginRequestAsync(string playerName, bool newDevice, bool newLocation)
     {
         try
         {
@@ -285,7 +285,7 @@ public sealed class NextBotAdapterPlugin(Main game) : TerrariaPlugin(game)
             }
 
             var settings = _configService.Load().NextBot;
-            var result = await _nextBotProbeService.NotifyLoginRequestAsync(settings, playerName).ConfigureAwait(false);
+            var result = await _nextBotProbeService.NotifyLoginRequestAsync(settings, playerName, newDevice, newLocation).ConfigureAwait(false);
 
             if (result.Success)
             {

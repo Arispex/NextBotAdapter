@@ -159,7 +159,7 @@ public sealed class ConfigEndpointsTests
         public Task<NextBotProbeResult> ProbeAsync(NextBotSettings settings, CancellationToken ct = default)
             => Task.FromResult(result);
 
-        public Task<NextBotLoginRequestResult> NotifyLoginRequestAsync(NextBotSettings settings, string playerName, CancellationToken ct = default)
+        public Task<NextBotLoginRequestResult> NotifyLoginRequestAsync(NextBotSettings settings, string playerName, bool newDevice = false, bool newLocation = false, CancellationToken ct = default)
             => Task.FromResult(new NextBotLoginRequestResult(true, 201, "ok"));
     }
 
