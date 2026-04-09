@@ -72,6 +72,13 @@ public sealed class NextBotAdapterPlugin(Main game) : TerrariaPlugin(game)
         }
 
         var initialLoginSettings = _configService.LoadLoginConfirmationSettings();
+        if (initialLoginSettings.Enabled && (initialLoginSettings.DetectUuid || initialLoginSettings.DetectIp))
+        {
+            TShock.Config.Settings.DisableUUIDLogin = true;
+            TShock.Config.Settings.DisableLoginBeforeJoin = true;
+            PluginLogger.Info("已禁用 TShock 的 UUID 自动登入和连接前登入，以确保插件的 UUID/IP 检测不被绕过。");
+        }
+
         if (initialLoginSettings.AutoLogin)
         {
             if (!IsAutoLoginConfigurationSafe(initialLoginSettings))
