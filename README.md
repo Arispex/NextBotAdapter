@@ -2,10 +2,6 @@
 
 [TShock](https://github.com/Pryaxis/TShock) 插件，用于适配 [NextBot](https://github.com/Arispex/nextbot)。
 
-## 环境要求
-
-- TShock for Terraria
-
 ## 安装
 
 1. 下载最新版本
