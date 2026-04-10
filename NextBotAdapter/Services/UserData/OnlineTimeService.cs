@@ -146,7 +146,6 @@ public sealed class OnlineTimeService : IOnlineTimeService
             PersistLocked();
         }
 
-        PluginLogger.Info("所有在线玩家的时长已持久化。");
     }
 
     private void PersistLocked()
