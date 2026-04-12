@@ -360,6 +360,8 @@ GET /nextbot/users/Arispex/inventory?token=<token>
 
 示例：`/nextbot/blacklist/add/BadPlayer?reason=使用外挂&token=<token>`
 
+添加成功后，若该玩家当前在线，会被立即踢出服务器并显示封禁提示。
+
 **响应 200**
 
 ```json

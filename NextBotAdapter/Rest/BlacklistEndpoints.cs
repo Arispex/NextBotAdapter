@@ -1,6 +1,8 @@
 using NextBotAdapter.Infrastructure;
 using NextBotAdapter.Services;
 using Rests;
+using Terraria;
+using TShockAPI;
 
 namespace NextBotAdapter.Rest;
 
@@ -34,6 +36,8 @@ public static class BlacklistEndpoints
             return EndpointResponseFactory.Error(error ?? "Blacklist user is invalid.");
         }
 
+        KickOnlinePlayer(user, service);
+
         return new RestObject("200") { { "response", $"User '{user}' has been added to the blacklist." } };
     }
 
@@ -53,6 +57,31 @@ public static class BlacklistEndpoints
         }
 
         return new RestObject("200") { { "response", $"User '{user}' has been removed from the blacklist." } };
+    }
+
+    private static void KickOnlinePlayer(string user, IBlacklistService service)
+    {
+        for (var i = 0; i < Main.maxPlayers; i++)
+        {
+            var player = TShock.Players[i];
+            if (player?.Active != true)
+            {
+                continue;
+            }
+
+            if (!string.Equals(player.Name, user, StringComparison.OrdinalIgnoreCase))
+            {
+                continue;
+            }
+
+            if (service.TryValidateJoin(user, out var reason))
+            {
+                continue;
+            }
+
+            player.Disconnect(reason!);
+            PluginLogger.Info($"玩家 {user} 已被踢出服务器，原因：黑名单封禁");
+        }
     }
 
     private static string? ReadRouteUser(RestRequestArgs args)
