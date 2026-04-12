@@ -49,9 +49,9 @@ public static class BlacklistEndpoints
     }
 
     public static object Remove(RestRequestArgs args)
-        => Remove(ReadRouteUser(args), Service);
+        => Remove(ReadRouteUser(args), Service, WhitelistService);
 
-    public static object Remove(string? user, IBlacklistService service)
+    public static object Remove(string? user, IBlacklistService service, IWhitelistService? whitelistService = null)
     {
         if (string.IsNullOrWhiteSpace(user))
         {
@@ -61,6 +61,12 @@ public static class BlacklistEndpoints
         if (!service.TryRemove(user, out var error))
         {
             return EndpointResponseFactory.Error(error ?? "Blacklist user is invalid.");
+        }
+
+        if (whitelistService is not null && !whitelistService.IsWhitelisted(user))
+        {
+            whitelistService.TryAdd(user, out _);
+            PluginLogger.Info($"玩家 {user} 已自动加入白名单，原因：从黑名单移除");
         }
 
         return new RestObject("200") { { "response", $"User '{user}' has been removed from the blacklist." } };
