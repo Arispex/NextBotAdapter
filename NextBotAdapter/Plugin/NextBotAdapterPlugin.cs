@@ -81,6 +81,11 @@ public sealed class NextBotAdapterPlugin(Main game) : TerrariaPlugin(game)
             PluginLogger.Warn("白名单功能未启用，玩家入服时将跳过白名单校验。");
         }
 
+        if (!_blacklistService.Settings.Enabled)
+        {
+            PluginLogger.Warn("黑名单功能未启用，玩家入服时将跳过黑名单校验。");
+        }
+
         var initialLoginSettings = _configService.LoadLoginConfirmationSettings();
         if (initialLoginSettings.Enabled && (initialLoginSettings.DetectUuid || initialLoginSettings.DetectIp))
         {
