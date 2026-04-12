@@ -129,7 +129,7 @@ public sealed class WhitelistService : IWhitelistService
                 return true;
             }
 
-            var comparer = CreateComparer(_settings.CaseSensitive);
+            var comparer = StringComparer.OrdinalIgnoreCase;
             return _users.Contains(user, comparer);
         }
     }
@@ -144,7 +144,7 @@ public sealed class WhitelistService : IWhitelistService
 
         lock (_lock)
         {
-            var comparer = CreateComparer(_settings.CaseSensitive);
+            var comparer = StringComparer.OrdinalIgnoreCase;
             if (_users.Contains(user, comparer))
             {
                 error = "User already exists in whitelist.";
@@ -179,7 +179,7 @@ public sealed class WhitelistService : IWhitelistService
 
         lock (_lock)
         {
-            var comparer = CreateComparer(_settings.CaseSensitive);
+            var comparer = StringComparer.OrdinalIgnoreCase;
             var existing = _users.FirstOrDefault(item => comparer.Equals(item, user));
             if (existing is null)
             {
@@ -215,7 +215,7 @@ public sealed class WhitelistService : IWhitelistService
                 return true;
             }
 
-            var comparer = CreateComparer(_settings.CaseSensitive);
+            var comparer = StringComparer.OrdinalIgnoreCase;
             if (_users.Contains(user, comparer))
             {
                 return true;
@@ -251,6 +251,4 @@ public sealed class WhitelistService : IWhitelistService
         File.WriteAllText(_filePath, JsonConvert.SerializeObject(store, JsonSettings));
     }
 
-    private static IEqualityComparer<string> CreateComparer(bool caseSensitive)
-        => caseSensitive ? StringComparer.Ordinal : StringComparer.OrdinalIgnoreCase;
 }

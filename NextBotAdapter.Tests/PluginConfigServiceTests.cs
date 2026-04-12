@@ -55,7 +55,7 @@ public sealed class PluginConfigServiceTests
         var service = CreateService();
         var config = new NextBotAdapterConfig(
             new NextBotSettings("https://example.com", "secret"),
-            new WhitelistSettings(false, "Custom deny", false),
+            new WhitelistSettings(false, "Custom deny"),
             BlacklistSettings.Default,
             new LoginConfirmationSettings(false, false, true));
         File.WriteAllText(service.ConfigFilePath, JsonConvert.SerializeObject(config, JsonSettings));
@@ -129,8 +129,7 @@ public sealed class PluginConfigServiceTests
         const string partialJson = """
             {
               "whitelist": {
-                "enabled": true,
-                "caseSensitive": false
+                "enabled": true
               }
             }
             """;
@@ -143,7 +142,6 @@ public sealed class PluginConfigServiceTests
         Assert.NotNull(result);
         Assert.Equal(WhitelistSettings.Default.DenyMessage, result!.Whitelist.DenyMessage);
         Assert.True(result.Whitelist.Enabled);
-        Assert.False(result.Whitelist.CaseSensitive);
     }
 
     [Fact]
@@ -165,8 +163,7 @@ public sealed class PluginConfigServiceTests
         var result = JsonConvert.DeserializeObject<NextBotAdapterConfig>(
             File.ReadAllText(service.ConfigFilePath), JsonSettings);
         Assert.NotNull(result);
-        Assert.Equal(WhitelistSettings.Default.CaseSensitive, result!.Whitelist.CaseSensitive);
-        Assert.Equal("xxxx", result.Whitelist.DenyMessage);
+        Assert.Equal("xxxx", result!.Whitelist.DenyMessage);
         Assert.True(result.Whitelist.Enabled);
     }
 
@@ -193,7 +190,6 @@ public sealed class PluginConfigServiceTests
         Assert.NotNull(result);
         Assert.Equal("xxxx", result!.Whitelist.DenyMessage);
         Assert.Equal(WhitelistSettings.Default.Enabled, result.Whitelist.Enabled);
-        Assert.Equal(WhitelistSettings.Default.CaseSensitive, result.Whitelist.CaseSensitive);
         Assert.NotNull(result.LoginConfirmation);
         Assert.False(result.LoginConfirmation!.Enabled);
         Assert.Equal(LoginConfirmationSettings.Default.DetectUuid, result.LoginConfirmation.DetectUuid);
@@ -219,8 +215,7 @@ public sealed class PluginConfigServiceTests
             {
               "whitelist": {
                 "enabled": true,
-                "denyMessage": null,
-                "caseSensitive": false
+                "denyMessage": null
               }
             }
             """;
@@ -232,7 +227,6 @@ public sealed class PluginConfigServiceTests
             File.ReadAllText(service.ConfigFilePath), JsonSettings);
         Assert.NotNull(result);
         Assert.Equal(WhitelistSettings.Default.DenyMessage, result!.Whitelist.DenyMessage);
-        Assert.False(result.Whitelist.CaseSensitive);
     }
 
     private static PluginConfigService CreateService()

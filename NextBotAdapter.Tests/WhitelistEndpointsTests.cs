@@ -82,7 +82,7 @@ public sealed class WhitelistEndpointsTests
             _removeError = removeError;
         }
 
-        public WhitelistSettings Settings => new(true, "Denied", true);
+        public WhitelistSettings Settings => new(true, "Denied");
 
         public IReadOnlyList<string> GetAll() => _users;
 

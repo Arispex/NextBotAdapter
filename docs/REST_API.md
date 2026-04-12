@@ -590,8 +590,7 @@ GET /nextbot/users/Arispex/inventory?token=<token>
   },
   "whitelist": {
     "enabled": true,
-    "denyMessage": "你不在白名单中，请在 QQ 群发送「注册账号 {playerName}」后重新连接。",
-    "caseSensitive": true
+    "denyMessage": "你不在白名单中，请在 QQ 群发送「注册账号 {playerName}」后重新连接。"
   },
   "blacklist": {
     "enabled": true,

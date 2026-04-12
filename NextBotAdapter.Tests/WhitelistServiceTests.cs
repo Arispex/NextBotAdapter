@@ -6,26 +6,19 @@ namespace NextBotAdapter.Tests;
 public sealed class WhitelistServiceTests
 {
     [Fact]
-    public void IsWhitelisted_ShouldMatchExactNameWhenCaseSensitive()
+    public void IsWhitelisted_ShouldIgnoreCase()
     {
-        var service = new WhitelistService(new WhitelistSettings(true, "Denied", true), new WhitelistStore(["Arispex"]));
+        var service = new WhitelistService(new WhitelistSettings(true, "Denied"), new WhitelistStore(["Arispex"]));
 
         Assert.True(service.IsWhitelisted("Arispex"));
-        Assert.False(service.IsWhitelisted("arispex"));
-    }
-
-    [Fact]
-    public void IsWhitelisted_ShouldIgnoreCaseWhenConfigured()
-    {
-        var service = new WhitelistService(new WhitelistSettings(true, "Denied", false), new WhitelistStore(["Arispex"]));
-
         Assert.True(service.IsWhitelisted("arispex"));
+        Assert.True(service.IsWhitelisted("ARISPEX"));
     }
 
     [Fact]
     public void Add_ShouldRejectExistingName()
     {
-        var service = new WhitelistService(new WhitelistSettings(true, "Denied", true), new WhitelistStore(["Arispex"]));
+        var service = new WhitelistService(new WhitelistSettings(true, "Denied"), new WhitelistStore(["Arispex"]));
 
         var added = service.TryAdd("Arispex", out var error);
 
@@ -37,7 +30,7 @@ public sealed class WhitelistServiceTests
     [Fact]
     public void Add_ShouldAppendNewName()
     {
-        var service = new WhitelistService(new WhitelistSettings(true, "Denied", true), new WhitelistStore(["Arispex"]));
+        var service = new WhitelistService(new WhitelistSettings(true, "Denied"), new WhitelistStore(["Arispex"]));
 
         var added = service.TryAdd("NextBot", out var error);
 
@@ -49,7 +42,7 @@ public sealed class WhitelistServiceTests
     [Fact]
     public void Remove_ShouldDeleteExistingName()
     {
-        var service = new WhitelistService(new WhitelistSettings(true, "Denied", true), new WhitelistStore(["Arispex", "NextBot"]));
+        var service = new WhitelistService(new WhitelistSettings(true, "Denied"), new WhitelistStore(["Arispex", "NextBot"]));
 
         var removed = service.TryRemove("NextBot", out var error);
 
@@ -61,7 +54,7 @@ public sealed class WhitelistServiceTests
     [Fact]
     public void Remove_ShouldReturnErrorWhenNameDoesNotExist()
     {
-        var service = new WhitelistService(new WhitelistSettings(true, "Denied", true), new WhitelistStore(["Arispex"]));
+        var service = new WhitelistService(new WhitelistSettings(true, "Denied"), new WhitelistStore(["Arispex"]));
 
         var removed = service.TryRemove("Missing", out var error);
 
@@ -73,7 +66,7 @@ public sealed class WhitelistServiceTests
     [Fact]
     public void ValidateJoin_ShouldRejectWhenWhitelistEnabledAndNameMissing()
     {
-        var service = new WhitelistService(new WhitelistSettings(true, "Access denied", true), new WhitelistStore(["Arispex"]));
+        var service = new WhitelistService(new WhitelistSettings(true, "Access denied"), new WhitelistStore(["Arispex"]));
 
         var allowed = service.TryValidateJoin("NextBot", out var denialReason);
 
@@ -85,7 +78,7 @@ public sealed class WhitelistServiceTests
     public void ValidateJoin_ShouldReplacePlayerNamePlaceholderInDenyMessage()
     {
         var service = new WhitelistService(
-            new WhitelistSettings(true, "请发送「注册账号 {playerName}」", true),
+            new WhitelistSettings(true, "请发送「注册账号 {playerName}」"),
             new WhitelistStore(["Arispex"]));
 
         var allowed = service.TryValidateJoin("NextBot", out var denialReason);
@@ -97,7 +90,7 @@ public sealed class WhitelistServiceTests
     [Fact]
     public void ValidateJoin_ShouldAllowWhenWhitelistDisabled()
     {
-        var service = new WhitelistService(new WhitelistSettings(false, "Access denied", true), new WhitelistStore([]));
+        var service = new WhitelistService(new WhitelistSettings(false, "Access denied"), new WhitelistStore([]));
 
         var allowed = service.TryValidateJoin("NextBot", out var denialReason);
 

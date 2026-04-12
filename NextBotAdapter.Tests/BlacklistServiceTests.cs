@@ -36,6 +36,7 @@ public sealed class BlacklistServiceTests
     {
         var service = CreateService(entries: new BlacklistEntry("Arispex", "作弊"));
 
+        Assert.True(service.IsBlacklisted("Arispex"));
         Assert.True(service.IsBlacklisted("arispex"));
         Assert.True(service.IsBlacklisted("ARISPEX"));
     }
