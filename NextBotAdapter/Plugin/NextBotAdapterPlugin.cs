@@ -19,6 +19,7 @@ public sealed class NextBotAdapterPlugin(Main game) : TerrariaPlugin(game)
 {
     private PluginConfigService? _configService;
     private WhitelistService? _whitelistService;
+    private BlacklistService? _blacklistService;
     private OnlineTimeService? _onlineTimeService;
     private LoginConfirmationService? _loginConfirmationService;
     private NextBotSessionProbeService? _nextBotProbeService;
@@ -39,9 +40,11 @@ public sealed class NextBotAdapterPlugin(Main game) : TerrariaPlugin(game)
         _configService = new PluginConfigService();
         _configService.EnsureConfigComplete();
         _whitelistService = new WhitelistService(_configService);
+        _blacklistService = new BlacklistService(_configService);
         _onlineTimeService = new OnlineTimeService();
         WhitelistEndpoints.Service = _whitelistService;
-        ConfigEndpoints.ReloadService = new ConfigurationReloadService(_configService, _whitelistService, _onlineTimeService);
+        BlacklistEndpoints.Service = _blacklistService;
+        ConfigEndpoints.ReloadService = new ConfigurationReloadService(_configService, _whitelistService, _blacklistService, _onlineTimeService);
         ConfigEndpoints.ConfigService = _configService;
         MapEndpoints.Service = new MapImageService();
         WorldEndpoints.WorldFileService = new WorldFileService();
@@ -146,6 +149,14 @@ public sealed class NextBotAdapterPlugin(Main game) : TerrariaPlugin(game)
         {
             PluginLogger.Warn($"玩家 {args.Name} 入服被拒绝，原因：{denialReason ?? "你不在白名单中"}");
             args.Player?.Disconnect(denialReason ?? "你不在白名单中");
+            args.Handled = true;
+            return;
+        }
+
+        if (_blacklistService is not null && !_blacklistService.TryValidateJoin(args.Name, out var blacklistReason))
+        {
+            PluginLogger.Warn($"玩家 {args.Name} 入服被拒绝，原因：黑名单封禁");
+            args.Player?.Disconnect(blacklistReason!);
             args.Handled = true;
         }
     }

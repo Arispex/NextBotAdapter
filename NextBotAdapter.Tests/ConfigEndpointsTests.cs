@@ -47,6 +47,7 @@ public sealed class ConfigEndpointsTests
         Assert.Equal("200", result.Status);
         Assert.NotNull(result["nextbot"]);
         Assert.NotNull(result["whitelist"]);
+        Assert.NotNull(result["blacklist"]);
         Assert.NotNull(result["loginConfirmation"]);
     }
 
@@ -168,6 +169,7 @@ public sealed class ConfigEndpointsTests
         var root = Path.Combine(Path.GetTempPath(), "NextBotAdapter.Tests", Guid.NewGuid().ToString("N"));
         Directory.CreateDirectory(root);
         var service = new PluginConfigService(root);
+        Directory.CreateDirectory(Path.Combine(root, "Data"));
         File.WriteAllText(service.ConfigFilePath,
             JsonConvert.SerializeObject(NextBotAdapterConfig.Default, JsonSettings));
         return service;

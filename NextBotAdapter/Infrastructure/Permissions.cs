@@ -11,6 +11,9 @@ public static class Permissions
     public const string WhitelistView = "nextbot.whitelist.view";
     public const string WhitelistAdd = "nextbot.whitelist.add";
     public const string WhitelistRemove = "nextbot.whitelist.remove";
+    public const string BlacklistView = "nextbot.blacklist.view";
+    public const string BlacklistAdd = "nextbot.blacklist.add";
+    public const string BlacklistRemove = "nextbot.blacklist.remove";
     public const string ConfigReload = "nextbot.config.reload";
     public const string ConfigRead = "nextbot.config.read";
     public const string ConfigUpdate = "nextbot.config.update";

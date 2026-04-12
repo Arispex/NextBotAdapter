@@ -3,6 +3,7 @@ namespace NextBotAdapter.Services;
 public sealed class ConfigurationReloadService(
     PluginConfigService configService,
     WhitelistService whitelistService,
+    BlacklistService blacklistService,
     OnlineTimeService onlineTimeService) : IConfigurationReloadService
 {
     public void ReloadAll()
@@ -10,6 +11,7 @@ public sealed class ConfigurationReloadService(
         PluginLogger.Info("开始重新加载插件配置。");
         _ = configService.Reload();
         whitelistService.Reload();
+        blacklistService.Reload();
         onlineTimeService.Reload();
         PluginLogger.Info("插件配置重新加载完成。");
     }

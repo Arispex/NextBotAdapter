@@ -318,6 +318,95 @@ GET /nextbot/users/Arispex/inventory?token=<token>
 
 ---
 
+## Blacklist（黑名单）
+
+### GET `/nextbot/blacklist`
+
+返回当前黑名单中的所有条目。
+
+**权限：** `nextbot.blacklist.view`
+
+**响应 200**
+
+```json
+{
+  "entries": [
+    { "username": "BadPlayer", "reason": "使用外挂" },
+    { "username": "Griefer", "reason": "恶意破坏" }
+  ]
+}
+```
+
+| 字段                 | 类型   | 说明           |
+|----------------------|--------|----------------|
+| `entries`            | array  | 黑名单条目列表 |
+| `entries[].username` | string | 被封禁的用户名 |
+| `entries[].reason`   | string | 封禁原因       |
+
+---
+
+### GET `/nextbot/blacklist/add/{user}`
+
+将用户添加到黑名单。
+
+**权限：** `nextbot.blacklist.add`
+
+**参数**
+
+| 名称     | 位置       | 说明           |
+|----------|------------|----------------|
+| `user`   | 路由参数   | 要封禁的用户名 |
+| `reason` | 查询参数   | 封禁原因       |
+
+示例：`/nextbot/blacklist/add/BadPlayer?reason=使用外挂&token=<token>`
+
+**响应 200**
+
+```json
+{
+  "response": "User 'BadPlayer' has been added to the blacklist."
+}
+```
+
+**错误**
+
+| 状态码 | `error`                              | 原因                   |
+|--------|--------------------------------------|------------------------|
+| 400    | `Missing required route parameter 'user'.` | `{user}` 为空   |
+| 400    | `Missing required parameter 'reason'.`     | 未提供封禁原因   |
+| 400    | `User already exists in blacklist.`        | 用户已在黑名单中 |
+
+---
+
+### GET `/nextbot/blacklist/remove/{user}`
+
+将用户从黑名单中移除。
+
+**权限：** `nextbot.blacklist.remove`
+
+**参数**
+
+| 名称   | 位置       | 说明             |
+|--------|------------|------------------|
+| `user` | 路由参数   | 要移除的用户名   |
+
+**响应 200**
+
+```json
+{
+  "response": "User 'BadPlayer' has been removed from the blacklist."
+}
+```
+
+**错误**
+
+| 状态码 | `error`                                      | 原因                   |
+|--------|----------------------------------------------|------------------------|
+| 400    | `Missing required route parameter 'user'.`   | `{user}` 为空          |
+| 400    | `User not found in blacklist.`               | 用户不在黑名单中       |
+
+---
+
 ## Leaderboards（排行榜）
 
 ### GET `/nextbot/leaderboards/deaths`
@@ -499,6 +588,10 @@ GET /nextbot/users/Arispex/inventory?token=<token>
     "denyMessage": "你不在白名单中，请在 QQ 群发送「注册账号 {playerName}」后重新连接",
     "caseSensitive": true
   },
+  "blacklist": {
+    "enabled": true,
+    "denyMessage": "你已被封禁，原因：{reason}。如有疑问，请联系管理员。"
+  },
   "loginConfirmation": {
     "enabled": true,
     "detectUuid": true,
@@ -547,7 +640,7 @@ GET /nextbot/users/Arispex/inventory?token=<token>
 
 ### GET `/nextbot/config/reload`
 
-从磁盘重新加载插件配置与白名单。
+从磁盘重新加载插件配置、白名单与黑名单。
 
 **权限：** `nextbot.config.reload`
 

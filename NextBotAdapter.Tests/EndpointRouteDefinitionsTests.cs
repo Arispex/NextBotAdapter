@@ -13,6 +13,9 @@ public sealed class EndpointRouteDefinitionsTests
     [InlineData(EndpointRoutes.LeaderboardFishingQuests, "/nextbot/leaderboards/fishing-quests")]
     [InlineData(EndpointRoutes.LeaderboardOnlineTime, "/nextbot/leaderboards/online-time")]
     [InlineData(EndpointRoutes.SecurityConfirmLogin, "/nextbot/security/confirm-login/{user}")]
+    [InlineData(EndpointRoutes.Blacklist, "/nextbot/blacklist")]
+    [InlineData(EndpointRoutes.BlacklistAddUser, "/nextbot/blacklist/add/{user}")]
+    [InlineData(EndpointRoutes.BlacklistRemoveUser, "/nextbot/blacklist/remove/{user}")]
     [InlineData(EndpointRoutes.ConfigRead, "/nextbot/config")]
     [InlineData(EndpointRoutes.ConfigUpdate, "/nextbot/config/update")]
     public void RouteConstants_ShouldUseExpectedPaths(string actual, string expected)
@@ -29,6 +32,9 @@ public sealed class EndpointRouteDefinitionsTests
     [InlineData(Permissions.LeaderboardFishingQuests, "nextbot.leaderboards.fishing_quests")]
     [InlineData(Permissions.LeaderboardOnlineTime, "nextbot.leaderboards.online_time")]
     [InlineData(Permissions.SecurityConfirmLogin, "nextbot.security.confirm_login")]
+    [InlineData(Permissions.BlacklistView, "nextbot.blacklist.view")]
+    [InlineData(Permissions.BlacklistAdd, "nextbot.blacklist.add")]
+    [InlineData(Permissions.BlacklistRemove, "nextbot.blacklist.remove")]
     [InlineData(Permissions.ConfigRead, "nextbot.config.read")]
     [InlineData(Permissions.ConfigUpdate, "nextbot.config.update")]
     public void PermissionConstants_ShouldUseExpectedNodes(string actual, string expected)

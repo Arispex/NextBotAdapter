@@ -93,6 +93,9 @@ public sealed class PluginConfigService
     public WhitelistSettings LoadWhitelistSettings()
         => Load().Whitelist;
 
+    public BlacklistSettings LoadBlacklistSettings()
+        => Load().Blacklist ?? BlacklistSettings.Default;
+
     public LoginConfirmationSettings LoadLoginConfirmationSettings()
         => Load().LoginConfirmation ?? LoginConfirmationSettings.Default;
 
