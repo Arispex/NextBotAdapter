@@ -8,8 +8,8 @@
 
 <!-- @@@auto:current-status -->
 - **Active File**: `journal-1.md`
-- **Total Sessions**: 18
-- **Last Active**: 2026-04-09
+- **Total Sessions**: 19
+- **Last Active**: 2026-04-12
 <!-- @@@/auto:current-status -->
 
 ---
@@ -19,7 +19,7 @@
 <!-- @@@auto:active-documents -->
 | File | Lines | Status |
 |------|-------|--------|
-| `journal-1.md` | ~852 | Active |
+| `journal-1.md` | ~905 | Active |
 <!-- @@@/auto:active-documents -->
 
 ---
@@ -29,6 +29,7 @@
 <!-- @@@auto:session-history -->
 | # | Date | Title | Commits |
 |---|------|-------|---------|
+| 19 | 2026-04-12 | 黑名单功能、游戏内指令、安全加固 | `9ceb5c4`, `0b24b9c`, `2e80145`, `4c273e1`, `4ed1c0d`, `bd5ea7d`, `0d6dfee`, `f4b0ed7`, `16c352c`, `5366acf` |
 | 18 | 2026-04-09 | autoLogin IP 检测修复 + TShock UUID 自动登入禁用 | `3ca54c6`, `5f281e4` |
 | 17 | 2026-04-09 | login-requests API 适配 newDevice/newLocation | `f36c3d6` |
 | 16 | 2026-04-08 | changeDetectedMessage 文案调整 | `7467be8` |
