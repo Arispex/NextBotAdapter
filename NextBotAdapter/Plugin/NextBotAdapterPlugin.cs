@@ -30,7 +30,7 @@ public sealed class NextBotAdapterPlugin(Main game) : TerrariaPlugin(game)
 
     public override string Name => "NextBotAdapter";
 
-    public override Version Version => new(1, 0, 0);
+    public override Version Version => new(1, 1, 0);
 
     public override void Initialize()
     {
