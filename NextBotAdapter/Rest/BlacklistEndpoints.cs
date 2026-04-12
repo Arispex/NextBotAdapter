@@ -9,6 +9,7 @@ namespace NextBotAdapter.Rest;
 public static class BlacklistEndpoints
 {
     public static IBlacklistService Service { get; set; } = null!;
+    public static IWhitelistService WhitelistService { get; set; } = null!;
 
     public static object List(RestRequestArgs _)
         => List(Service);
@@ -17,9 +18,9 @@ public static class BlacklistEndpoints
         => new RestObject("200") { { "entries", service.GetAll() } };
 
     public static object Add(RestRequestArgs args)
-        => Add(ReadRouteUser(args), args.Parameters?["reason"], Service);
+        => Add(ReadRouteUser(args), args.Parameters?["reason"], Service, WhitelistService);
 
-    public static object Add(string? user, string? reason, IBlacklistService service)
+    public static object Add(string? user, string? reason, IBlacklistService service, IWhitelistService? whitelistService = null)
     {
         if (string.IsNullOrWhiteSpace(user))
         {
@@ -34,6 +35,12 @@ public static class BlacklistEndpoints
         if (!service.TryAdd(user, reason, out var error))
         {
             return EndpointResponseFactory.Error(error ?? "Blacklist user is invalid.");
+        }
+
+        if (whitelistService is not null && whitelistService.IsWhitelisted(user))
+        {
+            whitelistService.TryRemove(user, out _);
+            PluginLogger.Info($"玩家 {user} 已从白名单中自动移除，原因：加入黑名单");
         }
 
         KickOnlinePlayer(user, service);
