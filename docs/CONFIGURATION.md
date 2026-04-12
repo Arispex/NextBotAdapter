@@ -34,6 +34,10 @@ tshock/
     "enabled": true,
     "denyMessage": "你已被封禁，原因：{reason}。如有疑问，请联系管理员。"
   },
+  "sync": {
+    "whitelist": true,
+    "blacklist": true
+  },
   "loginConfirmation": {
     "enabled": true,
     "detectUuid": true,
@@ -67,6 +71,13 @@ tshock/
 |---------------|---------|-------------------------------------------------------|------------------------------------------------------------------------------|
 | `enabled`       | boolean | `true`                                               | 是否启用黑名单。`false` 时跳过黑名单校验                                    |
 | `denyMessage`   | string  | `"你已被封禁，原因：{reason}。如有疑问，请联系管理员。"`    | 被封禁玩家入服时的拒绝提示。`{reason}` 会被替换为该玩家的封禁原因            |
+
+### `sync`
+
+| 字段        | 类型    | 默认值 | 说明                                                                                         |
+|-------------|---------|--------|----------------------------------------------------------------------------------------------|
+| `whitelist` | boolean | `true` | 启动时是否从 NextBot 同步白名单。开启后 NextBot 中未封禁的用户会同步到本地白名单             |
+| `blacklist` | boolean | `true` | 启动时是否从 NextBot 同步黑名单。开启后 NextBot 中已封禁的用户会同步到本地黑名单（含封禁原因）|
 
 ### `loginConfirmation`
 
@@ -182,6 +193,18 @@ UUID 或 IP 发生变化时，玩家登录会被拒绝，需通过 `GET /nextbot
 - 在黑名单内 → 断开连接，提示 `denyMessage`（其中 `{reason}` 替换为该玩家的封禁原因）
 
 名称比较不区分大小写。
+
+---
+
+## NextBot 同步
+
+插件启动时，如果成功连接到 NextBot 上游服务，会自动从 NextBot 获取完整用户列表并同步到本地白名单和黑名单：
+
+- `is_banned=false` 的用户同步到白名单
+- `is_banned=true` 的用户同步到黑名单（附带封禁原因）
+- 本地存在但 NextBot 中不存在的条目会被移除
+
+同步行为由 `sync.whitelist` 和 `sync.blacklist` 分别控制，两者均可独立关闭。如果 NextBot 连接失败，同步会被跳过，不影响已有的本地数据。
 
 ---
 

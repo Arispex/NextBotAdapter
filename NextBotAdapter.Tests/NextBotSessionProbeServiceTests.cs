@@ -183,6 +183,66 @@ public sealed class NextBotSessionProbeServiceTests
         Assert.Contains("dns failure", result.Message);
     }
 
+    [Fact]
+    public async Task FetchUsers_ReturnsUsers_On200()
+    {
+        var probe = new NextBotSessionProbeService(new HttpClient(new FakeHandler(_ =>
+            new HttpResponseMessage(System.Net.HttpStatusCode.OK)
+            {
+                Content = new StringContent("{\"data\":[{\"name\":\"Alice\",\"is_banned\":false,\"ban_reason\":\"\"},{\"name\":\"Bob\",\"is_banned\":true,\"ban_reason\":\"cheating\"}]}"),
+            })));
+
+        var result = await probe.FetchUsersAsync(new NextBotSettings("https://example.com/", "secret"));
+
+        Assert.True(result.Success);
+        Assert.NotNull(result.Users);
+        Assert.Equal(2, result.Users!.Count);
+        Assert.Equal("Alice", result.Users[0].Name);
+        Assert.False(result.Users[0].IsBanned);
+        Assert.Equal("Bob", result.Users[1].Name);
+        Assert.True(result.Users[1].IsBanned);
+        Assert.Equal("cheating", result.Users[1].BanReason);
+    }
+
+    [Fact]
+    public async Task FetchUsers_ReturnsFailure_OnHttpError()
+    {
+        var probe = new NextBotSessionProbeService(new HttpClient(new FakeHandler(_ =>
+            new HttpResponseMessage(System.Net.HttpStatusCode.InternalServerError))));
+
+        var result = await probe.FetchUsersAsync(new NextBotSettings("https://example.com", "secret"));
+
+        Assert.False(result.Success);
+        Assert.Null(result.Users);
+        Assert.Contains("500", result.Message);
+    }
+
+    [Fact]
+    public async Task FetchUsers_ReturnsFailure_WhenNotConfigured()
+    {
+        var probe = new NextBotSessionProbeService(new HttpClient(new FakeHandler(_ =>
+            throw new InvalidOperationException("should not be called"))));
+
+        var result = await probe.FetchUsersAsync(new NextBotSettings(string.Empty, "token"));
+
+        Assert.False(result.Success);
+        Assert.Null(result.Users);
+        Assert.Contains("未配置", result.Message);
+    }
+
+    [Fact]
+    public async Task FetchUsers_ReturnsFailure_OnNetworkException()
+    {
+        var probe = new NextBotSessionProbeService(new HttpClient(new FakeHandler(_ =>
+            throw new HttpRequestException("dns failure"))));
+
+        var result = await probe.FetchUsersAsync(new NextBotSettings("https://example.com", "secret"));
+
+        Assert.False(result.Success);
+        Assert.Null(result.Users);
+        Assert.Contains("dns failure", result.Message);
+    }
+
     private sealed class FakeHandler(Func<HttpRequestMessage, HttpResponseMessage> responder) : HttpMessageHandler
     {
         protected override Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)

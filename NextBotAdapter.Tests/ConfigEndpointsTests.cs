@@ -48,6 +48,7 @@ public sealed class ConfigEndpointsTests
         Assert.NotNull(result["nextbot"]);
         Assert.NotNull(result["whitelist"]);
         Assert.NotNull(result["blacklist"]);
+        Assert.NotNull(result["sync"]);
         Assert.NotNull(result["loginConfirmation"]);
     }
 
@@ -162,6 +163,9 @@ public sealed class ConfigEndpointsTests
 
         public Task<NextBotLoginRequestResult> NotifyLoginRequestAsync(NextBotSettings settings, string playerName, bool newDevice = false, bool newLocation = false, CancellationToken ct = default)
             => Task.FromResult(new NextBotLoginRequestResult(true, 201, "ok"));
+
+        public Task<NextBotFetchUsersResult> FetchUsersAsync(NextBotSettings settings, CancellationToken ct = default)
+            => Task.FromResult(new NextBotFetchUsersResult(false, null, "not implemented"));
     }
 
     private static PluginConfigService CreateConfigService()

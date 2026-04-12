@@ -57,6 +57,7 @@ public sealed class PluginConfigServiceTests
             new NextBotSettings("https://example.com", "secret"),
             new WhitelistSettings(false, "Custom deny"),
             BlacklistSettings.Default,
+            SyncSettings.Default,
             new LoginConfirmationSettings(false, false, true));
         File.WriteAllText(service.ConfigFilePath, JsonConvert.SerializeObject(config, JsonSettings));
 

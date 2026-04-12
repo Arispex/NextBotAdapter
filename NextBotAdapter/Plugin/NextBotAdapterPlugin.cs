@@ -422,13 +422,15 @@ public sealed class NextBotAdapterPlugin(Main game) : TerrariaPlugin(game)
                 return;
             }
 
-            var settings = _configService.Load().NextBot;
+            var config = _configService.Load();
+            var settings = config.NextBot;
             var result = await _nextBotProbeService.ProbeAsync(settings).ConfigureAwait(false);
 
             switch (result.Status)
             {
                 case NextBotProbeStatus.Ok:
                     PluginLogger.Info("连接 NextBot 成功");
+                    await SyncFromNextBotAsync(settings, config.Sync ?? Models.SyncSettings.Default).ConfigureAwait(false);
                     break;
                 case NextBotProbeStatus.Skipped:
                     PluginLogger.Info($"连接 NextBot 跳过：{result.Message}");
@@ -441,6 +443,38 @@ public sealed class NextBotAdapterPlugin(Main game) : TerrariaPlugin(game)
         catch (Exception ex)
         {
             PluginLogger.Warn($"连接 NextBot 失败：{ex.Message}");
+        }
+    }
+
+    private async Task SyncFromNextBotAsync(NextBotSettings settings, Models.SyncSettings syncSettings)
+    {
+        if (!syncSettings.Whitelist && !syncSettings.Blacklist)
+        {
+            PluginLogger.Info("NextBot 同步已跳过：白名单和黑名单同步均已关闭");
+            return;
+        }
+
+        var fetchResult = await _nextBotProbeService!.FetchUsersAsync(settings).ConfigureAwait(false);
+        if (!fetchResult.Success || fetchResult.Users is null)
+        {
+            PluginLogger.Warn($"从 NextBot 获取用户列表失败：{fetchResult.Message}");
+            return;
+        }
+
+        PluginLogger.Info($"从 NextBot 获取到 {fetchResult.Users.Count} 个用户，开始同步");
+
+        var syncService = new NextBotSyncService(_whitelistService!, _blacklistService!);
+
+        if (syncSettings.Whitelist)
+        {
+            var wResult = syncService.SyncWhitelist(fetchResult.Users);
+            PluginLogger.Info($"白名单同步完成：新增 {wResult.Added}，移除 {wResult.Removed}，跳过 {wResult.Skipped}");
+        }
+
+        if (syncSettings.Blacklist)
+        {
+            var bResult = syncService.SyncBlacklist(fetchResult.Users);
+            PluginLogger.Info($"黑名单同步完成：新增 {bResult.Added}，移除 {bResult.Removed}，跳过 {bResult.Skipped}");
         }
     }
 

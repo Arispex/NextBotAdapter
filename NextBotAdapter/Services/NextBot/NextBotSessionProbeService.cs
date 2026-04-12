@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using NextBotAdapter.Models;
+using NextBotAdapter.Models.Responses;
 
 namespace NextBotAdapter.Services;
 
@@ -28,11 +29,18 @@ public sealed record NextBotLoginRequestResult(
     int? HttpStatus,
     string Message);
 
+public sealed record NextBotFetchUsersResult(
+    bool Success,
+    IReadOnlyList<NextBotUserEntry>? Users,
+    string Message);
+
 public interface INextBotSessionProbeService
 {
     Task<NextBotProbeResult> ProbeAsync(NextBotSettings settings, CancellationToken ct = default);
 
     Task<NextBotLoginRequestResult> NotifyLoginRequestAsync(NextBotSettings settings, string playerName, bool newDevice = false, bool newLocation = false, CancellationToken ct = default);
+
+    Task<NextBotFetchUsersResult> FetchUsersAsync(NextBotSettings settings, CancellationToken ct = default);
 }
 
 public sealed class NextBotSessionProbeService : INextBotSessionProbeService
@@ -168,6 +176,48 @@ public sealed class NextBotSessionProbeService : INextBotSessionProbeService
         catch (HttpRequestException ex)
         {
             return new NextBotLoginRequestResult(false, null, $"网络异常：{ex.Message}");
+        }
+    }
+
+    public async Task<NextBotFetchUsersResult> FetchUsersAsync(NextBotSettings settings, CancellationToken ct = default)
+    {
+        if (string.IsNullOrWhiteSpace(settings.BaseUrl) || string.IsNullOrWhiteSpace(settings.Token))
+        {
+            return new NextBotFetchUsersResult(false, null, "未配置 baseUrl 或 token");
+        }
+
+        var url = $"{settings.BaseUrl.TrimEnd('/')}/webui/api/users?token={Uri.EscapeDataString(settings.Token)}&per_page=0";
+        if (!Uri.TryCreate(url, UriKind.Absolute, out var uri))
+        {
+            return new NextBotFetchUsersResult(false, null, $"baseUrl 不是合法的 URL：{settings.BaseUrl}");
+        }
+
+        try
+        {
+            using var request = new HttpRequestMessage(HttpMethod.Get, uri);
+            using var response = await _httpClient.SendAsync(request, ct).ConfigureAwait(false);
+            var text = await response.Content.ReadAsStringAsync(ct).ConfigureAwait(false);
+
+            if (!response.IsSuccessStatusCode)
+            {
+                return new NextBotFetchUsersResult(false, null, $"HTTP {(int)response.StatusCode}");
+            }
+
+            var parsed = JsonConvert.DeserializeObject<NextBotUsersResponse>(text);
+            if (parsed?.Data is null)
+            {
+                return new NextBotFetchUsersResult(false, null, "响应体解析失败");
+            }
+
+            return new NextBotFetchUsersResult(true, parsed.Data, $"获取到 {parsed.Data.Count} 个用户");
+        }
+        catch (TaskCanceledException ex) when (!ct.IsCancellationRequested)
+        {
+            return new NextBotFetchUsersResult(false, null, $"请求超时：{ex.Message}");
+        }
+        catch (HttpRequestException ex)
+        {
+            return new NextBotFetchUsersResult(false, null, $"网络异常：{ex.Message}");
         }
     }
 

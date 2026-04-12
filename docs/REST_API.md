@@ -596,6 +596,10 @@ GET /nextbot/users/Arispex/inventory?token=<token>
     "enabled": true,
     "denyMessage": "你已被封禁，原因：{reason}。如有疑问，请联系管理员。"
   },
+  "sync": {
+    "whitelist": true,
+    "blacklist": true
+  },
   "loginConfirmation": {
     "enabled": true,
     "detectUuid": true,

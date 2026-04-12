@@ -96,6 +96,9 @@ public sealed class PluginConfigService
     public BlacklistSettings LoadBlacklistSettings()
         => Load().Blacklist ?? BlacklistSettings.Default;
 
+    public SyncSettings LoadSyncSettings()
+        => Load().Sync ?? SyncSettings.Default;
+
     public LoginConfirmationSettings LoadLoginConfirmationSettings()
         => Load().LoginConfirmation ?? LoginConfirmationSettings.Default;
 
