@@ -61,7 +61,7 @@ public sealed class NextBotAdapterPlugin(Main game) : TerrariaPlugin(game)
 
         EndpointRegistrar.Register(TShock.RestApi);
 
-        Commands.ChatCommands.Add(new Command("nextbot.admin.reload", ReloadCommand, "nb")
+        Commands.ChatCommands.Add(new Command("nextbot.admin.reload", NbCommand, "nb")
         {
             HelpText = "重载 NextBotAdapter 插件配置与数据文件。用法：/nb reload"
         });
@@ -105,7 +105,7 @@ public sealed class NextBotAdapterPlugin(Main game) : TerrariaPlugin(game)
         if (disposing)
         {
             _onlineTimeService?.PersistAllSessions();
-            Commands.ChatCommands.RemoveAll(c => c.CommandDelegate == ReloadCommand);
+            Commands.ChatCommands.RemoveAll(c => c.CommandDelegate == NbCommand);
             GetDataHandlers.PlayerInfo.UnRegister(OnPlayerInfo);
             PlayerHooks.PlayerPreLogin -= OnPlayerPreLogin;
             PlayerHooks.PlayerPostLogin -= OnPlayerPostLogin;
@@ -117,16 +117,30 @@ public sealed class NextBotAdapterPlugin(Main game) : TerrariaPlugin(game)
         base.Dispose(disposing);
     }
 
-    private void ReloadCommand(CommandArgs args)
+    private void NbCommand(CommandArgs args)
     {
         var subcommand = args.Parameters.Count > 0 ? args.Parameters[0] : null;
 
-        if (!string.Equals(subcommand, "reload", StringComparison.OrdinalIgnoreCase))
+        switch (subcommand?.ToLowerInvariant())
         {
-            args.Player.SendInfoMessage("用法：/nb reload");
-            return;
+            case "reload":
+                HandleReload(args);
+                break;
+            default:
+                HandleHelp(args);
+                break;
         }
+    }
 
+    private static void HandleHelp(CommandArgs args)
+    {
+        args.Player.SendInfoMessage("NextBotAdapter 指令：");
+        args.Player.SendInfoMessage("  /nb reload - 重载插件配置与数据文件");
+        args.Player.SendInfoMessage("  /nb help   - 显示此帮助信息");
+    }
+
+    private void HandleReload(CommandArgs args)
+    {
         try
         {
             var reloadService = new ConfigurationReloadService(
