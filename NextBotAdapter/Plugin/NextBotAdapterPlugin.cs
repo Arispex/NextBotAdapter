@@ -193,18 +193,18 @@ public sealed class NextBotAdapterPlugin(Main game) : TerrariaPlugin(game)
 
     private void OnPlayerInfo(object? _, GetDataHandlers.PlayerInfoEventArgs args)
     {
-        if (_whitelistService is not null && !_whitelistService.TryValidateJoin(args.Name, out var denialReason))
-        {
-            PluginLogger.Warn($"玩家 {args.Name} 入服被拒绝，原因：{denialReason ?? "你不在白名单中"}");
-            args.Player?.Disconnect(denialReason ?? "你不在白名单中");
-            args.Handled = true;
-            return;
-        }
-
         if (_blacklistService is not null && !_blacklistService.TryValidateJoin(args.Name, out var blacklistReason))
         {
             PluginLogger.Warn($"玩家 {args.Name} 入服被拒绝，原因：黑名单封禁");
             args.Player?.Disconnect(blacklistReason!);
+            args.Handled = true;
+            return;
+        }
+
+        if (_whitelistService is not null && !_whitelistService.TryValidateJoin(args.Name, out var denialReason))
+        {
+            PluginLogger.Warn($"玩家 {args.Name} 入服被拒绝，原因：{denialReason ?? "你不在白名单中"}");
+            args.Player?.Disconnect(denialReason ?? "你不在白名单中");
             args.Handled = true;
         }
     }
