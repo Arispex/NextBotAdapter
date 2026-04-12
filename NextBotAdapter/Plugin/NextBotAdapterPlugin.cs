@@ -61,6 +61,11 @@ public sealed class NextBotAdapterPlugin(Main game) : TerrariaPlugin(game)
 
         EndpointRegistrar.Register(TShock.RestApi);
 
+        Commands.ChatCommands.Add(new Command("nextbot.admin.reload", ReloadCommand, "nb")
+        {
+            HelpText = "重载 NextBotAdapter 插件配置与数据文件。用法：/nb reload"
+        });
+
         _ = Task.Run(VerifyNextBotConnectionAsync);
 
         GetDataHandlers.PlayerInfo.Register(OnPlayerInfo, HandlerPriority.Highest);
@@ -100,6 +105,7 @@ public sealed class NextBotAdapterPlugin(Main game) : TerrariaPlugin(game)
         if (disposing)
         {
             _onlineTimeService?.PersistAllSessions();
+            Commands.ChatCommands.RemoveAll(c => c.CommandDelegate == ReloadCommand);
             GetDataHandlers.PlayerInfo.UnRegister(OnPlayerInfo);
             PlayerHooks.PlayerPreLogin -= OnPlayerPreLogin;
             PlayerHooks.PlayerPostLogin -= OnPlayerPostLogin;
@@ -109,6 +115,33 @@ public sealed class NextBotAdapterPlugin(Main game) : TerrariaPlugin(game)
         }
 
         base.Dispose(disposing);
+    }
+
+    private void ReloadCommand(CommandArgs args)
+    {
+        var subcommand = args.Parameters.Count > 0 ? args.Parameters[0] : null;
+
+        if (!string.Equals(subcommand, "reload", StringComparison.OrdinalIgnoreCase))
+        {
+            args.Player.SendInfoMessage("用法：/nb reload");
+            return;
+        }
+
+        try
+        {
+            var reloadService = new ConfigurationReloadService(
+                _configService!,
+                _whitelistService!,
+                _blacklistService!,
+                _onlineTimeService!);
+            reloadService.ReloadAll();
+            args.Player.SendSuccessMessage("NextBotAdapter 配置与数据文件已重载。");
+        }
+        catch (Exception ex)
+        {
+            args.Player.SendErrorMessage($"重载失败，原因：{ex.Message}");
+            PluginLogger.Warn($"指令重载配置失败，原因：{ex.Message}");
+        }
     }
 
     private static bool HasIpChanged(string? knownIps, string currentIp)
