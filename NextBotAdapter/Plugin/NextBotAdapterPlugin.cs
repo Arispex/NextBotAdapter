@@ -43,6 +43,7 @@ public sealed class NextBotAdapterPlugin(Main game) : TerrariaPlugin(game)
         _blacklistService = new BlacklistService(_configService);
         _onlineTimeService = new OnlineTimeService();
         WhitelistEndpoints.Service = _whitelistService;
+        WhitelistEndpoints.BlacklistService = _blacklistService;
         BlacklistEndpoints.Service = _blacklistService;
         BlacklistEndpoints.WhitelistService = _whitelistService;
         ConfigEndpoints.ReloadService = new ConfigurationReloadService(_configService, _whitelistService, _blacklistService, _onlineTimeService);

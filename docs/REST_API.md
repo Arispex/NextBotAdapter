@@ -285,6 +285,7 @@ GET /nextbot/users/Arispex/inventory?token=<token>
 | 状态码 | `error`                             | 原因                   |
 |--------|-------------------------------------|------------------------|
 | 400    | `Whitelist user is invalid.`        | `{user}` 为空          |
+| 400    | `User is currently blacklisted. Remove from blacklist first.` | 用户在黑名单中，需先移除 |
 | 400    | `User already exists in whitelist.` | 用户已在白名单中       |
 
 ---

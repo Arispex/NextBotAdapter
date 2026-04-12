@@ -7,6 +7,7 @@ namespace NextBotAdapter.Rest;
 public static class WhitelistEndpoints
 {
     public static IWhitelistService Service { get; set; } = null!;
+    public static IBlacklistService BlacklistService { get; set; } = null!;
 
     public static object List(RestRequestArgs _)
         => List(Service);
@@ -15,13 +16,18 @@ public static class WhitelistEndpoints
         => new RestObject("200") { { "users", service.GetAll() } };
 
     public static object Add(RestRequestArgs args)
-        => Add(ReadRouteUser(args), Service);
+        => Add(ReadRouteUser(args), Service, BlacklistService);
 
-    public static object Add(string? user, IWhitelistService service)
+    public static object Add(string? user, IWhitelistService service, IBlacklistService? blacklistService = null)
     {
         if (string.IsNullOrWhiteSpace(user))
         {
             return EndpointResponseFactory.Error("Whitelist user is invalid.");
+        }
+
+        if (blacklistService is not null && blacklistService.IsBlacklisted(user))
+        {
+            return EndpointResponseFactory.Error("User is currently blacklisted. Remove from blacklist first.");
         }
 
         if (!service.TryAdd(user, out var error))
