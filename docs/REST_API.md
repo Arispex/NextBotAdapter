@@ -589,6 +589,7 @@ GET /nextbot/users/Arispex/inventory?token=<token>
 
 ```json
 {
+  "serverName": "我的服务器",
   "nextbot": {
     "baseUrl": "",
     "token": ""
