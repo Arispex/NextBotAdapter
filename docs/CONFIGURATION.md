@@ -72,6 +72,10 @@ tshock/
 | `enabled`       | boolean | `true`                                               | 是否启用黑名单。`false` 时跳过黑名单校验                                    |
 | `denyMessage`   | string  | `"你已被封禁，原因：{reason}。如有疑问，请联系管理员。"`    | 被封禁玩家入服时的拒绝提示。`{reason}` 会被替换为该玩家的封禁原因            |
 
+#### 与 TShock 账号联动
+
+当通过 REST 接口或 NextBot 同步向黑名单添加用户时，如果该用户名对应一个已注册的 TShock 账号，插件会自动调用 TShock 的封禁接口（等价 `/ban add -a <account>`）对该账号执行永久封禁，`banningUser` 字段记为 `NextBotAdapter`，便于与管理员手动封禁区分。从黑名单移除用户时，同样会自动解除该账号由插件创建的游戏内封禁（等价 `/ban del <ticket>`）。未注册 TShock 账号的用户名静默跳过，不视为错误。
+
 ### `sync`
 
 | 字段        | 类型    | 默认值 | 说明                                                                                         |

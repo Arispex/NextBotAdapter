@@ -10,6 +10,7 @@ public static class BlacklistEndpoints
 {
     public static IBlacklistService Service { get; set; } = null!;
     public static IWhitelistService WhitelistService { get; set; } = null!;
+    public static ITShockUserBanService? BanService { get; set; }
 
     public static object List(RestRequestArgs _)
         => List(Service);
@@ -18,9 +19,9 @@ public static class BlacklistEndpoints
         => new RestObject("200") { { "entries", service.GetAll() } };
 
     public static object Add(RestRequestArgs args)
-        => Add(ReadRouteUser(args), args.Parameters?["reason"], Service, WhitelistService);
+        => Add(ReadRouteUser(args), args.Parameters?["reason"], Service, WhitelistService, BanService);
 
-    public static object Add(string? user, string? reason, IBlacklistService service, IWhitelistService? whitelistService = null)
+    public static object Add(string? user, string? reason, IBlacklistService service, IWhitelistService? whitelistService = null, ITShockUserBanService? banService = null)
     {
         if (string.IsNullOrWhiteSpace(user))
         {
@@ -37,6 +38,8 @@ public static class BlacklistEndpoints
             return EndpointResponseFactory.Error(error ?? "Blacklist user is invalid.");
         }
 
+        banService?.BanAccountIfRegistered(user, reason);
+
         if (whitelistService is not null && whitelistService.IsWhitelisted(user))
         {
             whitelistService.TryRemove(user, out _);
@@ -49,9 +52,9 @@ public static class BlacklistEndpoints
     }
 
     public static object Remove(RestRequestArgs args)
-        => Remove(ReadRouteUser(args), Service, WhitelistService);
+        => Remove(ReadRouteUser(args), Service, WhitelistService, BanService);
 
-    public static object Remove(string? user, IBlacklistService service, IWhitelistService? whitelistService = null)
+    public static object Remove(string? user, IBlacklistService service, IWhitelistService? whitelistService = null, ITShockUserBanService? banService = null)
     {
         if (string.IsNullOrWhiteSpace(user))
         {
@@ -62,6 +65,8 @@ public static class BlacklistEndpoints
         {
             return EndpointResponseFactory.Error(error ?? "Blacklist user is invalid.");
         }
+
+        banService?.UnbanAccountIfBanned(user);
 
         if (whitelistService is not null && !whitelistService.IsWhitelisted(user))
         {

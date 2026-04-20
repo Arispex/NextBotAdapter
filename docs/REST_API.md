@@ -361,7 +361,10 @@ GET /nextbot/users/Arispex/inventory?token=<token>
 
 示例：`/nextbot/blacklist/add/BadPlayer?reason=使用外挂&token=<token>`
 
-添加成功后，若该玩家在白名单中，会被自动从白名单移除。若该玩家当前在线，会被立即踢出服务器并显示封禁提示。
+添加成功后：
+- 若该用户名对应一个已注册的 TShock 账号，同时对该账号执行游戏内永久封禁（等价 `/ban add -a <account>`，`banningUser` 记为 `NextBotAdapter`）。未注册的用户名跳过此步骤。
+- 若该玩家在白名单中，会被自动从白名单移除。
+- 若该玩家当前在线，会被立即踢出服务器并显示封禁提示。
 
 **响应 200**
 
@@ -393,7 +396,9 @@ GET /nextbot/users/Arispex/inventory?token=<token>
 |--------|------------|------------------|
 | `user` | 路由参数   | 要移除的用户名   |
 
-移除成功后，若该玩家不在白名单中，会被自动加入白名单。
+移除成功后：
+- 若该用户名对应一个已注册的 TShock 账号，其所有由插件创建的游戏内封禁会被解除（等价 `/ban del <ticket>`）。
+- 若该玩家不在白名单中，会被自动加入白名单。
 
 **响应 200**
 

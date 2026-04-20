@@ -4,7 +4,10 @@ namespace NextBotAdapter.Services;
 
 public sealed record SyncResult(int Added, int Removed, int Skipped);
 
-public sealed class NextBotSyncService(IWhitelistService whitelistService, IBlacklistService blacklistService)
+public sealed class NextBotSyncService(
+    IWhitelistService whitelistService,
+    IBlacklistService blacklistService,
+    ITShockUserBanService? banService = null)
 {
     public SyncResult SyncWhitelist(IReadOnlyList<NextBotUserEntry> users)
     {
@@ -50,7 +53,11 @@ public sealed class NextBotSyncService(IWhitelistService whitelistService, IBlac
         {
             if (!expected.ContainsKey(entry.Username))
             {
-                if (blacklistService.TryRemove(entry.Username, out _)) removed++;
+                if (blacklistService.TryRemove(entry.Username, out _))
+                {
+                    banService?.UnbanAccountIfBanned(entry.Username);
+                    removed++;
+                }
                 else skipped++;
             }
         }
@@ -61,7 +68,11 @@ public sealed class NextBotSyncService(IWhitelistService whitelistService, IBlac
         {
             if (!currentSet.Contains(name))
             {
-                if (blacklistService.TryAdd(name, reason, out _)) added++;
+                if (blacklistService.TryAdd(name, reason, out _))
+                {
+                    banService?.BanAccountIfRegistered(name, reason);
+                    added++;
+                }
                 else skipped++;
             }
         }

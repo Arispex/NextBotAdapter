@@ -194,5 +194,53 @@ public sealed class NextBotSyncServiceTests
         Assert.Equal(0, result.Removed);
     }
 
+    [Fact]
+    public void SyncBlacklist_InvokesBanService_WhenEntryAdded()
+    {
+        var wl = new WhitelistService(WlSettings, new WhitelistStore([]));
+        var bl = new BlacklistService(BlSettings, BlacklistStore.Empty);
+        var banService = new FakeTShockUserBanService();
+        var sync = new NextBotSyncService(wl, bl, banService);
+
+        sync.SyncBlacklist([
+            new NextBotUserEntry("Bob", true, "cheating"),
+        ]);
+
+        Assert.Single(banService.BanCalls);
+        Assert.Equal(("Bob", "cheating"), banService.BanCalls[0]);
+        Assert.Empty(banService.UnbanCalls);
+    }
+
+    [Fact]
+    public void SyncBlacklist_InvokesUnbanService_WhenEntryRemoved()
+    {
+        var wl = new WhitelistService(WlSettings, new WhitelistStore([]));
+        var bl = new BlacklistService(BlSettings, new BlacklistStore([new BlacklistEntry("Charlie", "griefing")]));
+        var banService = new FakeTShockUserBanService();
+        var sync = new NextBotSyncService(wl, bl, banService);
+
+        sync.SyncBlacklist([]);
+
+        Assert.Single(banService.UnbanCalls);
+        Assert.Equal("Charlie", banService.UnbanCalls[0]);
+        Assert.Empty(banService.BanCalls);
+    }
+
+    [Fact]
+    public void SyncBlacklist_DoesNotInvokeBanService_WhenInSync()
+    {
+        var wl = new WhitelistService(WlSettings, new WhitelistStore([]));
+        var bl = new BlacklistService(BlSettings, new BlacklistStore([new BlacklistEntry("Bob", "cheating")]));
+        var banService = new FakeTShockUserBanService();
+        var sync = new NextBotSyncService(wl, bl, banService);
+
+        sync.SyncBlacklist([
+            new NextBotUserEntry("Bob", true, "cheating"),
+        ]);
+
+        Assert.Empty(banService.BanCalls);
+        Assert.Empty(banService.UnbanCalls);
+    }
+
     #endregion
 }

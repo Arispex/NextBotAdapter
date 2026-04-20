@@ -23,6 +23,7 @@ public sealed class NextBotAdapterPlugin(Main game) : TerrariaPlugin(game)
     private OnlineTimeService? _onlineTimeService;
     private LoginConfirmationService? _loginConfirmationService;
     private NextBotSessionProbeService? _nextBotProbeService;
+    private TShockUserBanService? _tshockUserBanService;
 
     public override string Author => "Arispex";
 
@@ -42,10 +43,12 @@ public sealed class NextBotAdapterPlugin(Main game) : TerrariaPlugin(game)
         _whitelistService = new WhitelistService(_configService);
         _blacklistService = new BlacklistService(_configService);
         _onlineTimeService = new OnlineTimeService();
+        _tshockUserBanService = new TShockUserBanService();
         WhitelistEndpoints.Service = _whitelistService;
         WhitelistEndpoints.BlacklistService = _blacklistService;
         BlacklistEndpoints.Service = _blacklistService;
         BlacklistEndpoints.WhitelistService = _whitelistService;
+        BlacklistEndpoints.BanService = _tshockUserBanService;
         ConfigEndpoints.ReloadService = new ConfigurationReloadService(_configService, _whitelistService, _blacklistService, _onlineTimeService);
         ConfigEndpoints.ConfigService = _configService;
         MapEndpoints.Service = new MapImageService();
@@ -463,7 +466,7 @@ public sealed class NextBotAdapterPlugin(Main game) : TerrariaPlugin(game)
 
         PluginLogger.Info($"从 NextBot 获取到 {fetchResult.Users.Count} 个用户，开始同步");
 
-        var syncService = new NextBotSyncService(_whitelistService!, _blacklistService!);
+        var syncService = new NextBotSyncService(_whitelistService!, _blacklistService!, _tshockUserBanService);
 
         if (syncSettings.Whitelist)
         {

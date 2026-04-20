@@ -64,6 +64,33 @@ public sealed class BlacklistEndpointsTests
     }
 
     [Fact]
+    public void Add_CallsBanService_WhenAddSucceeds()
+    {
+        var service = CreateService();
+        var banService = new FakeTShockUserBanService();
+
+        var result = Assert.IsType<RestObject>(
+            BlacklistEndpoints.Add("Arispex", "作弊", service, whitelistService: null, banService: banService));
+
+        Assert.Equal("200", result.Status);
+        Assert.Single(banService.BanCalls);
+        Assert.Equal(("Arispex", "作弊"), banService.BanCalls[0]);
+        Assert.Empty(banService.UnbanCalls);
+    }
+
+    [Fact]
+    public void Add_DoesNotCallBanService_WhenAddFails()
+    {
+        var service = CreateService(new BlacklistEntry("Arispex", "作弊"));
+        var banService = new FakeTShockUserBanService();
+
+        Assert.IsType<RestObject>(
+            BlacklistEndpoints.Add("Arispex", "再次作弊", service, whitelistService: null, banService: banService));
+
+        Assert.Empty(banService.BanCalls);
+    }
+
+    [Fact]
     public void Remove_ReturnsSuccess_ForExistingUser()
     {
         var service = CreateService(new BlacklistEntry("Arispex", "作弊"));
@@ -93,6 +120,33 @@ public sealed class BlacklistEndpointsTests
 
         Assert.Equal("400", result.Status);
         Assert.Contains("not found", result.Error);
+    }
+
+    [Fact]
+    public void Remove_CallsBanService_WhenRemoveSucceeds()
+    {
+        var service = CreateService(new BlacklistEntry("Arispex", "作弊"));
+        var banService = new FakeTShockUserBanService();
+
+        var result = Assert.IsType<RestObject>(
+            BlacklistEndpoints.Remove("Arispex", service, whitelistService: null, banService: banService));
+
+        Assert.Equal("200", result.Status);
+        Assert.Single(banService.UnbanCalls);
+        Assert.Equal("Arispex", banService.UnbanCalls[0]);
+        Assert.Empty(banService.BanCalls);
+    }
+
+    [Fact]
+    public void Remove_DoesNotCallBanService_WhenRemoveFails()
+    {
+        var service = CreateService();
+        var banService = new FakeTShockUserBanService();
+
+        Assert.IsType<RestObject>(
+            BlacklistEndpoints.Remove("Arispex", service, whitelistService: null, banService: banService));
+
+        Assert.Empty(banService.UnbanCalls);
     }
 
     private static IBlacklistService CreateService(params BlacklistEntry[] entries)
