@@ -47,7 +47,7 @@ public interface INextBotSessionProbeService
 
     Task<NextBotFetchUsersResult> FetchUsersAsync(NextBotSettings settings, CancellationToken ct = default);
 
-    Task<NextBotPlayerEventResult> NotifyPlayerEventAsync(NextBotSettings settings, string playerName, string eventType, string serverName, CancellationToken ct = default);
+    Task<NextBotPlayerEventResult> NotifyPlayerEventAsync(NextBotSettings settings, string playerName, string eventType, string serverName, string? message = null, CancellationToken ct = default);
 }
 
 public sealed class NextBotSessionProbeService : INextBotSessionProbeService
@@ -233,6 +233,7 @@ public sealed class NextBotSessionProbeService : INextBotSessionProbeService
         string playerName,
         string eventType,
         string serverName,
+        string? message = null,
         CancellationToken ct = default)
     {
         if (string.IsNullOrWhiteSpace(settings.BaseUrl) || string.IsNullOrWhiteSpace(settings.Token))
@@ -246,12 +247,15 @@ public sealed class NextBotSessionProbeService : INextBotSessionProbeService
             return new NextBotPlayerEventResult(false, null, $"baseUrl 不是合法的 URL：{settings.BaseUrl}");
         }
 
-        var body = JsonConvert.SerializeObject(new
-        {
-            player_name = playerName,
-            @event = eventType,
-            server_name = serverName,
-        });
+        var body = JsonConvert.SerializeObject(
+            new
+            {
+                player_name = playerName,
+                @event = eventType,
+                server_name = serverName,
+                message,
+            },
+            new JsonSerializerSettings { NullValueHandling = NullValueHandling.Ignore });
         using var request = new HttpRequestMessage(HttpMethod.Post, uri)
         {
             Content = new StringContent(body, Encoding.UTF8, "application/json"),
@@ -268,10 +272,10 @@ public sealed class NextBotSessionProbeService : INextBotSessionProbeService
                 return new NextBotPlayerEventResult(true, httpStatus, $"NextBot 已接收玩家 {playerName} 的 {eventType} 事件");
             }
 
-            var (code, message) = TryParseErrorBody(text);
+            var (code, errorMessage) = TryParseErrorBody(text);
             var reason = code is null
                 ? $"HTTP {httpStatus}"
-                : $"{code}: {message} (HTTP {httpStatus})";
+                : $"{code}: {errorMessage} (HTTP {httpStatus})";
             return new NextBotPlayerEventResult(false, httpStatus, reason);
         }
         catch (TaskCanceledException ex) when (!ct.IsCancellationRequested)

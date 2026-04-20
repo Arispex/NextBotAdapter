@@ -321,6 +321,52 @@ public sealed class NextBotSessionProbeServiceTests
         Assert.Contains("dns failure", result.Message);
     }
 
+    [Fact]
+    public async Task NotifyPlayerEvent_IncludesMessageInBody_ForMessageEvent()
+    {
+        string? capturedBody = null;
+        var probe = new NextBotSessionProbeService(new HttpClient(new FakeHandler(req =>
+        {
+            capturedBody = req.Content?.ReadAsStringAsync().Result;
+            return new HttpResponseMessage(HttpStatusCode.OK)
+            {
+                Content = new StringContent("{\"success\":true}"),
+            };
+        })));
+
+        var result = await probe.NotifyPlayerEventAsync(
+            new NextBotSettings("https://example.com", "secret"),
+            "Steve",
+            "message",
+            "主服",
+            message: "大家好");
+
+        Assert.True(result.Success);
+        Assert.NotNull(capturedBody);
+        Assert.Contains("\"event\":\"message\"", capturedBody);
+        Assert.Contains("\"message\":\"大家好\"", capturedBody);
+    }
+
+    [Fact]
+    public async Task NotifyPlayerEvent_OmitsMessageField_WhenNotProvided()
+    {
+        string? capturedBody = null;
+        var probe = new NextBotSessionProbeService(new HttpClient(new FakeHandler(req =>
+        {
+            capturedBody = req.Content?.ReadAsStringAsync().Result;
+            return new HttpResponseMessage(HttpStatusCode.OK);
+        })));
+
+        await probe.NotifyPlayerEventAsync(
+            new NextBotSettings("https://example.com", "secret"),
+            "Steve",
+            "online",
+            "主服");
+
+        Assert.NotNull(capturedBody);
+        Assert.DoesNotContain("\"message\"", capturedBody);
+    }
+
     private sealed class FakeHandler(Func<HttpRequestMessage, HttpResponseMessage> responder) : HttpMessageHandler
     {
         protected override Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)

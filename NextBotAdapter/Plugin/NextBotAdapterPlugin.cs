@@ -78,6 +78,7 @@ public sealed class NextBotAdapterPlugin(Main game) : TerrariaPlugin(game)
         GetDataHandlers.PlayerInfo.Register(OnPlayerInfo, HandlerPriority.Highest);
         PlayerHooks.PlayerPreLogin += OnPlayerPreLogin;
         PlayerHooks.PlayerPostLogin += OnPlayerPostLogin;
+        PlayerHooks.PlayerChat += OnPlayerChat;
         ServerApi.Hooks.ServerLeave.Register(this, OnServerLeave);
         ServerApi.Hooks.NetGreetPlayer.Register(this, OnNetGreetPlayer);
 
@@ -121,6 +122,7 @@ public sealed class NextBotAdapterPlugin(Main game) : TerrariaPlugin(game)
             GetDataHandlers.PlayerInfo.UnRegister(OnPlayerInfo);
             PlayerHooks.PlayerPreLogin -= OnPlayerPreLogin;
             PlayerHooks.PlayerPostLogin -= OnPlayerPostLogin;
+            PlayerHooks.PlayerChat -= OnPlayerChat;
             ServerApi.Hooks.ServerLeave.Deregister(this, OnServerLeave);
             ServerApi.Hooks.NetGreetPlayer.Deregister(this, OnNetGreetPlayer);
             AppDomain.CurrentDomain.AssemblyResolve -= CurrentDomain_AssemblyResolve;
@@ -229,7 +231,7 @@ public sealed class NextBotAdapterPlugin(Main game) : TerrariaPlugin(game)
         _ = Task.Run(() => NotifyNextBotPlayerEventAsync(playerName, "offline"));
     }
 
-    private async Task NotifyNextBotPlayerEventAsync(string playerName, string eventType)
+    private async Task NotifyNextBotPlayerEventAsync(string playerName, string eventType, string? message = null)
     {
         try
         {
@@ -240,7 +242,7 @@ public sealed class NextBotAdapterPlugin(Main game) : TerrariaPlugin(game)
 
             var config = _configService.Load();
             var result = await _nextBotProbeService
-                .NotifyPlayerEventAsync(config.NextBot, playerName, eventType, config.ServerName)
+                .NotifyPlayerEventAsync(config.NextBot, playerName, eventType, config.ServerName, message)
                 .ConfigureAwait(false);
 
             if (result.Success)
@@ -337,6 +339,29 @@ public sealed class NextBotAdapterPlugin(Main game) : TerrariaPlugin(game)
         PerformAutoLogin(player, account);
 
         NotifyPlayerOnline(args.Who, player);
+    }
+
+    private void OnPlayerChat(PlayerChatEventArgs args)
+    {
+        var settings = _configService?.LoadPlayerEventsSettings() ?? PlayerEventsSettings.Default;
+        if (!settings.Enabled || !settings.Message)
+        {
+            return;
+        }
+
+        var playerName = args.Player?.Name ?? string.Empty;
+        if (string.IsNullOrEmpty(playerName))
+        {
+            return;
+        }
+
+        var text = args.RawText ?? string.Empty;
+        if (string.IsNullOrWhiteSpace(text))
+        {
+            return;
+        }
+
+        _ = Task.Run(() => NotifyNextBotPlayerEventAsync(playerName, "message", text));
     }
 
     private void NotifyPlayerOnline(int slot, TSPlayer player)

@@ -52,7 +52,8 @@ tshock/
   "playerEvents": {
     "enabled": false,
     "online": false,
-    "offline": false
+    "offline": false,
+    "message": false
   }
 }
 ```
@@ -136,16 +137,19 @@ UUID 或 IP 发生变化时，玩家登录会被拒绝，需通过 `GET /nextbot
 
 | 字段       | 类型    | 默认值  | 说明                                                            |
 |------------|---------|---------|-----------------------------------------------------------------|
-| `enabled`  | boolean | `false` | 上下线通知总开关。`false` 时两类通知都不发送                   |
+| `enabled`  | boolean | `false` | 玩家事件通知总开关。`false` 时 online / offline / message 三类事件都不发送 |
 | `online`   | boolean | `false` | 是否在玩家入服后向 NextBot 推送"上线"事件（仅当 `enabled=true` 生效） |
 | `offline`  | boolean | `false` | 是否在玩家离开服务器后向 NextBot 推送"下线"事件（仅当 `enabled=true` 生效） |
+| `message`  | boolean | `false` | 是否将玩家游戏内聊天同步到 NextBot（仅当 `enabled=true` 生效） |
 
-启用后，插件会在 TShock 的 `NetGreetPlayer` / `ServerLeave` Hook 中调用 `POST {baseUrl}/webui/api/player-events`，NextBot 端按其"上下线通知"设置决定目标 QQ 群并组装消息文本。`server_name` 字段直接使用主配置的 `serverName`，`player_name` 字段使用玩家的角色名。
+启用后，插件会在 TShock 的 `NetGreetPlayer` / `ServerLeave` / `PlayerHooks.PlayerChat` Hook 中调用 `POST {baseUrl}/webui/api/player-events`，NextBot 端按其"上下线通知"/"消息同步"设置决定目标 QQ 群并组装消息文本。`server_name` 字段直接使用主配置的 `serverName`，`player_name` 字段使用玩家的角色名。
 
 行为要点：
 
-- **fire-and-forget**：Hook 线程不等待 HTTP 响应，失败只在插件日志中记 WARN，不影响游戏正常连接与断开。
-- **仅在 `NetGreetPlayer` 后追踪**：如果玩家在 `OnPlayerInfo` 阶段因黑名单 / 白名单被直接拒绝，不会产生任何上下线通知（插件用玩家 slot 追踪配对，保证不会出现"只有下线没有上线"）。
+- **fire-and-forget**：Hook 线程不等待 HTTP 响应，失败只在插件日志中记 WARN，不影响游戏正常连接、断开或聊天。
+- **仅在 `NetGreetPlayer` 后追踪上下线**：如果玩家在 `OnPlayerInfo` 阶段因黑名单 / 白名单被直接拒绝，不会产生任何 online / offline 通知（插件用玩家 slot 追踪配对，保证不会出现"只有下线没有上线"）。
+- **命令不会被当作聊天上报**：TShock 在 `PlayerChat` hook 之前已分流 `/` / `.` 前缀的命令，`message` 事件只会携带真正的聊天原文（`PlayerChatEventArgs.RawText`）。空白消息会被跳过。
+- **事件配置解耦**：NextBot 的"上下线通知"与"消息同步"在 WebUI 是两套独立配置，允许分别路由到不同 QQ 群、用不同模板；插件侧只统一通过一个端点上报。
 - **总开关优先**：`enabled=false` 时连 slot 追踪都不会记录，确保立即生效地静默所有通知。
 
 ---
