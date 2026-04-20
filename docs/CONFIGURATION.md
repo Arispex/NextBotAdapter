@@ -109,6 +109,8 @@ UUID 或 IP 发生变化时，玩家登录会被拒绝，需通过 `GET /nextbot
 
 任一条件不满足时，`autoLogin` 会被静默跳过，玩家正常进服后需手动 `/login`，以避免出现"任何人只要用目标用户名连入就能登入"的裸奔场景。
 
+**TShock 封禁列表检查**：autoLogin 登入完成后会触发 `PlayerHooks.OnPlayerPostLogin` 事件，与手动 `/login` 命令走同一条 hook 链。TShock 订阅该事件的 `Bans.CheckBan` 会依次检查 `name`、`ip`、`uuid`、`acc` 四种 identifier；若命中任一有效封禁，玩家会被立即断开，断连消息与原版 `/login` 一致。
+
 **已知风险**：
 
 - Terraria UUID 是客户端可控、非秘密的标识，同机器 / 同局域网 / 服务器日志都可能泄漏；一旦泄漏，攻击者可以在同 IP 下冒充

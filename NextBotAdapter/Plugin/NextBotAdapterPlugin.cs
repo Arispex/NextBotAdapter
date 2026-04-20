@@ -406,9 +406,10 @@ public sealed class NextBotAdapterPlugin(Main game) : TerrariaPlugin(game)
             TShock.UserAccounts.SetUserAccountUUID(account, player.UUID ?? string.Empty);
             TShock.UserAccounts.UpdateLogin(account);
 
-            _onlineTimeService?.StartSession(account.Name);
             player.SendSuccessMessage($"已自动登入账号 {account.Name}。");
             PluginLogger.Info($"玩家 {account.Name} 已自动登入。");
+
+            PlayerHooks.OnPlayerPostLogin(player);
         }
         catch (Exception ex)
         {
