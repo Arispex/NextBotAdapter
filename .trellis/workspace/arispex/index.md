@@ -8,8 +8,8 @@
 
 <!-- @@@auto:current-status -->
 - **Active File**: `journal-1.md`
-- **Total Sessions**: 20
-- **Last Active**: 2026-04-12
+- **Total Sessions**: 21
+- **Last Active**: 2026-04-20
 <!-- @@@/auto:current-status -->
 
 ---
@@ -19,7 +19,7 @@
 <!-- @@@auto:active-documents -->
 | File | Lines | Status |
 |------|-------|--------|
-| `journal-1.md` | ~954 | Active |
+| `journal-1.md` | ~1025 | Active |
 <!-- @@@/auto:active-documents -->
 
 ---
@@ -29,6 +29,7 @@
 <!-- @@@auto:session-history -->
 | # | Date | Title | Commits |
 |---|------|-------|---------|
+| 21 | 2026-04-20 | 黑名单联动 TShock 游戏内封禁 + autoLogin 封禁检查修复 | `960b830`, `0e284a2` |
 | 20 | 2026-04-12 | 安全加固、caseSensitive 移除、NextBot 同步功能 | `5366acf`, `16c352c`, `f4b0ed7`, `0d6dfee`, `bd5ea7d`, `4ed1c0d`, `e1927a9`, `24b7a29` |
 | 19 | 2026-04-12 | 黑名单功能、游戏内指令、安全加固 | `9ceb5c4`, `0b24b9c`, `2e80145`, `4c273e1`, `4ed1c0d`, `bd5ea7d`, `0d6dfee`, `f4b0ed7`, `16c352c`, `5366acf` |
 | 18 | 2026-04-09 | autoLogin IP 检测修复 + TShock UUID 自动登入禁用 | `3ca54c6`, `5f281e4` |
