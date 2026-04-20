@@ -48,6 +48,11 @@ tshock/
     "changeDetectedMessage": "你的 {changed} 发生变化，请在 QQ 群发送「允许登入」后重新连接。",
     "deviceMismatchMessage": "该账号已通过登入确认，但当前设备与确认时不一致，请使用原设备登入。",
     "pendingExistsMessage": "该账号已有待确认的登入请求，请等待其过期后再试。"
+  },
+  "playerEvents": {
+    "enabled": false,
+    "online": false,
+    "offline": false
   }
 }
 ```
@@ -126,6 +131,22 @@ UUID 或 IP 发生变化时，玩家登录会被拒绝，需通过 `GET /nextbot
 **建议**：
 
 - 与 `loginConfirmation.enabled=true` + `detectUuid=true` + `detectIp=true` 同时使用，提高攻破门槛
+
+### `playerEvents`
+
+| 字段       | 类型    | 默认值  | 说明                                                            |
+|------------|---------|---------|-----------------------------------------------------------------|
+| `enabled`  | boolean | `false` | 上下线通知总开关。`false` 时两类通知都不发送                   |
+| `online`   | boolean | `false` | 是否在玩家入服后向 NextBot 推送"上线"事件（仅当 `enabled=true` 生效） |
+| `offline`  | boolean | `false` | 是否在玩家离开服务器后向 NextBot 推送"下线"事件（仅当 `enabled=true` 生效） |
+
+启用后，插件会在 TShock 的 `NetGreetPlayer` / `ServerLeave` Hook 中调用 `POST {baseUrl}/webui/api/player-events`，NextBot 端按其"上下线通知"设置决定目标 QQ 群并组装消息文本。`server_name` 字段直接使用主配置的 `serverName`，`player_name` 字段使用玩家的角色名。
+
+行为要点：
+
+- **fire-and-forget**：Hook 线程不等待 HTTP 响应，失败只在插件日志中记 WARN，不影响游戏正常连接与断开。
+- **仅在 `NetGreetPlayer` 后追踪**：如果玩家在 `OnPlayerInfo` 阶段因黑名单 / 白名单被直接拒绝，不会产生任何上下线通知（插件用玩家 slot 追踪配对，保证不会出现"只有下线没有上线"）。
+- **总开关优先**：`enabled=false` 时连 slot 追踪都不会记录，确保立即生效地静默所有通知。
 
 ---
 

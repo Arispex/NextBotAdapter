@@ -24,6 +24,8 @@ public sealed class NextBotAdapterPlugin(Main game) : TerrariaPlugin(game)
     private LoginConfirmationService? _loginConfirmationService;
     private NextBotSessionProbeService? _nextBotProbeService;
     private TShockUserBanService? _tshockUserBanService;
+    private readonly HashSet<int> _onlineNotifiedSlots = [];
+    private readonly object _onlineNotifiedLock = new();
 
     public override string Author => "Arispex";
 
@@ -198,6 +200,62 @@ public sealed class NextBotAdapterPlugin(Main game) : TerrariaPlugin(game)
         {
             _onlineTimeService?.EndSession(username);
         }
+
+        NotifyPlayerOffline(args.Who, player);
+    }
+
+    private void NotifyPlayerOffline(int slot, TSPlayer? player)
+    {
+        lock (_onlineNotifiedLock)
+        {
+            if (!_onlineNotifiedSlots.Remove(slot))
+            {
+                return;
+            }
+        }
+
+        var settings = _configService?.LoadPlayerEventsSettings() ?? PlayerEventsSettings.Default;
+        if (!settings.Enabled || !settings.Offline)
+        {
+            return;
+        }
+
+        var playerName = player?.Name ?? string.Empty;
+        if (string.IsNullOrEmpty(playerName))
+        {
+            return;
+        }
+
+        _ = Task.Run(() => NotifyNextBotPlayerEventAsync(playerName, "offline"));
+    }
+
+    private async Task NotifyNextBotPlayerEventAsync(string playerName, string eventType)
+    {
+        try
+        {
+            if (_configService is null || _nextBotProbeService is null)
+            {
+                return;
+            }
+
+            var config = _configService.Load();
+            var result = await _nextBotProbeService
+                .NotifyPlayerEventAsync(config.NextBot, playerName, eventType, config.ServerName)
+                .ConfigureAwait(false);
+
+            if (result.Success)
+            {
+                PluginLogger.Info($"NextBot 已接收玩家 {playerName} 的 {eventType} 事件");
+            }
+            else
+            {
+                PluginLogger.Warn($"通知 NextBot 玩家 {playerName} 的 {eventType} 事件失败：{result.Message}");
+            }
+        }
+        catch (Exception ex)
+        {
+            PluginLogger.Warn($"通知 NextBot 玩家 {playerName} 的 {eventType} 事件异常：{ex.Message}");
+        }
     }
 
     private void OnPlayerInfo(object? _, GetDataHandlers.PlayerInfoEventArgs args)
@@ -277,6 +335,38 @@ public sealed class NextBotAdapterPlugin(Main game) : TerrariaPlugin(game)
         }
 
         PerformAutoLogin(player, account);
+
+        NotifyPlayerOnline(args.Who, player);
+    }
+
+    private void NotifyPlayerOnline(int slot, TSPlayer player)
+    {
+        var settings = _configService?.LoadPlayerEventsSettings() ?? PlayerEventsSettings.Default;
+        if (!settings.Enabled)
+        {
+            return;
+        }
+
+        var playerName = player.Name;
+        if (string.IsNullOrEmpty(playerName))
+        {
+            return;
+        }
+
+        lock (_onlineNotifiedLock)
+        {
+            if (!_onlineNotifiedSlots.Add(slot))
+            {
+                return;
+            }
+        }
+
+        if (!settings.Online)
+        {
+            return;
+        }
+
+        _ = Task.Run(() => NotifyNextBotPlayerEventAsync(playerName, "online"));
     }
 
     // Returns true if login should be allowed; false if rejected (denialReason set).

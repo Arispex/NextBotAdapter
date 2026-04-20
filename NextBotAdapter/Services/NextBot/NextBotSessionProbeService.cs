@@ -34,6 +34,11 @@ public sealed record NextBotFetchUsersResult(
     IReadOnlyList<NextBotUserEntry>? Users,
     string Message);
 
+public sealed record NextBotPlayerEventResult(
+    bool Success,
+    int? HttpStatus,
+    string Message);
+
 public interface INextBotSessionProbeService
 {
     Task<NextBotProbeResult> ProbeAsync(NextBotSettings settings, CancellationToken ct = default);
@@ -41,6 +46,8 @@ public interface INextBotSessionProbeService
     Task<NextBotLoginRequestResult> NotifyLoginRequestAsync(NextBotSettings settings, string playerName, bool newDevice = false, bool newLocation = false, CancellationToken ct = default);
 
     Task<NextBotFetchUsersResult> FetchUsersAsync(NextBotSettings settings, CancellationToken ct = default);
+
+    Task<NextBotPlayerEventResult> NotifyPlayerEventAsync(NextBotSettings settings, string playerName, string eventType, string serverName, CancellationToken ct = default);
 }
 
 public sealed class NextBotSessionProbeService : INextBotSessionProbeService
@@ -218,6 +225,62 @@ public sealed class NextBotSessionProbeService : INextBotSessionProbeService
         catch (HttpRequestException ex)
         {
             return new NextBotFetchUsersResult(false, null, $"网络异常：{ex.Message}");
+        }
+    }
+
+    public async Task<NextBotPlayerEventResult> NotifyPlayerEventAsync(
+        NextBotSettings settings,
+        string playerName,
+        string eventType,
+        string serverName,
+        CancellationToken ct = default)
+    {
+        if (string.IsNullOrWhiteSpace(settings.BaseUrl) || string.IsNullOrWhiteSpace(settings.Token))
+        {
+            return new NextBotPlayerEventResult(false, null, "未配置 baseUrl 或 token");
+        }
+
+        var url = $"{settings.BaseUrl.TrimEnd('/')}/webui/api/player-events?token={Uri.EscapeDataString(settings.Token)}";
+        if (!Uri.TryCreate(url, UriKind.Absolute, out var uri))
+        {
+            return new NextBotPlayerEventResult(false, null, $"baseUrl 不是合法的 URL：{settings.BaseUrl}");
+        }
+
+        var body = JsonConvert.SerializeObject(new
+        {
+            player_name = playerName,
+            @event = eventType,
+            server_name = serverName,
+        });
+        using var request = new HttpRequestMessage(HttpMethod.Post, uri)
+        {
+            Content = new StringContent(body, Encoding.UTF8, "application/json"),
+        };
+
+        try
+        {
+            using var response = await _httpClient.SendAsync(request, ct).ConfigureAwait(false);
+            var httpStatus = (int)response.StatusCode;
+            var text = await response.Content.ReadAsStringAsync(ct).ConfigureAwait(false);
+
+            if (response.StatusCode == HttpStatusCode.OK || response.StatusCode == HttpStatusCode.Created)
+            {
+                return new NextBotPlayerEventResult(true, httpStatus, $"NextBot 已接收玩家 {playerName} 的 {eventType} 事件");
+            }
+
+            var (code, message) = TryParseErrorBody(text);
+            var reason = code is null
+                ? $"HTTP {httpStatus}"
+                : $"{code}: {message} (HTTP {httpStatus})";
+            return new NextBotPlayerEventResult(false, httpStatus, reason);
+        }
+        catch (TaskCanceledException ex) when (!ct.IsCancellationRequested)
+        {
+            return new NextBotPlayerEventResult(false, null, $"请求超时：{ex.Message}");
+        }
+        catch (HttpRequestException ex)
+        {
+            return new NextBotPlayerEventResult(false, null, $"网络异常：{ex.Message}");
         }
     }
 

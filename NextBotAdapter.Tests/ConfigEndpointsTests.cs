@@ -166,6 +166,9 @@ public sealed class ConfigEndpointsTests
 
         public Task<NextBotFetchUsersResult> FetchUsersAsync(NextBotSettings settings, CancellationToken ct = default)
             => Task.FromResult(new NextBotFetchUsersResult(false, null, "not implemented"));
+
+        public Task<NextBotPlayerEventResult> NotifyPlayerEventAsync(NextBotSettings settings, string playerName, string eventType, string serverName, CancellationToken ct = default)
+            => Task.FromResult(new NextBotPlayerEventResult(true, 200, "ok"));
     }
 
     private static PluginConfigService CreateConfigService()

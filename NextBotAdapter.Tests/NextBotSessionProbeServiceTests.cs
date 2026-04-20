@@ -243,6 +243,84 @@ public sealed class NextBotSessionProbeServiceTests
         Assert.Contains("dns failure", result.Message);
     }
 
+    [Fact]
+    public async Task NotifyPlayerEvent_ReturnsSuccess_On200()
+    {
+        string? capturedUri = null;
+        string? capturedBody = null;
+        var probe = new NextBotSessionProbeService(new HttpClient(new FakeHandler(req =>
+        {
+            capturedUri = req.RequestUri?.ToString();
+            capturedBody = req.Content?.ReadAsStringAsync().Result;
+            return new HttpResponseMessage(HttpStatusCode.OK)
+            {
+                Content = new StringContent("{\"success\":true,\"data\":{\"sent_groups\":[1],\"failed_groups\":[]}}"),
+            };
+        })));
+
+        var result = await probe.NotifyPlayerEventAsync(
+            new NextBotSettings("https://example.com/", "secret"),
+            "Steve",
+            "online",
+            "主服");
+
+        Assert.True(result.Success);
+        Assert.Equal(200, result.HttpStatus);
+        Assert.NotNull(capturedUri);
+        Assert.Contains("/webui/api/player-events", capturedUri);
+        Assert.Contains("token=secret", capturedUri);
+        Assert.NotNull(capturedBody);
+        Assert.Contains("\"player_name\":\"Steve\"", capturedBody);
+        Assert.Contains("\"event\":\"online\"", capturedBody);
+        Assert.Contains("\"server_name\":\"主服\"", capturedBody);
+    }
+
+    [Fact]
+    public async Task NotifyPlayerEvent_ReturnsFailure_WhenNotConfigured()
+    {
+        var probe = new NextBotSessionProbeService(new HttpClient(new FakeHandler(_ =>
+            throw new InvalidOperationException("should not be called"))));
+
+        var result = await probe.NotifyPlayerEventAsync(
+            new NextBotSettings(string.Empty, "t"), "Steve", "online", "主服");
+
+        Assert.False(result.Success);
+        Assert.Null(result.HttpStatus);
+        Assert.Contains("未配置", result.Message);
+    }
+
+    [Fact]
+    public async Task NotifyPlayerEvent_ParsesErrorBody_OnValidationError()
+    {
+        var probe = new NextBotSessionProbeService(new HttpClient(new FakeHandler(_ =>
+            new HttpResponseMessage(HttpStatusCode.UnprocessableEntity)
+            {
+                Content = new StringContent("{\"success\":false,\"error\":{\"code\":\"validation_error\",\"message\":\"事件类型仅支持 online 或 offline\"}}"),
+            })));
+
+        var result = await probe.NotifyPlayerEventAsync(
+            new NextBotSettings("https://example.com", "t"), "Steve", "invalid", "主服");
+
+        Assert.False(result.Success);
+        Assert.Equal(422, result.HttpStatus);
+        Assert.Contains("validation_error", result.Message);
+        Assert.Contains("事件类型仅支持", result.Message);
+    }
+
+    [Fact]
+    public async Task NotifyPlayerEvent_ReturnsFailure_OnNetworkException()
+    {
+        var probe = new NextBotSessionProbeService(new HttpClient(new FakeHandler(_ =>
+            throw new HttpRequestException("dns failure"))));
+
+        var result = await probe.NotifyPlayerEventAsync(
+            new NextBotSettings("https://example.com", "t"), "Steve", "online", "主服");
+
+        Assert.False(result.Success);
+        Assert.Null(result.HttpStatus);
+        Assert.Contains("dns failure", result.Message);
+    }
+
     private sealed class FakeHandler(Func<HttpRequestMessage, HttpResponseMessage> responder) : HttpMessageHandler
     {
         protected override Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)

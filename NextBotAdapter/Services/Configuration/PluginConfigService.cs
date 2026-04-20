@@ -102,6 +102,9 @@ public sealed class PluginConfigService
     public LoginConfirmationSettings LoadLoginConfirmationSettings()
         => Load().LoginConfirmation ?? LoginConfirmationSettings.Default;
 
+    public PlayerEventsSettings LoadPlayerEventsSettings()
+        => Load().PlayerEvents ?? PlayerEventsSettings.Default;
+
     public string ReadConfigRaw()
     {
         EnsureDirectories();
