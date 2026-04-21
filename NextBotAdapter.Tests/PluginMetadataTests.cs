@@ -12,6 +12,6 @@ public sealed class PluginMetadataTests
         Assert.Equal("Arispex", plugin.Author);
         Assert.Equal("Provides NextBot with TShock server information.", plugin.Description);
         Assert.Equal("NextBotAdapter", plugin.Name);
-        Assert.Equal(new Version(1, 1, 0), plugin.Version);
+        Assert.Equal(new Version(1, 2, 0), plugin.Version);
     }
 }
