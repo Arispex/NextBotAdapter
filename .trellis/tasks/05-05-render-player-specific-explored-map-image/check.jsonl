@@ -1,0 +1,8 @@
+{"file": ".trellis/spec/backend/quality-guidelines.md", "reason": "Code Review Checklist（layer placement、测试覆盖、显式可读、错误码 / 路由常量集中化）"}
+{"file": ".trellis/spec/backend/directory-structure.md", "reason": "确认 Exploration service 与临时命令文件落在正确层；测试归属正确"}
+{"file": ".trellis/spec/backend/error-handling.md", "reason": "验收 400 / 500 错误响应符合既有契约；error.message 是有效原因，不拼接动作 + 结果"}
+{"file": ".trellis/spec/backend/logging-guidelines.md", "reason": "验收日志通过 PluginLogger，级别选用合理，消息表达 动作 + 对象 + 结果 + 上下文"}
+{"file": ".trellis/tasks/05-05-render-player-specific-explored-map-image/research/server-side-player-explored-data.md", "reason": "对照实现是否遵循 hook 选择（PlayerUpdate）和持久化策略，未踩研究里指出的限制（不要假装能拿到真实 explored）"}
+{"file": ".trellis/tasks/05-05-render-player-specific-explored-map-image/research/maptile-semantics.md", "reason": "对照未探索像素渲染是否正确（用 default(MapTile) 或直接写黑，不用 Light=0 这条歧义路径）"}
+{"file": ".trellis/tasks/05-05-render-player-specific-explored-map-image/research/rest-api-shape.md", "reason": "对照 endpoint 形态（query param vs path）+ 玩家名校验 / 错误返回行为"}
+{"file": "docs/REST_API.md", "reason": "验收文档是否同步追加 player 参数说明 + 限制声明，且风格与既有端点一致"}

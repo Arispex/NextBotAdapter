@@ -24,6 +24,7 @@ public sealed class NextBotAdapterPlugin(Main game) : TerrariaPlugin(game)
     private LoginConfirmationService? _loginConfirmationService;
     private NextBotSessionProbeService? _nextBotProbeService;
     private TShockUserBanService? _tshockUserBanService;
+    private PlayerExplorationTracker? _playerExplorationTracker;
     private readonly HashSet<int> _onlineNotifiedSlots = [];
     private readonly object _onlineNotifiedLock = new();
 
@@ -54,6 +55,15 @@ public sealed class NextBotAdapterPlugin(Main game) : TerrariaPlugin(game)
         ConfigEndpoints.ReloadService = new ConfigurationReloadService(_configService, _whitelistService, _blacklistService, _onlineTimeService);
         ConfigEndpoints.ConfigService = _configService;
         MapEndpoints.Service = new MapImageService();
+        MapEndpoints.PlayerService = new PlayerMapImageService();
+        var explorationStorage = new FileExplorationStorage(
+            Path.Combine(_configService.ConfigDirectoryPath, "explored"),
+            () => Main.worldID);
+        _playerExplorationTracker = new PlayerExplorationTracker(
+            explorationStorage,
+            () => (Main.maxTilesX, Main.maxTilesY));
+        MapEndpoints.ExplorationTracker = _playerExplorationTracker;
+        MapEndpoints.AccountLookup = TShockUserAccountLookup.Default;
         WorldEndpoints.WorldFileService = new WorldFileService();
         WorldEndpoints.MapFileService = new MapFileService();
 
@@ -76,11 +86,14 @@ public sealed class NextBotAdapterPlugin(Main game) : TerrariaPlugin(game)
         _ = Task.Run(VerifyNextBotConnectionAsync);
 
         GetDataHandlers.PlayerInfo.Register(OnPlayerInfo, HandlerPriority.Highest);
+        GetDataHandlers.PlayerUpdate.Register(OnPlayerUpdate);
         PlayerHooks.PlayerPreLogin += OnPlayerPreLogin;
         PlayerHooks.PlayerPostLogin += OnPlayerPostLogin;
         PlayerHooks.PlayerChat += OnPlayerChat;
         ServerApi.Hooks.ServerLeave.Register(this, OnServerLeave);
         ServerApi.Hooks.NetGreetPlayer.Register(this, OnNetGreetPlayer);
+
+        NextBotAdapter.Plugin.Dev.TestMapCommand.Register();
 
         if (!_whitelistService.Settings.Enabled)
         {
@@ -118,8 +131,11 @@ public sealed class NextBotAdapterPlugin(Main game) : TerrariaPlugin(game)
         if (disposing)
         {
             _onlineTimeService?.PersistAllSessions();
+            _playerExplorationTracker?.SaveAll();
             Commands.ChatCommands.RemoveAll(c => c.CommandDelegate == NbCommand);
+            NextBotAdapter.Plugin.Dev.TestMapCommand.Unregister();
             GetDataHandlers.PlayerInfo.UnRegister(OnPlayerInfo);
+            GetDataHandlers.PlayerUpdate.UnRegister(OnPlayerUpdate);
             PlayerHooks.PlayerPreLogin -= OnPlayerPreLogin;
             PlayerHooks.PlayerPostLogin -= OnPlayerPostLogin;
             PlayerHooks.PlayerChat -= OnPlayerChat;
@@ -193,6 +209,11 @@ public sealed class NextBotAdapterPlugin(Main game) : TerrariaPlugin(game)
     private void OnPlayerPostLogin(PlayerPostLoginEventArgs args)
     {
         _onlineTimeService?.StartSession(args.Player.Account.Name);
+        var uuid = args.Player?.Account?.UUID;
+        if (!string.IsNullOrEmpty(uuid))
+        {
+            _playerExplorationTracker?.Load(uuid);
+        }
     }
 
     private void OnServerLeave(LeaveEventArgs args)
@@ -203,7 +224,38 @@ public sealed class NextBotAdapterPlugin(Main game) : TerrariaPlugin(game)
             _onlineTimeService?.EndSession(username);
         }
 
+        var uuid = player?.Account?.UUID;
+        if (!string.IsNullOrEmpty(uuid))
+        {
+            _playerExplorationTracker?.Save(uuid);
+        }
+
         NotifyPlayerOffline(args.Who, player);
+    }
+
+    private void OnPlayerUpdate(object? _, GetDataHandlers.PlayerUpdateEventArgs args)
+    {
+        if (_playerExplorationTracker is null)
+        {
+            return;
+        }
+
+        var player = args.Player;
+        if (player is null || !player.IsLoggedIn || player.Account is null)
+        {
+            return;
+        }
+
+        var uuid = player.Account.UUID;
+        if (string.IsNullOrEmpty(uuid))
+        {
+            return;
+        }
+
+        var position = args.Position;
+        var tileX = (int)(position.X / 16f);
+        var tileY = (int)(position.Y / 16f);
+        _playerExplorationTracker.MarkArea(uuid, tileX, tileY);
     }
 
     private void NotifyPlayerOffline(int slot, TSPlayer? player)

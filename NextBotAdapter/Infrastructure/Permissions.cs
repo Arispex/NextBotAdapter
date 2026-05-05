@@ -23,4 +23,5 @@ public static class Permissions
     public const string LeaderboardOnlineTime = "nextbot.leaderboards.online_time";
     public const string SecurityConfirmLogin = "nextbot.security.confirm_login";
     public const string SecurityRejectLogin = "nextbot.security.reject_login";
+    public const string TestMap = "nextbot.test.map";
 }

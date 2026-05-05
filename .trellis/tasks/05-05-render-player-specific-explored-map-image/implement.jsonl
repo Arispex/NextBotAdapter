@@ -1,0 +1,8 @@
+{"file": ".trellis/spec/backend/directory-structure.md", "reason": "新增 Services/Exploration/ 子目录与文件归属、测试归属，以及临时命令文件位置（Plugin/Dev/）参考"}
+{"file": ".trellis/spec/backend/quality-guidelines.md", "reason": "Required Patterns（thin endpoint + service-layer 业务逻辑 + record 不可变契约）、Forbidden Patterns（不重复路由 / 错误码字符串、不在 Plugin/Rest 写业务逻辑）、Testing Requirements（行为变更必须有测试）"}
+{"file": ".trellis/spec/backend/error-handling.md", "reason": "REST 错误响应格式（{error}）、状态码（400 用户不存在 vs 500 渲染异常）、错误消息字面量约定"}
+{"file": ".trellis/spec/backend/logging-guidelines.md", "reason": "PluginLogger 入口、级别（INFO 玩家登录加载 bitmap / WARN 文件损坏 fail-safe / ERROR 持久化失败）、消息风格"}
+{"file": ".trellis/tasks/05-05-render-player-specific-explored-map-image/research/server-side-player-explored-data.md", "reason": "实现细节：用 PacketTypes.PlayerUpdate / GetDataHandlers.PlayerUpdate 采样位置、为什么不能用真实 explored 数据、推荐 reveal radius、内存开销估算、相似插件先例"}
+{"file": ".trellis/tasks/05-05-render-player-specific-explored-map-image/research/maptile-semantics.md", "reason": "渲染未探索像素的正确表达：default(MapTile) → (0,0,0,0) 透明 / 直接写 Rgba32(0,0,0,255) 实心黑；Light=0 不是通用未探索开关"}
+{"file": ".trellis/tasks/05-05-render-player-specific-explored-map-image/research/rest-api-shape.md", "reason": "确认接口形态为 GET /nextbot/world/map-image?player={user}（query param 可选过滤），玩家名 trim + 非空校验模式参考 UserEndpoints"}
+{"file": "docs/REST_API.md", "reason": "现有 /nextbot/world/map-image 端点文档、/nextbot/users/{user}/inventory 错误风格参考；本任务需要在此文件追加 player 参数说明 + 模拟探索的限制声明"}
