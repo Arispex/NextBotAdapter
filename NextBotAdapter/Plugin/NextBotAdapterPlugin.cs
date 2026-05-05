@@ -57,7 +57,7 @@ public sealed class NextBotAdapterPlugin(Main game) : TerrariaPlugin(game)
         MapEndpoints.Service = new MapImageService();
         MapEndpoints.PlayerService = new PlayerMapImageService();
         var explorationStorage = new FileExplorationStorage(
-            Path.Combine(_configService.ConfigDirectoryPath, "explored"),
+            Path.Combine(_configService.ConfigDirectoryPath, "Explored"),
             () => Main.worldID);
         _playerExplorationTracker = new PlayerExplorationTracker(
             explorationStorage,
@@ -92,8 +92,6 @@ public sealed class NextBotAdapterPlugin(Main game) : TerrariaPlugin(game)
         PlayerHooks.PlayerChat += OnPlayerChat;
         ServerApi.Hooks.ServerLeave.Register(this, OnServerLeave);
         ServerApi.Hooks.NetGreetPlayer.Register(this, OnNetGreetPlayer);
-
-        NextBotAdapter.Plugin.Dev.TestMapCommand.Register();
 
         if (!_whitelistService.Settings.Enabled)
         {
@@ -133,7 +131,6 @@ public sealed class NextBotAdapterPlugin(Main game) : TerrariaPlugin(game)
             _onlineTimeService?.PersistAllSessions();
             _playerExplorationTracker?.SaveAll();
             Commands.ChatCommands.RemoveAll(c => c.CommandDelegate == NbCommand);
-            NextBotAdapter.Plugin.Dev.TestMapCommand.Unregister();
             GetDataHandlers.PlayerInfo.UnRegister(OnPlayerInfo);
             GetDataHandlers.PlayerUpdate.UnRegister(OnPlayerUpdate);
             PlayerHooks.PlayerPreLogin -= OnPlayerPreLogin;
