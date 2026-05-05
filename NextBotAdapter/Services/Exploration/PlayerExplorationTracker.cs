@@ -19,10 +19,12 @@ public sealed class PlayerExplorationTracker : IPlayerExplorationTracker
 
     /// <summary>
     /// Distance (in tiles) above which two consecutive samples are treated as a
-    /// teleport (mirror / magic conch / long-range warp) instead of continuous
-    /// movement; only the endpoint is stamped in that case.
+    /// teleport (mirror / magic conch / recall / hellevator) instead of continuous
+    /// movement; only the endpoint is stamped in that case. 500 covers
+    /// network-batched high-speed flight (a single coalesced packet under heavy
+    /// lag) while still catching real teleports, which are typically 1000+ tile.
     /// </summary>
-    public const int TeleportThresholdTiles = 200;
+    public const int TeleportThresholdTiles = 500;
 
     /// <summary>
     /// Step (in tiles) used when bridging two consecutive samples with intermediate

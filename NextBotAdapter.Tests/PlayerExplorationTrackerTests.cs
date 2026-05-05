@@ -205,6 +205,8 @@ public sealed class PlayerExplorationTrackerTests
         const int height = 1500;
         var tracker = CreateTracker(width, height);
 
+        // chord = sqrt(900^2 + 900^2) ≈ 1273 > 500 threshold, so this still
+        // exercises the teleport branch (no interpolation between endpoints).
         tracker.MarkAtPosition("uuid-tp", 100, 100);
         tracker.MarkAtPosition("uuid-tp", 1000, 1000);
 
@@ -224,6 +226,33 @@ public sealed class PlayerExplorationTrackerTests
         // The midpoint along the chord must NOT be stamped (no interpolation on teleport).
         // (500, 500) is far outside both endpoint boxes.
         Assert.False(IsSet(bitmap!, 500, 500, width));
+    }
+
+    [Fact]
+    public void MarkAtPosition_LongJumpUnder500Threshold_StillInterpolates()
+    {
+        // Regression guard for the teleport threshold raise from 200 -> 500.
+        // chord = 300 falls in the 200-500 band, which represents a network-batched
+        // high-speed flight (wings/mount, single coalesced packet). It must be
+        // bridged with interpolation, not treated as a teleport.
+        const int width = 2400;
+        const int height = 600;
+        var tracker = CreateTracker(width, height);
+
+        tracker.MarkAtPosition("uuid-longjump", 100, 100);
+        tracker.MarkAtPosition("uuid-longjump", 400, 100);
+
+        var bitmap = tracker.GetBitmap("uuid-longjump");
+        Assert.NotNull(bitmap);
+
+        // Path is from (100, 100) to (400, 100). With 141x87 reveal boxes
+        // (half-extent X=70, Y=43), the line covers x in [30, 470].
+        // y=100 sits inside every box (vertical half-extent 43 around y=100),
+        // so the entire row [30..470] must be true with no gap.
+        for (var x = 30; x <= 470; x++)
+        {
+            Assert.True(IsSet(bitmap!, x, 100, width), $"expected (x={x}, y=100) to be revealed by interpolation");
+        }
     }
 
     [Fact]
