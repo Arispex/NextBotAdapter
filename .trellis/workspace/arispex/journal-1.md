@@ -1057,3 +1057,40 @@ Upgraded Trellis framework from 0.3.10 to 0.5.0-rc.3 (agents/skills/scripts rest
 ### Next Steps
 
 - None - task complete
+
+
+## Session 23: Render player-specific explored map (v1 + path-param refactor)
+
+**Date**: 2026-05-06
+**Task**: Render player-specific explored map (v1 + path-param refactor)
+**Branch**: `main`
+
+### Summary
+
+Built MVP for rendering per-player explored map. Server cannot read real client <player>.map (research persisted), so synthesize a per-account-UUID bitmap from PlayerUpdate position sampling. Iterations: v1 with 41x41 reveal box; added path interpolation and resized box to 141x87 (1080p screen aspect ratio 1.62 measured from screenshot); raised teleport threshold from 200 to 500 tiles to avoid misclassifying high-speed flight under packet batching; removed throwaway /nbtestmap dev command and capitalized persistence dir to Explored; final refactor moved player view from ?player= query to dedicated GET /nextbot/users/{user}/map-image route to align with existing /users/{user}/inventory style. 261 tests green, REST_API.md fully synced.
+
+### Main Changes
+
+(Add details)
+
+### Git Commits
+
+| Hash | Message |
+|------|---------|
+| `1baa319` | (see git log) |
+| `c8d51af` | (see git log) |
+| `856a057` | (see git log) |
+| `4240dd5` | (see git log) |
+| `3252d6b` | (see git log) |
+
+### Testing
+
+- [OK] (Add test results)
+
+### Status
+
+[OK] **Completed**
+
+### Next Steps
+
+- None - task complete
