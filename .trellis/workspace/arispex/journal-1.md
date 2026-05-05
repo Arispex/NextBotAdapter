@@ -1023,3 +1023,37 @@ NotifyLoginRequestAsync 签名加 bool newDevice / bool newLocation，body 序�
 ### Next Steps
 
 - None - task complete
+
+
+## Session 22: Trellis upgrade to 0.5.0-rc.3 + fix map tile coordinate bug
+
+**Date**: 2026-05-05
+**Task**: Trellis upgrade to 0.5.0-rc.3 + fix map tile coordinate bug
+**Branch**: `main`
+
+### Summary
+
+Upgraded Trellis framework from 0.3.10 to 0.5.0-rc.3 (agents/skills/scripts restructure). Then diagnosed and fixed a coordinate-alignment bug in MapImageService/MapFileService where LightUpWholeMap wrote each tile twice into _tiles, causing the rendered map's bottom/right Edge-wide L-shape to be duplicated and offset. Extracted a pure MapTileGrid.Fill<T> helper used by both services, with xUnit regression coverage. 235/235 tests green.
+
+### Main Changes
+
+(Add details)
+
+### Git Commits
+
+| Hash | Message |
+|------|---------|
+| `a6ecf4e` | (see git log) |
+| `95bf55d` | (see git log) |
+
+### Testing
+
+- [OK] (Add test results)
+
+### Status
+
+[OK] **Completed**
+
+### Next Steps
+
+- None - task complete
