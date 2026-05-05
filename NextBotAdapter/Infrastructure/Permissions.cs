@@ -4,6 +4,7 @@ public static class Permissions
 {
     public const string UserInventory = "nextbot.users.inventory";
     public const string UserStats = "nextbot.users.stats";
+    public const string UserMapImage = "nextbot.users.map_image";
     public const string WorldProgress = "nextbot.world.progress";
     public const string WorldMapImage = "nextbot.world.map_image";
     public const string WorldFile = "nextbot.world.world_file";

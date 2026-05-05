@@ -55,15 +55,15 @@ public sealed class NextBotAdapterPlugin(Main game) : TerrariaPlugin(game)
         ConfigEndpoints.ReloadService = new ConfigurationReloadService(_configService, _whitelistService, _blacklistService, _onlineTimeService);
         ConfigEndpoints.ConfigService = _configService;
         MapEndpoints.Service = new MapImageService();
-        MapEndpoints.PlayerService = new PlayerMapImageService();
+        UserEndpoints.PlayerMapImageService = new PlayerMapImageService();
         var explorationStorage = new FileExplorationStorage(
             Path.Combine(_configService.ConfigDirectoryPath, "Explored"),
             () => Main.worldID);
         _playerExplorationTracker = new PlayerExplorationTracker(
             explorationStorage,
             () => (Main.maxTilesX, Main.maxTilesY));
-        MapEndpoints.ExplorationTracker = _playerExplorationTracker;
-        MapEndpoints.AccountLookup = TShockUserAccountLookup.Default;
+        UserEndpoints.ExplorationTracker = _playerExplorationTracker;
+        UserEndpoints.AccountLookup = TShockUserAccountLookup.Default;
         WorldEndpoints.WorldFileService = new WorldFileService();
         WorldEndpoints.MapFileService = new MapFileService();
 

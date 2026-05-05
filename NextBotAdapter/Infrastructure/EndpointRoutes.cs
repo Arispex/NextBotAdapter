@@ -4,6 +4,7 @@ public static class EndpointRoutes
 {
     public const string UserInventory = "/nextbot/users/{user}/inventory";
     public const string UserStats = "/nextbot/users/{user}/stats";
+    public const string UserMapImage = "/nextbot/users/{user}/map-image";
     public const string WorldProgress = "/nextbot/world/progress";
     public const string WorldMapImage = "/nextbot/world/map-image";
     public const string WorldFile = "/nextbot/world/world-file";
