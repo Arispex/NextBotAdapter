@@ -49,18 +49,11 @@ public class MapFileService : IMapFileService
     private static void LightUpWholeMap()
     {
         Main.Map = CreateWorkingMap();
-        var width = Main.Map._tiles.GetLength(0);
-        var height = Main.Map._tiles.GetLength(1);
-        for (var x = 0; x < Main.maxTilesX; x++)
-        for (var y = 0; y < Main.maxTilesY; y++)
-        {
-            var tile = MapHelper.CreateMapTile(x, y, byte.MaxValue);
-            if ((uint)x < (uint)width && (uint)y < (uint)height)
-                Main.Map._tiles[x, y] = tile;
-            var rawX = x + Edge;
-            var rawY = y + Edge;
-            if ((uint)rawX < (uint)width && (uint)rawY < (uint)height)
-                Main.Map._tiles[rawX, rawY] = tile;
-        }
+        MapTileGrid.Fill(
+            Main.maxTilesX,
+            Main.maxTilesY,
+            Edge,
+            (x, y) => MapHelper.CreateMapTile(x, y, byte.MaxValue),
+            Main.Map._tiles);
     }
 }

@@ -1,0 +1,2 @@
+{"file": ".trellis/spec/backend/directory-structure.md", "reason": "Services/World/ 是新 MapTileGrid.cs 的归属层；测试落到 NextBotAdapter.Tests/，需要遵循现有目录规范"}
+{"file": ".trellis/spec/backend/quality-guidelines.md", "reason": "明确 Required Patterns（保持显式可读、record/小工具类）、Testing Requirements（行为变更必须有自动化测试）和 Forbidden Patterns（不引入不必要的抽象层）"}

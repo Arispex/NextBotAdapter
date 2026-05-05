@@ -7,6 +7,10 @@
     </PropertyGroup>
 
     <ItemGroup>
+        <InternalsVisibleTo Include="NextBotAdapter.Tests" />
+    </ItemGroup>
+
+    <ItemGroup>
         <PackageReference Include="TShock" Version="6.1.0" ExcludeAssets="contentFiles" GeneratePathProperty="true" />
         <PackageReference Include="SixLabors.ImageSharp" Version="3.1.12" GeneratePathProperty="true" />
     </ItemGroup>
