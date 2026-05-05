@@ -228,6 +228,7 @@ public sealed class NextBotAdapterPlugin(Main game) : TerrariaPlugin(game)
         if (!string.IsNullOrEmpty(uuid))
         {
             _playerExplorationTracker?.Save(uuid);
+            _playerExplorationTracker?.ForgetLastSample(uuid);
         }
 
         NotifyPlayerOffline(args.Who, player);
@@ -253,9 +254,12 @@ public sealed class NextBotAdapterPlugin(Main game) : TerrariaPlugin(game)
         }
 
         var position = args.Position;
-        var tileX = (int)(position.X / 16f);
-        var tileY = (int)(position.Y / 16f);
-        _playerExplorationTracker.MarkArea(uuid, tileX, tileY);
+        // position is the player's collision-box top-left (playerWidth=22 px, playerHeight=42 px).
+        // Shift to the body center before converting to tile coords so the reveal box is centered
+        // on the player rather than on their feet / shoulder.
+        var tileX = (int)((position.X + 11f) / 16f);
+        var tileY = (int)((position.Y + 21f) / 16f);
+        _playerExplorationTracker.MarkAtPosition(uuid, tileX, tileY);
     }
 
     private void NotifyPlayerOffline(int slot, TSPlayer? player)

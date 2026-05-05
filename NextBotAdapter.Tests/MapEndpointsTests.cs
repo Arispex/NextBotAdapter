@@ -145,6 +145,8 @@ public sealed class MapEndpointsTests
     private sealed class FakeExplorationTracker(BitArray? bitmap) : IPlayerExplorationTracker
     {
         public void MarkArea(string accountUuid, int tileX, int tileY) { }
+        public void MarkAtPosition(string accountUuid, int tileX, int tileY) { }
+        public void ForgetLastSample(string accountUuid) { }
         public BitArray? GetBitmap(string accountUuid) => bitmap;
         public void Load(string accountUuid) { }
         public void Save(string accountUuid) { }

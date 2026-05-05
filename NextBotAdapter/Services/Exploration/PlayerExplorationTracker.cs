@@ -5,12 +5,34 @@ namespace NextBotAdapter.Services;
 public sealed class PlayerExplorationTracker : IPlayerExplorationTracker
 {
     /// <summary>
-    /// Vanilla Terraria reveals roughly a 41x41 tile rectangle around the player.
-    /// Half-extent (radius) of 20 yields 41 tiles per side including the center.
+    /// Horizontal half-extent (tiles) of the simulated reveal box.
+    /// Sized for 1080p default zoom: full screen ~120 tile wide; half-extent 70 + ~10% margin.
     /// </summary>
-    public const int RevealHalfExtent = 20;
+    public const int RevealHalfExtentX = 70;
+
+    /// <summary>
+    /// Vertical half-extent (tiles) of the simulated reveal box.
+    /// Sized so the box aspect (2*HalfX+1) / (2*HalfY+1) ≈ 1.62, matching the
+    /// width:height ratio observed empirically from a 1080p client screenshot.
+    /// </summary>
+    public const int RevealHalfExtentY = 43;
+
+    /// <summary>
+    /// Distance (in tiles) above which two consecutive samples are treated as a
+    /// teleport (mirror / magic conch / long-range warp) instead of continuous
+    /// movement; only the endpoint is stamped in that case.
+    /// </summary>
+    public const int TeleportThresholdTiles = 200;
+
+    /// <summary>
+    /// Step (in tiles) used when bridging two consecutive samples with intermediate
+    /// stamps. Must be &lt;= min(<see cref="RevealHalfExtentX"/>, <see cref="RevealHalfExtentY"/>)
+    /// so adjacent reveal boxes overlap and leave no visible gap along the line.
+    /// </summary>
+    public const int InterpolationStepTiles = 20;
 
     private readonly Dictionary<string, BitArray> _bitmaps = new(StringComparer.Ordinal);
+    private readonly Dictionary<string, (int X, int Y)> _lastSamples = new(StringComparer.Ordinal);
     private readonly object _lock = new();
     private readonly IExplorationStorage _storage;
     private readonly Func<(int Width, int Height)> _worldSizeProvider;
@@ -36,26 +58,85 @@ public sealed class PlayerExplorationTracker : IPlayerExplorationTracker
 
         var bitmap = GetOrCreateBitmap(accountUuid, width, height);
 
-        var minX = Math.Max(0, tileX - RevealHalfExtent);
-        var maxX = Math.Min(width - 1, tileX + RevealHalfExtent);
-        var minY = Math.Max(0, tileY - RevealHalfExtent);
-        var maxY = Math.Min(height - 1, tileY + RevealHalfExtent);
+        lock (_lock)
+        {
+            MarkBox(bitmap, width, height, tileX, tileY);
+        }
+    }
 
-        if (minX > maxX || minY > maxY)
+    /// <summary>
+    /// Sample at world tile coord. Internally bridges from the previous sample to
+    /// avoid gaps under low-packet-rate or fast movement; resets to a single stamp
+    /// when the jump exceeds <see cref="TeleportThresholdTiles"/>.
+    /// </summary>
+    public void MarkAtPosition(string accountUuid, int tileX, int tileY)
+    {
+        if (string.IsNullOrWhiteSpace(accountUuid))
+        {
+            return;
+        }
+
+        var (width, height) = _worldSizeProvider();
+        if (width <= 0 || height <= 0)
+        {
+            return;
+        }
+
+        var bitmap = GetOrCreateBitmap(accountUuid, width, height);
+
+        lock (_lock)
+        {
+            if (!_lastSamples.TryGetValue(accountUuid, out var prev))
+            {
+                MarkBox(bitmap, width, height, tileX, tileY);
+                _lastSamples[accountUuid] = (tileX, tileY);
+                return;
+            }
+
+            var dx = tileX - prev.X;
+            var dy = tileY - prev.Y;
+            var distance = Math.Sqrt((double)dx * dx + (double)dy * dy);
+
+            if (distance == 0d)
+            {
+                return;
+            }
+
+            if (distance > TeleportThresholdTiles)
+            {
+                MarkBox(bitmap, width, height, tileX, tileY);
+                _lastSamples[accountUuid] = (tileX, tileY);
+                return;
+            }
+
+            var steps = Math.Max(1, (int)Math.Ceiling(distance / InterpolationStepTiles));
+            for (var i = 0; i <= steps; i++)
+            {
+                var t = (double)i / steps;
+                var ix = prev.X + (int)Math.Round(dx * t);
+                var iy = prev.Y + (int)Math.Round(dy * t);
+                MarkBox(bitmap, width, height, ix, iy);
+            }
+
+            _lastSamples[accountUuid] = (tileX, tileY);
+        }
+    }
+
+    /// <summary>
+    /// Forget the last-sampled position for this player so the next sample starts
+    /// fresh (e.g. on logout / leave; prevents a phantom line from old position to
+    /// next login spawn).
+    /// </summary>
+    public void ForgetLastSample(string accountUuid)
+    {
+        if (string.IsNullOrWhiteSpace(accountUuid))
         {
             return;
         }
 
         lock (_lock)
         {
-            for (var y = minY; y <= maxY; y++)
-            {
-                var rowOffset = y * width;
-                for (var x = minX; x <= maxX; x++)
-                {
-                    bitmap.Set(rowOffset + x, true);
-                }
-            }
+            _lastSamples.Remove(accountUuid);
         }
     }
 
@@ -137,6 +218,28 @@ public sealed class PlayerExplorationTracker : IPlayerExplorationTracker
         foreach (var (uuid, bitmap) in snapshot)
         {
             _storage.Save(uuid, bitmap);
+        }
+    }
+
+    private static void MarkBox(BitArray bitmap, int width, int height, int tileX, int tileY)
+    {
+        var minX = Math.Max(0, tileX - RevealHalfExtentX);
+        var maxX = Math.Min(width - 1, tileX + RevealHalfExtentX);
+        var minY = Math.Max(0, tileY - RevealHalfExtentY);
+        var maxY = Math.Min(height - 1, tileY + RevealHalfExtentY);
+
+        if (minX > maxX || minY > maxY)
+        {
+            return;
+        }
+
+        for (var y = minY; y <= maxY; y++)
+        {
+            var rowOffset = y * width;
+            for (var x = minX; x <= maxX; x++)
+            {
+                bitmap.Set(rowOffset + x, true);
+            }
         }
     }
 

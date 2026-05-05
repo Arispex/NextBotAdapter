@@ -6,6 +6,10 @@ public interface IPlayerExplorationTracker
 {
     void MarkArea(string accountUuid, int tileX, int tileY);
 
+    void MarkAtPosition(string accountUuid, int tileX, int tileY);
+
+    void ForgetLastSample(string accountUuid);
+
     BitArray? GetBitmap(string accountUuid);
 
     void Load(string accountUuid);
