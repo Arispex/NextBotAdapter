@@ -13,13 +13,16 @@ public sealed class MapImageService : IMapImageService
 
     public (string FileName, byte[] Content) Generate()
     {
-        PrepareMapEnvironment();
+        lock (MapRenderMutex.Lock)
+        {
+            PrepareMapEnvironment();
 
-        using var image = CreateMapImage();
-        using var stream = new MemoryStream();
-        image.Save(stream, PngFormat.Instance);
-        var fileName = $"map-{DateTimeOffset.Now:yyyy-MM-dd_HH-mm-ss}.png";
-        return (fileName, stream.ToArray());
+            using var image = CreateMapImage();
+            using var stream = new MemoryStream();
+            image.Save(stream, PngFormat.Instance);
+            var fileName = $"map-{DateTimeOffset.Now:yyyy-MM-dd_HH-mm-ss}.png";
+            return (fileName, stream.ToArray());
+        }
     }
 
     private static void PrepareMapEnvironment()

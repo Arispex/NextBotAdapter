@@ -14,59 +14,65 @@ public sealed class PlayerMapImageService : IPlayerMapImageService
 
     public (string FileName, byte[] Content) Generate(string accountName, BitArray bitmap)
     {
-        PrepareMapEnvironment();
-
-        var width = Main.maxTilesX;
-        var height = Main.maxTilesY;
-
-        FillMaskedTiles(bitmap, width, height);
-
-        using var image = new Image<Rgba32>(width, height);
-        for (var x = 0; x < width; x++)
+        lock (MapRenderMutex.Lock)
         {
-            for (var y = 0; y < height; y++)
-            {
-                var index = (y * width) + x;
-                var explored = index < bitmap.Length && bitmap.Get(index);
-                if (!explored)
-                {
-                    image[x, y] = new Rgba32(0, 0, 0, 255);
-                    continue;
-                }
+            PrepareMapEnvironment();
 
-                var tile = Main.Map._tiles[x + Edge, y + Edge];
-                var color = MapHelper.GetMapTileXnaColor(tile);
-                if (color.A == 0)
+            var width = Main.maxTilesX;
+            var height = Main.maxTilesY;
+
+            FillMaskedTiles(bitmap, width, height);
+
+            using var image = new Image<Rgba32>(width, height);
+            for (var x = 0; x < width; x++)
+            {
+                for (var y = 0; y < height; y++)
                 {
-                    image[x, y] = new Rgba32(0, 0, 0, 255);
-                }
-                else
-                {
-                    image[x, y] = new Rgba32(color.R, color.G, color.B, color.A);
+                    var index = (y * width) + x;
+                    var explored = index < bitmap.Length && bitmap.Get(index);
+                    if (!explored)
+                    {
+                        image[x, y] = new Rgba32(0, 0, 0, 255);
+                        continue;
+                    }
+
+                    var tile = Main.Map._tiles[x + Edge, y + Edge];
+                    var color = MapHelper.GetMapTileXnaColor(tile);
+                    if (color.A == 0)
+                    {
+                        image[x, y] = new Rgba32(0, 0, 0, 255);
+                    }
+                    else
+                    {
+                        image[x, y] = new Rgba32(color.R, color.G, color.B, color.A);
+                    }
                 }
             }
-        }
 
-        return EncodePng(accountName, image);
+            return EncodePng(accountName, image);
+        }
     }
 
     public (string FileName, byte[] Content) GenerateBlank(string accountName)
     {
-        PrepareMapEnvironment();
-
-        var width = Main.maxTilesX;
-        var height = Main.maxTilesY;
-        using var image = new Image<Rgba32>(width, height);
-        var black = new Rgba32(0, 0, 0, 255);
-        for (var x = 0; x < width; x++)
+        lock (MapRenderMutex.Lock)
         {
-            for (var y = 0; y < height; y++)
-            {
-                image[x, y] = black;
-            }
-        }
+            PrepareMapEnvironment();
 
-        return EncodePng(accountName, image);
+            var width = Main.maxTilesX;
+            var height = Main.maxTilesY;
+            using var image = new Image<Rgba32>(width, height);
+            var black = new Rgba32(0, 0, 0, 255);
+            for (var x = 0; x < width; x++)
+            {
+                for (var y = 0; y < height; y++)
+                {
+                    image[x, y] = black;
+                }
+            }
+
+            return EncodePng(accountName, image);
+        }
     }
 
     private static (string FileName, byte[] Content) EncodePng(string accountName, Image<Rgba32> image)

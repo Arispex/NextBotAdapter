@@ -1,0 +1,2 @@
+{"file": ".trellis/spec/backend/directory-structure.md", "reason": "新增 MapRenderMutex.cs 应落在 Services/World/，与现有 MapImageService / PlayerMapImageService / MapFileService 同目录"}
+{"file": ".trellis/spec/backend/quality-guidelines.md", "reason": "Required Patterns（显式可读 + 测试覆盖行为变更）+ Forbidden Patterns（不发明 DI / middleware 抽象、不在 Plugin/Rest 写业务逻辑）"}

@@ -1,0 +1,2 @@
+{"file": ".trellis/spec/backend/quality-guidelines.md", "reason": "Code Review Checklist（layer placement / 测试覆盖 / 显式可读）"}
+{"file": ".trellis/spec/backend/directory-structure.md", "reason": "确认 MapRenderMutex.cs 位于 Services/World/，测试在 NextBotAdapter.Tests/"}

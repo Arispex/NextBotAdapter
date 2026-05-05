@@ -25,19 +25,22 @@ public class MapFileService : IMapFileService
 
     public (string FileName, byte[] Content) GetMapFile()
     {
-        LightUpWholeMap();
-        MapHelper.SaveMap();
+        lock (MapRenderMutex.Lock)
+        {
+            LightUpWholeMap();
+            MapHelper.SaveMap();
 
-        var playerPath = Main.playerPathName[..^4] + Path.DirectorySeparatorChar;
-        var mapFileName = !Main.ActiveWorldFileData.UseGuidAsMapName
-            ? Main.worldID + ".map"
-            : Main.ActiveWorldFileData.UniqueId + ".map";
-        var mapFilePath = Path.Combine(playerPath, mapFileName);
+            var playerPath = Main.playerPathName[..^4] + Path.DirectorySeparatorChar;
+            var mapFileName = !Main.ActiveWorldFileData.UseGuidAsMapName
+                ? Main.worldID + ".map"
+                : Main.ActiveWorldFileData.UniqueId + ".map";
+            var mapFilePath = Path.Combine(playerPath, mapFileName);
 
-        if (!File.Exists(mapFilePath))
-            throw new FileNotFoundException("Map file not found.", mapFilePath);
+            if (!File.Exists(mapFilePath))
+                throw new FileNotFoundException("Map file not found.", mapFilePath);
 
-        return (Path.GetFileName(mapFilePath), File.ReadAllBytes(mapFilePath));
+            return (Path.GetFileName(mapFilePath), File.ReadAllBytes(mapFilePath));
+        }
     }
 
     private static WorldMap CreateWorkingMap() =>
