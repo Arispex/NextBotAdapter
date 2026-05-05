@@ -1094,3 +1094,36 @@ Built MVP for rendering per-player explored map. Server cannot read real client 
 ### Next Steps
 
 - None - task complete
+
+
+## Session 24: Fix concurrent map render race via shared MapRenderMutex
+
+**Date**: 2026-05-06
+**Task**: Fix concurrent map render race via shared MapRenderMutex
+**Branch**: `main`
+
+### Summary
+
+Diagnosed cross-endpoint race: /world/map-image, /users/{user}/map-image, /world/map-file all reach for the same Terraria static state (Main.Map etc.) without synchronization. TShock dispatches each request to a thread-pool worker, so two concurrent requests interleave their CreateWorkingMap + fill + render steps and the later request's view ends up returned by both. Introduced Services/World/MapRenderMutex (single static readonly object) and wrapped all 4 rendering entry methods in lock(MapRenderMutex.Lock), spanning Prepare + fill + pixel read + PNG encode / SaveMap / File.ReadAllBytes. Added MapRenderMutexTests with Assert.Same so any future regression converting the field into an allocating getter would fail. 263 tests green. Plan B (drop the Main.Map global entirely) deferred to a future task.
+
+### Main Changes
+
+(Add details)
+
+### Git Commits
+
+| Hash | Message |
+|------|---------|
+| `1843a32` | (see git log) |
+
+### Testing
+
+- [OK] (Add test results)
+
+### Status
+
+[OK] **Completed**
+
+### Next Steps
+
+- None - task complete
