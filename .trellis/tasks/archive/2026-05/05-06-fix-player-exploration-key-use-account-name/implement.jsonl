@@ -1,0 +1,4 @@
+{"file": ".trellis/spec/backend/directory-structure.md", "reason": "确认 Services/Exploration/、Services/UserData/、Rest/、Plugin/ 下的文件归属未改变；本任务只改文件内部，不动目录结构"}
+{"file": ".trellis/spec/backend/quality-guidelines.md", "reason": "Required Patterns（thin endpoint + Try* 服务方法 + 测试覆盖行为变更）、Forbidden Patterns（不改公开 REST 字段名、不重复路由 / 错误码字面量）、Testing Requirements（行为变更必须有自动化测试）"}
+{"file": ".trellis/spec/backend/error-handling.md", "reason": "REST 错误响应格式与状态码（user 不存在仍返回原 400 文案）、error.message 仅返回有效原因不写前端展示文案"}
+{"file": ".trellis/spec/backend/logging-guidelines.md", "reason": "PluginLogger 入口、级别（INFO 玩家上线 Load / WARN 文件损坏 / ERROR 持久化失败），日志字段命名风格（user= 等）需要保持稳定"}
