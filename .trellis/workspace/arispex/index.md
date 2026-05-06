@@ -8,7 +8,7 @@
 
 <!-- @@@auto:current-status -->
 - **Active File**: `journal-1.md`
-- **Total Sessions**: 30
+- **Total Sessions**: 31
 - **Last Active**: 2026-05-06
 <!-- @@@/auto:current-status -->
 
@@ -19,7 +19,7 @@
 <!-- @@@auto:active-documents -->
 | File | Lines | Status |
 |------|-------|--------|
-| `journal-1.md` | ~1329 | Active |
+| `journal-1.md` | ~1363 | Active |
 <!-- @@@/auto:active-documents -->
 
 ---
@@ -29,6 +29,7 @@
 <!-- @@@auto:session-history -->
 | # | Date | Title | Commits | Branch |
 |---|------|-------|---------|--------|
+| 31 | 2026-05-06 | fix: tracker IO 异常永久负缓存 + 钩子顺序竞态 + SaveAll 可观测性（audit round 2） | `139154b`, `930f74b` | `main` |
 | 30 | 2026-05-06 | fix: 玩家探索 tracker race 与缓存遗漏（audit followups） | `bca23b9`, `df3f14c` | `main` |
 | 29 | 2026-05-06 | feat: 地图探索率排行榜 REST API | `1d689b8` | `main` |
 | 28 | 2026-05-06 | feat: 在 user stats 增加地图探索度百分比 | `279bea0` | `main` |

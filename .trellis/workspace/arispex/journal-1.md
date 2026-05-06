@@ -1327,3 +1327,37 @@ GET /users/{user}/stats 响应新增 mapExplorationPercent（double, 0–100, 2 
 ### Next Steps
 
 - None - task complete
+
+
+## Session 31: fix: tracker IO 异常永久负缓存 + 钩子顺序竞态 + SaveAll 可观测性（audit round 2）
+
+**Date**: 2026-05-06
+**Task**: fix: tracker IO 异常永久负缓存 + 钩子顺序竞态 + SaveAll 可观测性（audit round 2）
+**Branch**: `main`
+
+### Summary
+
+修第二轮 audit 发现的 4 个问题：(C) IExplorationStorage.Load 改返回 ExplorationLoadResult record，区分'确认 missing'与'IO 异常'，仅前者写负缓存——避免瞬时 IO 错误被永久缓存；(A) OnPlayerPostLogin 中 ForgetLastSample 前移到 Load 之前，避免误清 PlayerUpdate 写入的新 lastSample；(B) Load null 路径与 GetBitmap 对称，仅 FileMissing=true 时写负缓存；(D) IExplorationStorage.Save 返回 bool，SaveAll 累加成功/失败计数 + 完成度日志（INFO/WARN）。新增 6 条单元测试，293/293 通过。沉淀'storage 接口 return-value expressiveness'规则到 backend/database-guidelines.md。
+
+### Main Changes
+
+(Add details)
+
+### Git Commits
+
+| Hash | Message |
+|------|---------|
+| `139154b` | (see git log) |
+| `930f74b` | (see git log) |
+
+### Testing
+
+- [OK] (Add test results)
+
+### Status
+
+[OK] **Completed**
+
+### Next Steps
+
+- None - task complete
