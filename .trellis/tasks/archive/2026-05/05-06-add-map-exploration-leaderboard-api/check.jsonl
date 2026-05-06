@@ -1,0 +1,2 @@
+{"file": ".trellis/spec/backend/quality-guidelines.md", "reason": "Code Review Checklist：layer placement（service / endpoint / model / infra）、复用集中常量、不动 REST 既有约定、行为变更有测试"}
+{"file": ".trellis/spec/backend/error-handling.md", "reason": "确认 tracker null 路径退化为空 entries（不抛异常 / 不引入新错误状态码 / 与 OnlineTime 风格一致）"}

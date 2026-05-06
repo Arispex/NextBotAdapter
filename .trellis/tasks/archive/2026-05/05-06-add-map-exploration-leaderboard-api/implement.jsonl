@@ -1,0 +1,4 @@
+{"file": ".trellis/spec/backend/directory-structure.md", "reason": "新增 Models/Responses/MapExplorationLeaderboardEntryResponse.cs 与 Services/Leaderboards/MapExplorationLeaderboardService.cs 的归属位置；与 Death/FishingQuests/OnlineTime 三个现有 leaderboard 同目录"}
+{"file": ".trellis/spec/backend/quality-guidelines.md", "reason": "Required Patterns（thin endpoint + service-layer 业务逻辑 + record 不可变契约 + 集中常量）、Forbidden Patterns（不重复路由 / 错误码字面量、不在 Plugin/Rest 写业务逻辑）、Testing Requirements（行为变更必须有自动化测试）"}
+{"file": ".trellis/spec/backend/error-handling.md", "reason": "REST 错误响应风格：本端点不引入 4xx 路径，tracker null 退化为空 entries（与 OnlineTime leaderboard 风格一致）"}
+{"file": ".trellis/spec/backend/logging-guidelines.md", "reason": "高频 leaderboard 端点不打额外日志；与现有三个 leaderboard 风格一致"}
