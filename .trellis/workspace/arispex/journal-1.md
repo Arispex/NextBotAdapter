@@ -1227,3 +1227,36 @@ Diagnosed cross-endpoint race: /world/map-image, /users/{user}/map-image, /world
 ### Next Steps
 
 - None - task complete
+
+
+## Session 28: feat: 在 user stats 增加地图探索度百分比
+
+**Date**: 2026-05-06
+**Task**: feat: 在 user stats 增加地图探索度百分比
+**Branch**: `main`
+
+### Summary
+
+GET /users/{user}/stats 响应新增 mapExplorationPercent（double, 0–100, 2 位小数）。计算封装在 IPlayerExplorationTracker.GetExplorationPercent：复用 GetBitmap 的 lazy-load 路径，PopCount 用 BitArray.CopyTo(int[]) + BitOperations.PopCount。fail-safe：bitmap / tracker 缺失返回 0.0。新增 6 条单元测试（含 tail-bit 边界），275/275 通过。
+
+### Main Changes
+
+(Add details)
+
+### Git Commits
+
+| Hash | Message |
+|------|---------|
+| `279bea0` | (see git log) |
+
+### Testing
+
+- [OK] (Add test results)
+
+### Status
+
+[OK] **Completed**
+
+### Next Steps
+
+- None - task complete
