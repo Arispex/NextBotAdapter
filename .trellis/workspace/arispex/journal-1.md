@@ -1361,3 +1361,37 @@ GET /users/{user}/stats 响应新增 mapExplorationPercent（double, 0–100, 2 
 ### Next Steps
 
 - None - task complete
+
+
+## Session 32: feat: 5 分钟定时刷盘 + bitmap 脏标记，避免断电丢失会话数据
+
+**Date**: 2026-05-06
+**Task**: feat: 5 分钟定时刷盘 + bitmap 脏标记，避免断电丢失会话数据
+**Branch**: `main`
+
+### Summary
+
+用户提的真实问题：玩家探索 bitmap + 在线时长之前只在玩家正常下线 / Dispose 时落盘，突发断电会丢失整个开服周期数据。加 System.Threading.Timer 5 分钟回调，OnlineTimeService 加 Flush（推 active session 差量到 records 但不结束 session），PlayerExplorationTracker 加 _dirty HashSet（仅写脏的，失败重打脏重试，懒加载不打脏）。SaveAll 加 contextLabel 参数让日志显示 '自动保存完成' / '关机保存完成'。Plugin Dispose 先关 timer 后兜底持久化。11 条新增测试，304/304 通过。沉淀'periodic flush + dirty tracking for crash durability'到 backend/database-guidelines.md。
+
+### Main Changes
+
+(Add details)
+
+### Git Commits
+
+| Hash | Message |
+|------|---------|
+| `376c0dc` | (see git log) |
+| `a03f2c2` | (see git log) |
+
+### Testing
+
+- [OK] (Add test results)
+
+### Status
+
+[OK] **Completed**
+
+### Next Steps
+
+- None - task complete
