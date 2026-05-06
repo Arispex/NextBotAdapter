@@ -1,0 +1,3 @@
+{"file": ".trellis/spec/backend/quality-guidelines.md", "reason": "Code Review Checklist：layer placement / 测试覆盖 / 显式可读 / 不动公开 REST 字段名既有约定"}
+{"file": ".trellis/spec/backend/database-guidelines.md", "reason": "确认并发模型不变量（IO 不在 lock 内 / dict 操作在 lock 内）+ 持久化 fail-safe（Load null / 大小不匹配等场景退化为 null）"}
+{"file": ".trellis/spec/backend/error-handling.md", "reason": "确认 lazy-load 失败、负缓存命中、Load 不覆写 in-memory 等场景下不抛异常 / 不引入新错误状态码"}
