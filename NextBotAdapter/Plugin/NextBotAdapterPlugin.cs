@@ -211,6 +211,11 @@ public sealed class NextBotAdapterPlugin(Main game) : TerrariaPlugin(game)
         if (!string.IsNullOrEmpty(accountName))
         {
             _playerExplorationTracker?.Load(accountName);
+            // Treat each login as a fresh session: drop any stale last-sample so the
+            // first MarkAtPosition after login can't draw an interpolated line from
+            // the previous session's exit position (the OnServerLeave hook can be
+            // missed on abnormal disconnects such as network timeout / client kill).
+            _playerExplorationTracker?.ForgetLastSample(accountName);
         }
     }
 

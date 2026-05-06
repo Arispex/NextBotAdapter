@@ -36,6 +36,7 @@ public sealed class PlayerExplorationTracker : IPlayerExplorationTracker
 
     private readonly Dictionary<string, BitArray> _bitmaps = new(StringComparer.Ordinal);
     private readonly Dictionary<string, (int X, int Y)> _lastSamples = new(StringComparer.Ordinal);
+    private readonly HashSet<string> _missingFiles = new(StringComparer.Ordinal);
     private readonly object _lock = new();
     private readonly IExplorationStorage _storage;
     private readonly Func<(int Width, int Height)> _worldSizeProvider;
@@ -59,10 +60,9 @@ public sealed class PlayerExplorationTracker : IPlayerExplorationTracker
             return;
         }
 
-        var bitmap = GetOrCreateBitmap(accountName, width, height);
-
         lock (_lock)
         {
+            var bitmap = GetOrCreateBitmapLocked(accountName, width, height);
             MarkBox(bitmap, width, height, tileX, tileY);
         }
     }
@@ -85,10 +85,10 @@ public sealed class PlayerExplorationTracker : IPlayerExplorationTracker
             return;
         }
 
-        var bitmap = GetOrCreateBitmap(accountName, width, height);
-
         lock (_lock)
         {
+            var bitmap = GetOrCreateBitmapLocked(accountName, width, height);
+
             if (!_lastSamples.TryGetValue(accountName, out var prev))
             {
                 MarkBox(bitmap, width, height, tileX, tileY);
@@ -158,6 +158,14 @@ public sealed class PlayerExplorationTracker : IPlayerExplorationTracker
             {
                 return new BitArray(bitmap);
             }
+
+            // Negative cache hit: a previous lazy-load probed storage and found
+            // nothing. Skip the redundant disk probe — leaderboard fan-out across
+            // many accounts without bitmap files would otherwise re-probe each one.
+            if (_missingFiles.Contains(accountName))
+            {
+                return null;
+            }
         }
 
         // Cache miss: try lazy-load from disk so REST queries can return the latest
@@ -170,10 +178,6 @@ public sealed class PlayerExplorationTracker : IPlayerExplorationTracker
         }
 
         var loaded = _storage.Load(accountName, width * height);
-        if (loaded is null)
-        {
-            return null;
-        }
 
         lock (_lock)
         {
@@ -184,7 +188,13 @@ public sealed class PlayerExplorationTracker : IPlayerExplorationTracker
             {
                 return new BitArray(existing);
             }
+            if (loaded is null)
+            {
+                _missingFiles.Add(accountName);
+                return null;
+            }
             _bitmaps[accountName] = loaded;
+            _missingFiles.Remove(accountName);
             return new BitArray(loaded);
         }
     }
@@ -231,7 +241,14 @@ public sealed class PlayerExplorationTracker : IPlayerExplorationTracker
 
         lock (_lock)
         {
+            // Preserve any in-memory bitmap already populated via lazy-load or stamp
+            // path so accumulated stamps from this session aren't silently erased.
+            if (_bitmaps.ContainsKey(accountName))
+            {
+                return;
+            }
             _bitmaps[accountName] = bitmap;
+            _missingFiles.Remove(accountName);
         }
 
         PluginLogger.Info($"加载玩家探索数据成功，accountName={accountName}");
@@ -297,18 +314,25 @@ public sealed class PlayerExplorationTracker : IPlayerExplorationTracker
         }
     }
 
-    private BitArray GetOrCreateBitmap(string accountName, int width, int height)
+    /// <summary>
+    /// Caller must already hold <see cref="_lock"/>. Returns the current
+    /// in-memory bitmap, creating a fresh empty one on first encounter so the
+    /// stamp callsite can mutate atomically without releasing the lock.
+    /// </summary>
+    private BitArray GetOrCreateBitmapLocked(string accountName, int width, int height)
     {
-        lock (_lock)
+        if (_bitmaps.TryGetValue(accountName, out var existing))
         {
-            if (_bitmaps.TryGetValue(accountName, out var bitmap))
-            {
-                return bitmap;
-            }
-
-            var created = new BitArray(width * height);
-            _bitmaps[accountName] = created;
-            return created;
+            return existing;
         }
+
+        var created = new BitArray(width * height);
+        _bitmaps[accountName] = created;
+        // Defensive: if a prior GetBitmap had registered this account in the
+        // negative cache (missing-file probe), clear it now that we have a
+        // live in-memory bitmap. GetBitmap also checks _bitmaps first, so this
+        // is belt-and-suspenders.
+        _missingFiles.Remove(accountName);
+        return created;
     }
 }

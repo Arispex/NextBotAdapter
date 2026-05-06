@@ -411,8 +411,151 @@ public sealed class PlayerExplorationTrackerTests
         var bitmap = tracker.GetBitmap("never-seen");
 
         Assert.Null(bitmap);
-        // The lazy-load path was attempted exactly once (no negative cache by design).
+        // The lazy-load path was attempted exactly once on the first miss; subsequent
+        // calls hit the negative cache (see GetBitmap_ShouldUseNegativeCache_AfterFirstStorageMiss).
         Assert.Equal(1, storage.LoadCallCount);
+    }
+
+    [Fact]
+    public void Load_ShouldNotOverwrite_WhenInMemoryBitmapAlreadyExists()
+    {
+        const int width = 400;
+        const int height = 300;
+        var storage = new InMemoryStorage();
+
+        // Storage holds an unrelated bitmap stamped at (300, 250). If Load were to
+        // overwrite the in-memory state, we'd see (300, 250) revealed and (100, 100)
+        // gone after the Load call.
+        var seeder = new PlayerExplorationTracker(storage, () => (width, height));
+        seeder.MarkArea("alice", 300, 250);
+        seeder.Save("alice");
+
+        var tracker = new PlayerExplorationTracker(storage, () => (width, height));
+        // Stamp in-memory at (100, 100) without touching storage — this populates
+        // _bitmaps["alice"] before Load runs.
+        tracker.MarkArea("alice", 100, 100);
+
+        // Load must preserve the in-memory bitmap (which has (100, 100) stamped) and
+        // must NOT replace it with the storage bitmap (which has only (300, 250)).
+        tracker.Load("alice");
+
+        var bitmap = tracker.GetBitmap("alice");
+        Assert.NotNull(bitmap);
+        // In-memory stamp is preserved.
+        Assert.True(IsSet(bitmap!, 100, 100, width));
+        // Storage's stamp at (300, 250) was NOT pulled in (Load skipped because
+        // the in-memory entry already existed).
+        Assert.False(IsSet(bitmap, 300, 250, width));
+    }
+
+    [Fact]
+    public void MarkArea_AndGetBitmap_ShouldShareSameStampedState()
+    {
+        // Atomic stamp contract (#1): the bitmap MarkArea writes to is the same
+        // instance later returned (as a snapshot) by GetBitmap. If MarkArea ever
+        // wrote to an orphan BitArray due to a two-phase lock, the read path
+        // would see all-zero output.
+        const int width = 400;
+        const int height = 300;
+        var tracker = CreateTracker(width, height);
+
+        tracker.MarkArea("uuid-atomic", 100, 100);
+
+        // Stamp must be visible via GetBitmap snapshot.
+        var first = tracker.GetBitmap("uuid-atomic");
+        Assert.NotNull(first);
+        Assert.True(IsSet(first!, 100, 100, width));
+
+        // A second stamp at a different coord must accumulate on the same instance.
+        tracker.MarkArea("uuid-atomic", 200, 100);
+        var second = tracker.GetBitmap("uuid-atomic");
+        Assert.NotNull(second);
+        Assert.True(IsSet(second!, 100, 100, width), "first stamp must still be visible after second MarkArea");
+        Assert.True(IsSet(second, 200, 100, width), "second stamp must be visible — proves MarkArea wrote to the live bitmap, not an orphan");
+    }
+
+    [Fact]
+    public void GetBitmap_ShouldUseNegativeCache_AfterFirstStorageMiss()
+    {
+        // Negative cache (#3): subsequent GetBitmap calls for an account with no
+        // bitmap file must not re-probe storage. This makes leaderboard fan-out
+        // across many accounts O(1) IO instead of O(N).
+        const int width = 400;
+        const int height = 300;
+        var storage = new InMemoryStorage();
+        var tracker = new PlayerExplorationTracker(storage, () => (width, height));
+
+        var first = tracker.GetBitmap("alice");
+        var afterFirst = storage.LoadCallCount;
+
+        var second = tracker.GetBitmap("alice");
+        var afterSecond = storage.LoadCallCount;
+
+        Assert.Null(first);
+        Assert.Null(second);
+        Assert.Equal(1, afterFirst);
+        // Negative-cache hit: no second IO probe.
+        Assert.Equal(afterFirst, afterSecond);
+    }
+
+    [Fact]
+    public void GetBitmap_ShouldHitInMemoryAfterStamp_NotNegativeCache()
+    {
+        // #3 side-effect regression: a player who arrives with no bitmap file
+        // (registered into the negative cache) and then logs in and walks must
+        // see their in-memory bitmap returned, not be blocked by the negative
+        // cache. GetBitmap checks _bitmaps before _missingFiles; MarkArea also
+        // clears the negative cache entry as a defensive belt-and-suspenders.
+        const int width = 400;
+        const int height = 300;
+        var storage = new InMemoryStorage();
+        var tracker = new PlayerExplorationTracker(storage, () => (width, height));
+
+        // First GetBitmap registers alice into _missingFiles (no file on disk).
+        Assert.Null(tracker.GetBitmap("alice"));
+
+        // Player logs in + moves: an in-memory bitmap is created.
+        tracker.MarkAtPosition("alice", 100, 100);
+
+        // GetBitmap must now return the live in-memory bitmap, not be short-circuited
+        // by the prior negative-cache entry.
+        var bitmap = tracker.GetBitmap("alice");
+        Assert.NotNull(bitmap);
+        Assert.True(IsSet(bitmap!, 100, 100, width));
+    }
+
+    [Fact]
+    public void MarkAtPosition_AfterForgetLastSample_DoesNotInterpolateOldShortJump()
+    {
+        // #5 contract: after ForgetLastSample, the next MarkAtPosition is treated
+        // as a fresh first sample even if the previous lastSample is well within
+        // the teleport threshold. Without ForgetLastSample, (100,100) -> (200,200)
+        // is a 141-tile chord (under 500 threshold) and would be interpolated,
+        // stamping the midpoint (150, 150). With ForgetLastSample, only (200,200)
+        // gets stamped, and (150, 150) (which lies outside the (200,200) reveal
+        // box of half-extent 70/43) must remain unrevealed.
+        const int width = 2400;
+        const int height = 600;
+        var tracker = CreateTracker(width, height);
+
+        tracker.MarkAtPosition("uuid-sess", 100, 100);
+        tracker.ForgetLastSample("uuid-sess");
+        tracker.MarkAtPosition("uuid-sess", 300, 300);
+
+        var bitmap = tracker.GetBitmap("uuid-sess");
+        Assert.NotNull(bitmap);
+
+        // First endpoint reveal box [30..170] x [57..143]: (100, 100) is inside.
+        Assert.True(IsSet(bitmap!, 100, 100, width));
+        // Second endpoint reveal box [230..370] x [257..343]: (300, 300) is inside.
+        Assert.True(IsSet(bitmap!, 300, 300, width));
+
+        // The midpoint (200, 200) lies outside both endpoint boxes (vertical
+        // half-extent 43, so the (100,100) box ends at y=143 and the (300,300)
+        // box starts at y=257). If interpolation had run, (200, 200) would have
+        // been stamped by an intermediate step. ForgetLastSample must prevent
+        // that.
+        Assert.False(IsSet(bitmap!, 200, 200, width));
     }
 
     [Fact]
