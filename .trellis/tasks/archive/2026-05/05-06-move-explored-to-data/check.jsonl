@@ -1,0 +1,2 @@
+{"file": ".trellis/spec/backend/quality-guidelines.md", "reason": "Code Review Checklist：layer placement、避免硬编码、不动公开 REST 行为"}
+{"file": ".trellis/spec/backend/database-guidelines.md", "reason": "确认 Data/ 子目录与 Whitelist/Blacklist 路径布局一致"}
