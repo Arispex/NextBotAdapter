@@ -1127,3 +1127,37 @@ Diagnosed cross-endpoint race: /world/map-image, /users/{user}/map-image, /world
 ### Next Steps
 
 - None - task complete
+
+
+## Session 25: fix: 玩家探索数据按账号名为 key 而非客户端 UUID
+
+**Date**: 2026-05-06
+**Task**: fix: 玩家探索数据按账号名为 key 而非客户端 UUID
+**Branch**: `main`
+
+### Summary
+
+把玩家探索 bitmap 的存储 key 从 Account.UUID（实质设备指纹，每次登录被覆写）改为 Account.Name，修复同设备多账号互相污染、换设备记录丢失两类 bug。同步把 IUserAccountLookup.TryGetAccountUuid 重命名为 TryGetAccountName。REST 外部行为零变化，264/264 测试通过。沉淀 TShock 账号身份选择规则到 backend/database-guidelines.md。
+
+### Main Changes
+
+(Add details)
+
+### Git Commits
+
+| Hash | Message |
+|------|---------|
+| `849b204` | (see git log) |
+| `486c3b2` | (see git log) |
+
+### Testing
+
+- [OK] (Add test results)
+
+### Status
+
+[OK] **Completed**
+
+### Next Steps
+
+- None - task complete
