@@ -116,6 +116,70 @@ Even though routes and permissions are not database objects, they are part of th
 
 ---
 
+## In-memory cache + persistent store consistency
+
+When a service holds an in-memory cache (e.g. `Dictionary<string, T>`) backed by a persistent store with multiple write paths (stamp / mutate, lazy load, explicit `Load`, save), the cache and store must stay consistent under concurrency. Two patterns are mandatory.
+
+### Don't: two-phase lock that captures a reference then re-locks to write
+
+```csharp
+// Bad: get-or-create under lock1, release, then re-lock to mutate the captured ref.
+var bitmap = GetOrCreateBitmap(name);  // lock1 inside; releases on return
+lock (_lock)                           // lock2: writes into the ref captured above
+{
+    MarkBox(bitmap, w, h, x, y);
+}
+```
+
+Why it's bad: between `lock1` and `lock2`, another thread can replace `_bitmaps[name]` (e.g. via `Load`). The mutation then writes into an **orphan** object that is no longer the cache entry - the update is silently dropped.
+
+### Do: single-lock atomic get-or-create-and-write
+
+Express "caller must already hold the lock" as a `*Locked` helper, then keep get-or-create and the mutation inside one lock region.
+
+```csharp
+public void MarkArea(string name, int w, int h, int x, int y)
+{
+    lock (_lock)
+    {
+        var bitmap = GetOrCreateBitmapLocked(name, w, h);
+        MarkBox(bitmap, w, h, x, y);
+    }
+}
+
+// Caller must already hold _lock. Lock-free by contract.
+private BitArray GetOrCreateBitmapLocked(string name, int w, int h) { /* ... */ }
+```
+
+### Don't: `Load` unconditionally overwrites the cache entry
+
+```csharp
+// Bad: clobbers in-memory data that other write paths already populated.
+var bitmap = _storage.Load(name, ...);
+if (bitmap is null) return;
+lock (_lock)
+{
+    _bitmaps[name] = bitmap;
+}
+```
+
+Why it's bad: if another path (lazy create, stamp/mutate) has already populated `_bitmaps[name]` with newer in-memory data, `Load` erases it.
+
+### Do: conditional insert (preserve in-memory data)
+
+```csharp
+lock (_lock)
+{
+    if (_bitmaps.ContainsKey(name)) return;  // in-memory data wins; do not overwrite
+    _bitmaps[name] = bitmap;
+}
+```
+
+Reference task: `05-06-fix-exploration-tracker-audit-followups`.
+Reference code: `NextBotAdapter/Services/Exploration/PlayerExplorationTracker.cs`.
+
+---
+
 ## Common Mistakes
 
 - Do not query TShock APIs directly from endpoint classes.
@@ -125,3 +189,5 @@ Even though routes and permissions are not database objects, they are part of th
 - Do not change persisted file names or JSON field names without updating `docs/CONFIGURATION.md` and related tests.
 - Do not assume this repository has a migration toolchain when it currently does not.
 - Do not use `Account.UUID` as a persistence key; it is a per-login device fingerprint, not account identity. Use `Account.Name` (or `Account.ID` if rename-stability is required).
+- Do not split get-or-create and mutation across two `lock` regions for the same in-memory cache; another writer can replace the entry between the regions and your mutation lands on an orphan. Use a single lock plus a `*Locked` helper.
+- Do not let `Load` (or any rehydration path) unconditionally overwrite an existing in-memory cache entry; check `ContainsKey` first so newer in-memory data is preserved.
