@@ -1,0 +1,4 @@
+{"file": ".trellis/spec/backend/quality-guidelines.md", "reason": "Required Patterns（显式可读 + 接口 / 实现拆分）、Forbidden Patterns（不在 Plugin 写业务逻辑——回调函数应短小委托给 service）、Testing Requirements（行为变更必须有自动化测试）"}
+{"file": ".trellis/spec/backend/database-guidelines.md", "reason": "持久化层 in-memory cache + persistent store consistency（已沉淀小节）；脏标记是这个原则的延伸；并发模型不变量（IO 不在 _lock 内）"}
+{"file": ".trellis/spec/backend/error-handling.md", "reason": "Save 失败重新打脏的 fail-safe 处理；定时回调异常 catch+log 不让 timer 死掉；现有 SaveAll 完成度日志契约不破坏"}
+{"file": ".trellis/spec/backend/logging-guidelines.md", "reason": "Plugin 启动时 INFO 日志启用刷盘任务；定时回调异常 WARN 日志；现有 Load/Save 路径日志保持原文案"}

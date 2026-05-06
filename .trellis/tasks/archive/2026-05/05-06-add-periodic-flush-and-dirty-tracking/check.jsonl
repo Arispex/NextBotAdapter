@@ -1,0 +1,3 @@
+{"file": ".trellis/spec/backend/quality-guidelines.md", "reason": "Code Review Checklist（layer placement / 显式可读 / 测试覆盖 / 接口公开签名稳定）"}
+{"file": ".trellis/spec/backend/database-guidelines.md", "reason": "确认 in-memory cache + persistent store consistency 不被破坏；脏标记的对称性（stamp 打脏 / 写盘清脏 / 失败重新打脏）；IO 不在 _lock 内的并发约定"}
+{"file": ".trellis/spec/backend/error-handling.md", "reason": "确认 Flush / 定时回调异常路径不抛、不破坏既有 fail-safe；Save 失败重新打脏机制正确"}
