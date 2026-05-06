@@ -1,0 +1,4 @@
+{"file": ".trellis/spec/backend/quality-guidelines.md", "reason": "Required Patterns（record 不可变契约 + Try* 服务方法 + 测试覆盖行为变更）、Forbidden Patterns（不重复硬编码常量 / 不在 Plugin/Rest 写业务逻辑）、Testing Requirements（行为变更必须有自动化测试）"}
+{"file": ".trellis/spec/backend/database-guidelines.md", "reason": "持久化层 fail-safe 约定（异常不向上抛 / 调用方拿稳定结果）、in-memory cache + persistent store 一致性约定（已沉淀于该文件）、IO 在 lock 外的并发模型不变量"}
+{"file": ".trellis/spec/backend/error-handling.md", "reason": "区分'确认 missing'与'IO 异常'两种 null 语义；瞬时异常不应被永久负缓存；返回值表达失败原因而非用相同 null 值统一表示"}
+{"file": ".trellis/spec/backend/logging-guidelines.md", "reason": "SaveAll 完成度日志（INFO / WARN 取决于失败计数）、Load 路径成功 INFO 日志保持现有 'accountName=' key=value 风格；瞬时 IO 异常仍走 storage 层 Warn 日志，不在 tracker 层重复"}

@@ -1,0 +1,3 @@
+{"file": ".trellis/spec/backend/quality-guidelines.md", "reason": "Code Review Checklist：layer placement、record 不可变契约、显式可读、不动公开 REST 字段名"}
+{"file": ".trellis/spec/backend/database-guidelines.md", "reason": "确认并发不变量（IO 不在 lock 内）+ in-memory cache 与 persistent store 对齐 + fail-safe 退化路径"}
+{"file": ".trellis/spec/backend/error-handling.md", "reason": "确认 missing / corrupt / IO 异常的区分语义、不向上抛异常、日志风格不变"}
