@@ -4,17 +4,17 @@ namespace NextBotAdapter.Services;
 
 public interface IPlayerExplorationTracker
 {
-    void MarkArea(string accountUuid, int tileX, int tileY);
+    void MarkArea(string accountName, int tileX, int tileY);
 
-    void MarkAtPosition(string accountUuid, int tileX, int tileY);
+    void MarkAtPosition(string accountName, int tileX, int tileY);
 
-    void ForgetLastSample(string accountUuid);
+    void ForgetLastSample(string accountName);
 
-    BitArray? GetBitmap(string accountUuid);
+    BitArray? GetBitmap(string accountName);
 
-    void Load(string accountUuid);
+    void Load(string accountName);
 
-    void Save(string accountUuid);
+    void Save(string accountName);
 
     void SaveAll();
 }

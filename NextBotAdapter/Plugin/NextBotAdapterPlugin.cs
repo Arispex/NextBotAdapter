@@ -206,10 +206,10 @@ public sealed class NextBotAdapterPlugin(Main game) : TerrariaPlugin(game)
     private void OnPlayerPostLogin(PlayerPostLoginEventArgs args)
     {
         _onlineTimeService?.StartSession(args.Player.Account.Name);
-        var uuid = args.Player?.Account?.UUID;
-        if (!string.IsNullOrEmpty(uuid))
+        var accountName = args.Player?.Account?.Name;
+        if (!string.IsNullOrEmpty(accountName))
         {
-            _playerExplorationTracker?.Load(uuid);
+            _playerExplorationTracker?.Load(accountName);
         }
     }
 
@@ -221,11 +221,11 @@ public sealed class NextBotAdapterPlugin(Main game) : TerrariaPlugin(game)
             _onlineTimeService?.EndSession(username);
         }
 
-        var uuid = player?.Account?.UUID;
-        if (!string.IsNullOrEmpty(uuid))
+        var accountName = player?.Account?.Name;
+        if (!string.IsNullOrEmpty(accountName))
         {
-            _playerExplorationTracker?.Save(uuid);
-            _playerExplorationTracker?.ForgetLastSample(uuid);
+            _playerExplorationTracker?.Save(accountName);
+            _playerExplorationTracker?.ForgetLastSample(accountName);
         }
 
         NotifyPlayerOffline(args.Who, player);
@@ -244,8 +244,8 @@ public sealed class NextBotAdapterPlugin(Main game) : TerrariaPlugin(game)
             return;
         }
 
-        var uuid = player.Account.UUID;
-        if (string.IsNullOrEmpty(uuid))
+        var accountName = player.Account.Name;
+        if (string.IsNullOrEmpty(accountName))
         {
             return;
         }
@@ -256,7 +256,7 @@ public sealed class NextBotAdapterPlugin(Main game) : TerrariaPlugin(game)
         // on the player rather than on their feet / shoulder.
         var tileX = (int)((position.X + 11f) / 16f);
         var tileY = (int)((position.Y + 21f) / 16f);
-        _playerExplorationTracker.MarkAtPosition(uuid, tileX, tileY);
+        _playerExplorationTracker.MarkAtPosition(accountName, tileX, tileY);
     }
 
     private void NotifyPlayerOffline(int slot, TSPlayer? player)

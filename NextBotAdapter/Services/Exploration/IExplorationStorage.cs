@@ -4,7 +4,7 @@ namespace NextBotAdapter.Services;
 
 public interface IExplorationStorage
 {
-    BitArray? Load(string accountUuid, int expectedBitCount);
+    BitArray? Load(string accountName, int expectedBitCount);
 
-    void Save(string accountUuid, BitArray bitmap);
+    void Save(string accountName, BitArray bitmap);
 }

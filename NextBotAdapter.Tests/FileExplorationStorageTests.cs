@@ -70,7 +70,7 @@ public sealed class FileExplorationStorageTests : IDisposable
     }
 
     [Fact]
-    public void Load_ShouldReturnNullWhenAccountUuidIsBlank()
+    public void Load_ShouldReturnNullWhenAccountNameIsBlank()
     {
         var storage = CreateStorage();
 

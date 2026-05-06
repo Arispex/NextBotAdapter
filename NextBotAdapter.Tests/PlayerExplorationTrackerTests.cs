@@ -315,9 +315,9 @@ public sealed class PlayerExplorationTrackerTests
     {
         private readonly Dictionary<string, byte[]> _store = new(StringComparer.Ordinal);
 
-        public BitArray? Load(string accountUuid, int expectedBitCount)
+        public BitArray? Load(string accountName, int expectedBitCount)
         {
-            if (!_store.TryGetValue(accountUuid, out var bytes))
+            if (!_store.TryGetValue(accountName, out var bytes))
             {
                 return null;
             }
@@ -331,12 +331,12 @@ public sealed class PlayerExplorationTrackerTests
             return new BitArray(bytes) { Length = expectedBitCount };
         }
 
-        public void Save(string accountUuid, BitArray bitmap)
+        public void Save(string accountName, BitArray bitmap)
         {
             var byteCount = (bitmap.Length + 7) / 8;
             var bytes = new byte[byteCount];
             bitmap.CopyTo(bytes, 0);
-            _store[accountUuid] = bytes;
+            _store[accountName] = bytes;
         }
     }
 }

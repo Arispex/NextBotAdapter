@@ -8,9 +8,9 @@ public sealed class TShockUserAccountLookup : IUserAccountLookup
 {
     public static readonly IUserAccountLookup Default = new TShockUserAccountLookup();
 
-    public bool TryGetAccountUuid(string user, out string accountUuid)
+    public bool TryGetAccountName(string user, out string accountName)
     {
-        accountUuid = string.Empty;
+        accountName = string.Empty;
         if (string.IsNullOrWhiteSpace(user))
         {
             return false;
@@ -22,7 +22,7 @@ public sealed class TShockUserAccountLookup : IUserAccountLookup
             return false;
         }
 
-        accountUuid = account.UUID ?? string.Empty;
+        accountName = account.Name ?? string.Empty;
         return true;
     }
 }

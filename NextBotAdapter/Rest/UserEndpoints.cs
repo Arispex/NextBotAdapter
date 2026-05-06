@@ -78,14 +78,14 @@ public static class UserEndpoints
             return EndpointResponseFactory.Error("Player exploration service is not configured.", "500");
         }
 
-        if (!lookup.TryGetAccountUuid(trimmedUser, out var accountUuid))
+        if (!lookup.TryGetAccountName(trimmedUser, out var accountName))
         {
             return EndpointResponseFactory.Error("User was not found.");
         }
 
         try
         {
-            var bitmap = string.IsNullOrEmpty(accountUuid) ? null : tracker.GetBitmap(accountUuid);
+            var bitmap = string.IsNullOrEmpty(accountName) ? null : tracker.GetBitmap(accountName);
             if (bitmap is null)
             {
                 PluginLogger.Info($"开始生成玩家视角地图，user={trimmedUser}（无探索数据，返回全黑图）。");

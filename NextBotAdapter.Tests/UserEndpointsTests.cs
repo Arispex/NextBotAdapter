@@ -11,7 +11,7 @@ public sealed class UserEndpointsTests
     {
         var bitmap = new BitArray(8);
         bitmap.Set(0, true);
-        var lookup = new FakeAccountLookup(("alice", "uuid-1"));
+        var lookup = new FakeAccountLookup(("alice", "alice"));
         var tracker = new FakeExplorationTracker(bitmap);
         var playerService = new FakePlayerMapImageService(masked: ("map-alice.png", [1, 2, 3]));
 
@@ -27,7 +27,7 @@ public sealed class UserEndpointsTests
     [Fact]
     public void MapImage_ReturnsBlackWhenAccountExistsButNoBitmap()
     {
-        var lookup = new FakeAccountLookup(("alice", "uuid-1"));
+        var lookup = new FakeAccountLookup(("alice", "alice"));
         var tracker = new FakeExplorationTracker(null);
         var playerService = new FakePlayerMapImageService(blank: ("map-alice-blank.png", [9, 9]));
 
@@ -72,7 +72,7 @@ public sealed class UserEndpointsTests
     public void MapImage_Returns500WhenServiceThrows()
     {
         var bitmap = new BitArray(8);
-        var lookup = new FakeAccountLookup(("alice", "uuid-1"));
+        var lookup = new FakeAccountLookup(("alice", "alice"));
         var tracker = new FakeExplorationTracker(bitmap);
         var playerService = new FakePlayerMapImageService(generateException: new InvalidOperationException("render failure"));
 
@@ -91,36 +91,60 @@ public sealed class UserEndpointsTests
         Assert.Equal("Player exploration service is not configured.", result.Error);
     }
 
+    [Fact]
+    public void MapImage_LooksUpBitmapByAccountNameNotByLoginUser()
+    {
+        // Regression guard: bitmap key must be the canonical account name returned
+        // by IUserAccountLookup, not the raw route value.
+        var bitmap = new BitArray(8);
+        bitmap.Set(0, true);
+        var lookup = new FakeAccountLookup((Name: "Alice", ResolvedName: "alice"));
+        var tracker = new FakeExplorationTracker(bitmap);
+        var playerService = new FakePlayerMapImageService(masked: ("map-alice.png", [1, 2, 3]));
+
+        var result = UserEndpoints.MapImage("Alice", playerService, tracker, lookup);
+
+        Assert.Equal("200", result.Status);
+        Assert.Equal("alice", tracker.LastGetBitmapKey);
+        Assert.True(playerService.GenerateCalled);
+    }
+
     private sealed class FakeAccountLookup : IUserAccountLookup
     {
         private readonly Dictionary<string, string> _accounts;
 
-        public FakeAccountLookup(params (string Name, string Uuid)[] accounts)
+        public FakeAccountLookup(params (string Name, string ResolvedName)[] accounts)
         {
-            _accounts = accounts.ToDictionary(a => a.Name, a => a.Uuid, StringComparer.Ordinal);
+            _accounts = accounts.ToDictionary(a => a.Name, a => a.ResolvedName, StringComparer.Ordinal);
         }
 
-        public bool TryGetAccountUuid(string user, out string accountUuid)
+        public bool TryGetAccountName(string user, out string accountName)
         {
-            if (_accounts.TryGetValue(user, out var uuid))
+            if (_accounts.TryGetValue(user, out var resolved))
             {
-                accountUuid = uuid;
+                accountName = resolved;
                 return true;
             }
 
-            accountUuid = string.Empty;
+            accountName = string.Empty;
             return false;
         }
     }
 
     private sealed class FakeExplorationTracker(BitArray? bitmap) : IPlayerExplorationTracker
     {
-        public void MarkArea(string accountUuid, int tileX, int tileY) { }
-        public void MarkAtPosition(string accountUuid, int tileX, int tileY) { }
-        public void ForgetLastSample(string accountUuid) { }
-        public BitArray? GetBitmap(string accountUuid) => bitmap;
-        public void Load(string accountUuid) { }
-        public void Save(string accountUuid) { }
+        public string? LastGetBitmapKey { get; private set; }
+
+        public void MarkArea(string accountName, int tileX, int tileY) { }
+        public void MarkAtPosition(string accountName, int tileX, int tileY) { }
+        public void ForgetLastSample(string accountName) { }
+        public BitArray? GetBitmap(string accountName)
+        {
+            LastGetBitmapKey = accountName;
+            return bitmap;
+        }
+        public void Load(string accountName) { }
+        public void Save(string accountName) { }
         public void SaveAll() { }
     }
 

@@ -45,9 +45,9 @@ public sealed class PlayerExplorationTracker : IPlayerExplorationTracker
         _worldSizeProvider = worldSizeProvider;
     }
 
-    public void MarkArea(string accountUuid, int tileX, int tileY)
+    public void MarkArea(string accountName, int tileX, int tileY)
     {
-        if (string.IsNullOrWhiteSpace(accountUuid))
+        if (string.IsNullOrWhiteSpace(accountName))
         {
             return;
         }
@@ -58,7 +58,7 @@ public sealed class PlayerExplorationTracker : IPlayerExplorationTracker
             return;
         }
 
-        var bitmap = GetOrCreateBitmap(accountUuid, width, height);
+        var bitmap = GetOrCreateBitmap(accountName, width, height);
 
         lock (_lock)
         {
@@ -71,9 +71,9 @@ public sealed class PlayerExplorationTracker : IPlayerExplorationTracker
     /// avoid gaps under low-packet-rate or fast movement; resets to a single stamp
     /// when the jump exceeds <see cref="TeleportThresholdTiles"/>.
     /// </summary>
-    public void MarkAtPosition(string accountUuid, int tileX, int tileY)
+    public void MarkAtPosition(string accountName, int tileX, int tileY)
     {
-        if (string.IsNullOrWhiteSpace(accountUuid))
+        if (string.IsNullOrWhiteSpace(accountName))
         {
             return;
         }
@@ -84,14 +84,14 @@ public sealed class PlayerExplorationTracker : IPlayerExplorationTracker
             return;
         }
 
-        var bitmap = GetOrCreateBitmap(accountUuid, width, height);
+        var bitmap = GetOrCreateBitmap(accountName, width, height);
 
         lock (_lock)
         {
-            if (!_lastSamples.TryGetValue(accountUuid, out var prev))
+            if (!_lastSamples.TryGetValue(accountName, out var prev))
             {
                 MarkBox(bitmap, width, height, tileX, tileY);
-                _lastSamples[accountUuid] = (tileX, tileY);
+                _lastSamples[accountName] = (tileX, tileY);
                 return;
             }
 
@@ -107,7 +107,7 @@ public sealed class PlayerExplorationTracker : IPlayerExplorationTracker
             if (distance > TeleportThresholdTiles)
             {
                 MarkBox(bitmap, width, height, tileX, tileY);
-                _lastSamples[accountUuid] = (tileX, tileY);
+                _lastSamples[accountName] = (tileX, tileY);
                 return;
             }
 
@@ -120,7 +120,7 @@ public sealed class PlayerExplorationTracker : IPlayerExplorationTracker
                 MarkBox(bitmap, width, height, ix, iy);
             }
 
-            _lastSamples[accountUuid] = (tileX, tileY);
+            _lastSamples[accountName] = (tileX, tileY);
         }
     }
 
@@ -129,22 +129,22 @@ public sealed class PlayerExplorationTracker : IPlayerExplorationTracker
     /// fresh (e.g. on logout / leave; prevents a phantom line from old position to
     /// next login spawn).
     /// </summary>
-    public void ForgetLastSample(string accountUuid)
+    public void ForgetLastSample(string accountName)
     {
-        if (string.IsNullOrWhiteSpace(accountUuid))
+        if (string.IsNullOrWhiteSpace(accountName))
         {
             return;
         }
 
         lock (_lock)
         {
-            _lastSamples.Remove(accountUuid);
+            _lastSamples.Remove(accountName);
         }
     }
 
-    public BitArray? GetBitmap(string accountUuid)
+    public BitArray? GetBitmap(string accountName)
     {
-        if (string.IsNullOrWhiteSpace(accountUuid))
+        if (string.IsNullOrWhiteSpace(accountName))
         {
             return null;
         }
@@ -153,13 +153,13 @@ public sealed class PlayerExplorationTracker : IPlayerExplorationTracker
         {
             // Return a snapshot copy so renderers can iterate safely while PlayerUpdate
             // continues to mutate the live bitmap on a different thread.
-            return _bitmaps.TryGetValue(accountUuid, out var bitmap) ? new BitArray(bitmap) : null;
+            return _bitmaps.TryGetValue(accountName, out var bitmap) ? new BitArray(bitmap) : null;
         }
     }
 
-    public void Load(string accountUuid)
+    public void Load(string accountName)
     {
-        if (string.IsNullOrWhiteSpace(accountUuid))
+        if (string.IsNullOrWhiteSpace(accountName))
         {
             return;
         }
@@ -171,7 +171,7 @@ public sealed class PlayerExplorationTracker : IPlayerExplorationTracker
         }
 
         var expectedBitCount = width * height;
-        var bitmap = _storage.Load(accountUuid, expectedBitCount);
+        var bitmap = _storage.Load(accountName, expectedBitCount);
         if (bitmap is null)
         {
             return;
@@ -179,15 +179,15 @@ public sealed class PlayerExplorationTracker : IPlayerExplorationTracker
 
         lock (_lock)
         {
-            _bitmaps[accountUuid] = bitmap;
+            _bitmaps[accountName] = bitmap;
         }
 
-        PluginLogger.Info($"加载玩家探索数据成功，accountUuid={accountUuid}");
+        PluginLogger.Info($"加载玩家探索数据成功，accountName={accountName}");
     }
 
-    public void Save(string accountUuid)
+    public void Save(string accountName)
     {
-        if (string.IsNullOrWhiteSpace(accountUuid))
+        if (string.IsNullOrWhiteSpace(accountName))
         {
             return;
         }
@@ -195,14 +195,14 @@ public sealed class PlayerExplorationTracker : IPlayerExplorationTracker
         BitArray? snapshot;
         lock (_lock)
         {
-            if (!_bitmaps.TryGetValue(accountUuid, out var bitmap))
+            if (!_bitmaps.TryGetValue(accountName, out var bitmap))
             {
                 return;
             }
             snapshot = new BitArray(bitmap);
         }
 
-        _storage.Save(accountUuid, snapshot);
+        _storage.Save(accountName, snapshot);
     }
 
     public void SaveAll()
@@ -211,15 +211,15 @@ public sealed class PlayerExplorationTracker : IPlayerExplorationTracker
         lock (_lock)
         {
             snapshot = new Dictionary<string, BitArray>(_bitmaps.Count, StringComparer.Ordinal);
-            foreach (var (uuid, bitmap) in _bitmaps)
+            foreach (var (name, bitmap) in _bitmaps)
             {
-                snapshot[uuid] = new BitArray(bitmap);
+                snapshot[name] = new BitArray(bitmap);
             }
         }
 
-        foreach (var (uuid, bitmap) in snapshot)
+        foreach (var (name, bitmap) in snapshot)
         {
-            _storage.Save(uuid, bitmap);
+            _storage.Save(name, bitmap);
         }
     }
 
@@ -245,17 +245,17 @@ public sealed class PlayerExplorationTracker : IPlayerExplorationTracker
         }
     }
 
-    private BitArray GetOrCreateBitmap(string accountUuid, int width, int height)
+    private BitArray GetOrCreateBitmap(string accountName, int width, int height)
     {
         lock (_lock)
         {
-            if (_bitmaps.TryGetValue(accountUuid, out var bitmap))
+            if (_bitmaps.TryGetValue(accountName, out var bitmap))
             {
                 return bitmap;
             }
 
             var created = new BitArray(width * height);
-            _bitmaps[accountUuid] = created;
+            _bitmaps[accountName] = created;
             return created;
         }
     }

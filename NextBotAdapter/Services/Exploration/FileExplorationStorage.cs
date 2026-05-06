@@ -14,14 +14,14 @@ public sealed class FileExplorationStorage : IExplorationStorage
         _worldIdProvider = worldIdProvider;
     }
 
-    public BitArray? Load(string accountUuid, int expectedBitCount)
+    public BitArray? Load(string accountName, int expectedBitCount)
     {
-        if (string.IsNullOrWhiteSpace(accountUuid) || expectedBitCount <= 0)
+        if (string.IsNullOrWhiteSpace(accountName) || expectedBitCount <= 0)
         {
             return null;
         }
 
-        var filePath = ResolveFilePath(accountUuid);
+        var filePath = ResolveFilePath(accountName);
         if (!File.Exists(filePath))
         {
             return null;
@@ -33,7 +33,7 @@ public sealed class FileExplorationStorage : IExplorationStorage
             var expectedByteCount = (expectedBitCount + 7) / 8;
             if (bytes.Length != expectedByteCount)
             {
-                PluginLogger.Warn($"加载玩家探索数据失败，原因：文件大小不匹配，accountUuid={accountUuid}，expected={expectedByteCount}，actual={bytes.Length}");
+                PluginLogger.Warn($"加载玩家探索数据失败，原因：文件大小不匹配，accountName={accountName}，expected={expectedByteCount}，actual={bytes.Length}");
                 return null;
             }
 
@@ -45,19 +45,19 @@ public sealed class FileExplorationStorage : IExplorationStorage
         }
         catch (Exception ex)
         {
-            PluginLogger.Warn($"加载玩家探索数据失败，accountUuid={accountUuid}，原因：{ex.Message}");
+            PluginLogger.Warn($"加载玩家探索数据失败，accountName={accountName}，原因：{ex.Message}");
             return null;
         }
     }
 
-    public void Save(string accountUuid, BitArray bitmap)
+    public void Save(string accountName, BitArray bitmap)
     {
-        if (string.IsNullOrWhiteSpace(accountUuid) || bitmap.Length <= 0)
+        if (string.IsNullOrWhiteSpace(accountName) || bitmap.Length <= 0)
         {
             return;
         }
 
-        var filePath = ResolveFilePath(accountUuid);
+        var filePath = ResolveFilePath(accountName);
         try
         {
             var directory = Path.GetDirectoryName(filePath);
@@ -73,15 +73,15 @@ public sealed class FileExplorationStorage : IExplorationStorage
         }
         catch (Exception ex)
         {
-            PluginLogger.Error($"保存玩家探索数据失败，accountUuid={accountUuid}，原因：{ex.Message}");
+            PluginLogger.Error($"保存玩家探索数据失败，accountName={accountName}，原因：{ex.Message}");
         }
     }
 
-    private string ResolveFilePath(string accountUuid)
+    private string ResolveFilePath(string accountName)
     {
         var worldId = _worldIdProvider();
-        var safeUuid = SanitizeFileName(accountUuid);
-        return Path.Combine(_rootDirectory, worldId.ToString(), safeUuid + ".bin");
+        var safeName = SanitizeFileName(accountName);
+        return Path.Combine(_rootDirectory, worldId.ToString(), safeName + ".bin");
     }
 
     private static string SanitizeFileName(string raw)
