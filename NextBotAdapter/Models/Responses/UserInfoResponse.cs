@@ -10,4 +10,5 @@ public sealed record UserInfoResponse(
     [property: JsonProperty("questsCompleted")] int QuestsCompleted,
     [property: JsonProperty("deathsPve")] int DeathsPve,
     [property: JsonProperty("deathsPvp")] int DeathsPvp,
-    [property: JsonProperty("onlineSeconds")] long OnlineSeconds = 0);
+    [property: JsonProperty("onlineSeconds")] long OnlineSeconds = 0,
+    [property: JsonProperty("mapExplorationPercent")] double MapExplorationPercent = 0);

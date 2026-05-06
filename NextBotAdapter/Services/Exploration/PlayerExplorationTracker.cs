@@ -1,4 +1,5 @@
 using System.Collections;
+using System.Numerics;
 
 namespace NextBotAdapter.Services;
 
@@ -186,6 +187,26 @@ public sealed class PlayerExplorationTracker : IPlayerExplorationTracker
             _bitmaps[accountName] = loaded;
             return new BitArray(loaded);
         }
+    }
+
+    public double GetExplorationPercent(string accountName)
+    {
+        var bitmap = GetBitmap(accountName);
+        if (bitmap is null || bitmap.Length == 0)
+        {
+            return 0.0;
+        }
+
+        var ints = new int[(bitmap.Length + 31) / 32];
+        bitmap.CopyTo(ints, 0);
+
+        var explored = 0;
+        foreach (var v in ints)
+        {
+            explored += BitOperations.PopCount((uint)v);
+        }
+
+        return Math.Round(100.0 * explored / bitmap.Length, 2);
     }
 
     public void Load(string accountName)

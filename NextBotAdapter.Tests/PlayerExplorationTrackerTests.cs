@@ -414,4 +414,119 @@ public sealed class PlayerExplorationTrackerTests
         // The lazy-load path was attempted exactly once (no negative cache by design).
         Assert.Equal(1, storage.LoadCallCount);
     }
+
+    [Fact]
+    public void GetExplorationPercent_ShouldReturnZero_WhenBitmapMissing()
+    {
+        const int width = 400;
+        const int height = 300;
+        var storage = new InMemoryStorage();
+        var tracker = new PlayerExplorationTracker(storage, () => (width, height));
+
+        var percent = tracker.GetExplorationPercent("never-seen");
+
+        Assert.Equal(0.0, percent);
+    }
+
+    [Fact]
+    public void GetExplorationPercent_ShouldReturnZero_ForAllZeroBitmap()
+    {
+        const int width = 400;
+        const int height = 300;
+
+        // Pre-seed an all-zero bitmap via storage round-trip so the tracker reaches it via lazy-load.
+        var storage = new InMemoryStorage();
+        var seed = new BitArray(width * height); // all false
+        storage.Save("zero", seed);
+        var tracker = new PlayerExplorationTracker(storage, () => (width, height));
+
+        var percent = tracker.GetExplorationPercent("zero");
+
+        Assert.Equal(0.0, percent);
+    }
+
+    [Fact]
+    public void GetExplorationPercent_ShouldReturn100_ForAllOneBitmap()
+    {
+        const int width = 400;
+        const int height = 300;
+        var storage = new InMemoryStorage();
+
+        // Persist an all-1 bitmap. Note: BitArray(byte[]) followed by setting
+        // Length back to expectedBitCount zeros out any tail bits beyond Length,
+        // so PopCount over the int[] view stays consistent with bitmap.Length.
+        var seed = new BitArray(width * height, defaultValue: true);
+        storage.Save("full", seed);
+
+        var tracker = new PlayerExplorationTracker(storage, () => (width, height));
+
+        var percent = tracker.GetExplorationPercent("full");
+
+        Assert.Equal(100.0, percent);
+    }
+
+    [Fact]
+    public void GetExplorationPercent_ShouldReturnPartial_ForKnownPattern()
+    {
+        const int width = 400;
+        const int height = 300;
+        var storage = new InMemoryStorage();
+
+        // Set exactly half of the bits to true.
+        var totalBits = width * height;
+        var seed = new BitArray(totalBits);
+        for (var i = 0; i < totalBits; i += 2)
+        {
+            seed.Set(i, true);
+        }
+        storage.Save("half", seed);
+
+        var tracker = new PlayerExplorationTracker(storage, () => (width, height));
+
+        var percent = tracker.GetExplorationPercent("half");
+
+        Assert.InRange(percent, 50.0 - 0.01, 50.0 + 0.01);
+    }
+
+    [Fact]
+    public void GetExplorationPercent_ShouldLazyLoadFromStorage_WhenCacheMisses()
+    {
+        const int width = 400;
+        const int height = 300;
+        var storage = new InMemoryStorage();
+
+        // Seed via an isolated tracker so storage holds a real bitmap on disk.
+        var seeder = new PlayerExplorationTracker(storage, () => (width, height));
+        seeder.MarkArea("alice", 100, 100);
+        seeder.Save("alice");
+
+        // Fresh tracker: in-memory cache is empty; GetExplorationPercent must
+        // still see the persisted bitmap via the lazy-load path.
+        var tracker = new PlayerExplorationTracker(storage, () => (width, height));
+
+        var percent = tracker.GetExplorationPercent("alice");
+
+        Assert.True(percent > 0.0, $"expected percent > 0 from lazy-load, got {percent}");
+    }
+
+    [Fact]
+    public void GetExplorationPercent_ShouldIgnoreTailBits_WhenLengthIsNotMultipleOf32()
+    {
+        // 100 bits fits in 4 ints (128 bits) — the last 28 bits beyond Length must
+        // not be counted by PopCount. We verify by saving an all-1 BitArray with
+        // a length that's not a multiple of 32 and asserting we still get 100% (not
+        // a polluted value > 100% caused by tail garbage).
+        const int width = 10;
+        const int height = 10; // 100 bits, not a multiple of 32
+
+        var storage = new InMemoryStorage();
+        var seed = new BitArray(width * height, defaultValue: true);
+        storage.Save("tail", seed);
+
+        var tracker = new PlayerExplorationTracker(storage, () => (width, height));
+
+        var percent = tracker.GetExplorationPercent("tail");
+
+        Assert.Equal(100.0, percent);
+    }
 }

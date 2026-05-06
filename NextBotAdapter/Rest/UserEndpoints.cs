@@ -30,16 +30,20 @@ public static class UserEndpoints
     }
 
     public static object Stats(RestRequestArgs args)
-        => Stats(ReadRouteUser(args), UserDataService.Default, OnlineTimeService);
+        => Stats(ReadRouteUser(args), UserDataService.Default, OnlineTimeService, ExplorationTracker);
 
-    public static object Stats(string? user, IPlayerDataAccessor accessor, IOnlineTimeService? onlineTimeService = null)
+    public static object Stats(
+        string? user,
+        IPlayerDataAccessor accessor,
+        IOnlineTimeService? onlineTimeService = null,
+        IPlayerExplorationTracker? explorationTracker = null)
     {
         if (string.IsNullOrWhiteSpace(user))
         {
             return EndpointResponseFactory.MissingUser();
         }
 
-        if (!UserInfoService.TryGetUserInfo(user, accessor, onlineTimeService, out var response, out var error))
+        if (!UserInfoService.TryGetUserInfo(user, accessor, onlineTimeService, explorationTracker, out var response, out var error))
         {
             return EndpointResponseFactory.Error(error ?? "User was not found.");
         }
@@ -53,7 +57,8 @@ public static class UserEndpoints
             { "questsCompleted", response.QuestsCompleted },
             { "deathsPve", response.DeathsPve },
             { "deathsPvp", response.DeathsPvp },
-            { "onlineSeconds", response.OnlineSeconds }
+            { "onlineSeconds", response.OnlineSeconds },
+            { "mapExplorationPercent", response.MapExplorationPercent }
         };
     }
 

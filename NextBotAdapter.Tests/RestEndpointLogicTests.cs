@@ -136,6 +136,34 @@ public sealed class RestEndpointLogicTests
     }
 
     [Fact]
+    public void Stats_ShouldIncludeMapExplorationPercent_WhenTrackerProvided()
+    {
+        var accessor = new FakePlayerDataAccessor(new FakePlayerData(
+            [new InventoryItemResponse(0, 1, 2, 3)],
+            new UserInfoResponse(120, 400, 80, 200, 9, 4, 2)));
+        var tracker = new FakeStatsExplorationTracker(42.5);
+
+        var result = Assert.IsType<RestObject>(UserEndpoints.Stats("alice", accessor, null, tracker));
+
+        Assert.Equal("200", result.Status);
+        Assert.Equal(42.5, result["mapExplorationPercent"]);
+        Assert.Equal("alice", tracker.LastAccountName);
+    }
+
+    [Fact]
+    public void Stats_ShouldDefaultMapExplorationPercentToZero_WhenTrackerNotProvided()
+    {
+        var accessor = new FakePlayerDataAccessor(new FakePlayerData(
+            [new InventoryItemResponse(0, 1, 2, 3)],
+            new UserInfoResponse(120, 400, 80, 200, 9, 4, 2)));
+
+        var result = Assert.IsType<RestObject>(UserEndpoints.Stats("alice", accessor));
+
+        Assert.Equal("200", result.Status);
+        Assert.Equal(0.0, result["mapExplorationPercent"]);
+    }
+
+    [Fact]
     public void OnlineTime_ShouldReturnOkWithEntriesSortedByOnlineSecondsDescending()
     {
         var onlineTimeService = new FakeOnlineTimeService([("bob", 7200L), ("alice", 3600L)]);
@@ -307,6 +335,24 @@ public sealed class RestEndpointLogicTests
         public long GetTotalSeconds(string username) => _records.TryGetValue(username, out var s) ? s : 0;
         public IReadOnlyList<(string Username, long OnlineSeconds)> GetAllRecords()
             => _records.Select(kv => (kv.Key, kv.Value)).OrderByDescending(x => x.Value).ToList();
+    }
+
+    private sealed class FakeStatsExplorationTracker(double percent) : IPlayerExplorationTracker
+    {
+        public string? LastAccountName { get; private set; }
+
+        public void MarkArea(string accountName, int tileX, int tileY) { }
+        public void MarkAtPosition(string accountName, int tileX, int tileY) { }
+        public void ForgetLastSample(string accountName) { }
+        public System.Collections.BitArray? GetBitmap(string accountName) => null;
+        public double GetExplorationPercent(string accountName)
+        {
+            LastAccountName = accountName;
+            return percent;
+        }
+        public void Load(string accountName) { }
+        public void Save(string accountName) { }
+        public void SaveAll() { }
     }
 
     private sealed class FakeLeaderboardGateway(

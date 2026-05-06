@@ -6,12 +6,21 @@ namespace NextBotAdapter.Services;
 public static class UserInfoService
 {
     public static bool TryGetUserInfo(string user, out UserInfoResponse response, out string? error)
-        => TryGetUserInfo(user, UserDataService.Default, out response, out error);
+        => TryGetUserInfo(user, UserDataService.Default, null, null, out response, out error);
 
     public static bool TryGetUserInfo(string user, IPlayerDataAccessor accessor, out UserInfoResponse response, out string? error)
-        => TryGetUserInfo(user, accessor, null, out response, out error);
+        => TryGetUserInfo(user, accessor, null, null, out response, out error);
 
     public static bool TryGetUserInfo(string user, IPlayerDataAccessor accessor, IOnlineTimeService? onlineTimeService, out UserInfoResponse response, out string? error)
+        => TryGetUserInfo(user, accessor, onlineTimeService, null, out response, out error);
+
+    public static bool TryGetUserInfo(
+        string user,
+        IPlayerDataAccessor accessor,
+        IOnlineTimeService? onlineTimeService,
+        IPlayerExplorationTracker? explorationTracker,
+        out UserInfoResponse response,
+        out string? error)
     {
         response = new UserInfoResponse(0, 0, 0, 0, 0, 0, 0);
         error = null;
@@ -23,7 +32,8 @@ public static class UserInfoService
 
         response = UserInfoMapper.CreateResponse(data) with
         {
-            OnlineSeconds = onlineTimeService?.GetTotalSeconds(user) ?? 0
+            OnlineSeconds = onlineTimeService?.GetTotalSeconds(user) ?? 0,
+            MapExplorationPercent = explorationTracker?.GetExplorationPercent(user) ?? 0
         };
         return true;
     }

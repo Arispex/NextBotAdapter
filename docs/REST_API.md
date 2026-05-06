@@ -89,20 +89,22 @@ GET /nextbot/users/Arispex/inventory?token=<token>
   "questsCompleted": 7,
   "deathsPve": 12,
   "deathsPvp": 3,
-  "onlineSeconds": 36000
+  "onlineSeconds": 36000,
+  "mapExplorationPercent": 12.34
 }
 ```
 
-| 字段              | 类型    | 说明                       |
-|-------------------|---------|----------------------------|
-| `health`          | integer | 当前生命值                 |
-| `maxHealth`       | integer | 最大生命值                 |
-| `mana`            | integer | 当前魔力值                 |
-| `maxMana`         | integer | 最大魔力值                 |
-| `questsCompleted` | integer | 渔夫任务完成次数           |
-| `deathsPve`       | integer | PvE 死亡次数               |
-| `deathsPvp`       | integer | PvP 死亡次数               |
-| `onlineSeconds`   | integer | 累计在线时长（秒）；若玩家当前在线则包含本次会话已用时 |
+| 字段                     | 类型    | 说明                       |
+|--------------------------|---------|----------------------------|
+| `health`                 | integer | 当前生命值                 |
+| `maxHealth`              | integer | 最大生命值                 |
+| `mana`                   | integer | 当前魔力值                 |
+| `maxMana`                | integer | 最大魔力值                 |
+| `questsCompleted`        | integer | 渔夫任务完成次数           |
+| `deathsPve`              | integer | PvE 死亡次数               |
+| `deathsPvp`              | integer | PvP 死亡次数               |
+| `onlineSeconds`          | integer | 累计在线时长（秒）；若玩家当前在线则包含本次会话已用时 |
+| `mapExplorationPercent`  | number  | 玩家已探索 tile 占全图 tile 的百分比，0–100，保留 2 位小数；从未上线 / 无探索数据时为 0 |
 
 **错误**
 

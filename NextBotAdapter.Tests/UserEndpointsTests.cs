@@ -131,9 +131,10 @@ public sealed class UserEndpointsTests
         }
     }
 
-    private sealed class FakeExplorationTracker(BitArray? bitmap) : IPlayerExplorationTracker
+    private sealed class FakeExplorationTracker(BitArray? bitmap, double explorationPercent = 0) : IPlayerExplorationTracker
     {
         public string? LastGetBitmapKey { get; private set; }
+        public string? LastGetExplorationPercentKey { get; private set; }
 
         public void MarkArea(string accountName, int tileX, int tileY) { }
         public void MarkAtPosition(string accountName, int tileX, int tileY) { }
@@ -142,6 +143,11 @@ public sealed class UserEndpointsTests
         {
             LastGetBitmapKey = accountName;
             return bitmap;
+        }
+        public double GetExplorationPercent(string accountName)
+        {
+            LastGetExplorationPercentKey = accountName;
+            return explorationPercent;
         }
         public void Load(string accountName) { }
         public void Save(string accountName) { }

@@ -12,6 +12,8 @@ public interface IPlayerExplorationTracker
 
     BitArray? GetBitmap(string accountName);
 
+    double GetExplorationPercent(string accountName);
+
     void Load(string accountName);
 
     void Save(string accountName);
