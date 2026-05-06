@@ -18,5 +18,5 @@ public interface IPlayerExplorationTracker
 
     void Save(string accountName);
 
-    void SaveAll(string contextLabel = "保存");
+    void SaveAll();
 }

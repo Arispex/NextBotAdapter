@@ -144,7 +144,7 @@ public sealed class NextBotAdapterPlugin(Main game) : TerrariaPlugin(game)
             _persistenceTimer = null;
 
             _onlineTimeService?.PersistAllSessions();
-            _playerExplorationTracker?.SaveAll("关机保存");
+            _playerExplorationTracker?.SaveAll();
             Commands.ChatCommands.RemoveAll(c => c.CommandDelegate == NbCommand);
             GetDataHandlers.PlayerInfo.UnRegister(OnPlayerInfo);
             GetDataHandlers.PlayerUpdate.UnRegister(OnPlayerUpdate);
@@ -164,7 +164,8 @@ public sealed class NextBotAdapterPlugin(Main game) : TerrariaPlugin(game)
         try
         {
             _onlineTimeService?.Flush();
-            _playerExplorationTracker?.SaveAll("自动保存");
+            _playerExplorationTracker?.SaveAll();
+            PluginLogger.Info("自动保存完成。");
         }
         catch (Exception ex)
         {

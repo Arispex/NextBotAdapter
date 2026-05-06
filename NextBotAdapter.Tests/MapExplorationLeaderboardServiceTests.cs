@@ -95,6 +95,6 @@ public sealed class MapExplorationLeaderboardServiceTests
             => percents.TryGetValue(accountName, out var p) ? p : 0.0;
         public void Load(string accountName) { }
         public void Save(string accountName) { }
-        public void SaveAll(string contextLabel = "保存") { }
+        public void SaveAll() { }
     }
 }

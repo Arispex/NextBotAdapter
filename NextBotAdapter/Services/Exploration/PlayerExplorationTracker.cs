@@ -320,7 +320,7 @@ public sealed class PlayerExplorationTracker : IPlayerExplorationTracker
         }
     }
 
-    public void SaveAll(string contextLabel = "保存")
+    public void SaveAll()
     {
         Dictionary<string, BitArray> snapshot;
         lock (_lock)
@@ -339,18 +339,11 @@ public sealed class PlayerExplorationTracker : IPlayerExplorationTracker
             _dirty.Clear();
         }
 
-        var success = 0;
-        var failure = 0;
         var failedNames = new List<string>();
         foreach (var (name, bitmap) in snapshot)
         {
-            if (_storage.Save(name, bitmap))
+            if (!_storage.Save(name, bitmap))
             {
-                success++;
-            }
-            else
-            {
-                failure++;
                 failedNames.Add(name);
             }
         }
@@ -367,15 +360,10 @@ public sealed class PlayerExplorationTracker : IPlayerExplorationTracker
             }
         }
 
-        if (failure > 0)
-        {
-            PluginLogger.Warn($"{contextLabel}完成，成功={success}，失败={failure}");
-        }
-        else if (success > 0)
-        {
-            PluginLogger.Info($"{contextLabel}完成，成功={success}");
-        }
-        // success == 0 && failure == 0：无脏数据，不打日志
+        // No log emitted here: "auto-save complete" is logged by the plugin-layer
+        // timer callback so it covers all auto-saved subsystems uniformly. Per-
+        // account failure diagnostics still come from FileExplorationStorage.Save's
+        // ERROR log on the IO failure path.
     }
 
     private static void MarkBox(BitArray bitmap, int width, int height, int tileX, int tileY)

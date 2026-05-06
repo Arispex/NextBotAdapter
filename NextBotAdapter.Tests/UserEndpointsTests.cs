@@ -151,7 +151,7 @@ public sealed class UserEndpointsTests
         }
         public void Load(string accountName) { }
         public void Save(string accountName) { }
-        public void SaveAll(string contextLabel = "保存") { }
+        public void SaveAll() { }
     }
 
     private sealed class FakePlayerMapImageService : IPlayerMapImageService

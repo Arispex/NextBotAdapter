@@ -394,7 +394,7 @@ public sealed class RestEndpointLogicTests
         }
         public void Load(string accountName) { }
         public void Save(string accountName) { }
-        public void SaveAll(string contextLabel = "保存") { }
+        public void SaveAll() { }
     }
 
     private sealed class FakeMapExplorationTracker(IReadOnlyDictionary<string, double> percents) : IPlayerExplorationTracker
@@ -407,7 +407,7 @@ public sealed class RestEndpointLogicTests
             => percents.TryGetValue(accountName, out var p) ? p : 0.0;
         public void Load(string accountName) { }
         public void Save(string accountName) { }
-        public void SaveAll(string contextLabel = "保存") { }
+        public void SaveAll() { }
     }
 
     private sealed class FakeLeaderboardGateway(
