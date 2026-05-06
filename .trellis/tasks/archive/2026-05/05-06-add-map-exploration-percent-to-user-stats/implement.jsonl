@@ -1,0 +1,4 @@
+{"file": ".trellis/spec/backend/quality-guidelines.md", "reason": "Required Patterns（thin endpoint + 服务层业务逻辑 + record 不可变契约 + 集中常量）、Forbidden Patterns（不重复响应字段名）、Testing Requirements（行为变更必须有自动化测试）"}
+{"file": ".trellis/spec/backend/error-handling.md", "reason": "Stats 端点错误响应格式（user not found 仍返回原 400 文案）、error.message 仅返回有效原因"}
+{"file": ".trellis/spec/backend/database-guidelines.md", "reason": "BitArray 持久化与 lazy-load 路径已在 PlayerExplorationTracker.GetBitmap 实现；新方法 GetExplorationPercent 内部复用，确认 fail-safe 退化为 0.0 而非异常"}
+{"file": ".trellis/spec/backend/logging-guidelines.md", "reason": "高频 stats 端点不打额外日志，避免刷屏；与 GetBitmap lazy-load 路径无日志风格一致"}
