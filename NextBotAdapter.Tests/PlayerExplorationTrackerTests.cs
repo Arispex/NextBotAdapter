@@ -315,8 +315,12 @@ public sealed class PlayerExplorationTrackerTests
     {
         private readonly Dictionary<string, byte[]> _store = new(StringComparer.Ordinal);
 
+        public int LoadCallCount { get; private set; }
+
         public BitArray? Load(string accountName, int expectedBitCount)
         {
+            LoadCallCount++;
+
             if (!_store.TryGetValue(accountName, out var bytes))
             {
                 return null;
@@ -338,5 +342,76 @@ public sealed class PlayerExplorationTrackerTests
             bitmap.CopyTo(bytes, 0);
             _store[accountName] = bytes;
         }
+    }
+
+    [Fact]
+    public void GetBitmap_ShouldLazyLoadFromStorage_WhenCacheMisses()
+    {
+        const int width = 400;
+        const int height = 300;
+        var storage = new InMemoryStorage();
+
+        // Seed storage by saving a bitmap from a separate tracker (simulates a prior
+        // session having persisted the file to disk).
+        var seeder = new PlayerExplorationTracker(storage, () => (width, height));
+        seeder.MarkArea("alice", 100, 100);
+        seeder.Save("alice");
+
+        // Fresh tracker: in-memory cache is empty, but storage already has alice.
+        var tracker = new PlayerExplorationTracker(storage, () => (width, height));
+
+        var bitmap = tracker.GetBitmap("alice");
+
+        Assert.NotNull(bitmap);
+        // Inside the 141x87 box around (100, 100): x in [30, 170], y in [57, 143].
+        Assert.True(IsSet(bitmap!, 100, 100, width));
+        Assert.True(IsSet(bitmap, 30, 57, width));
+        Assert.True(IsSet(bitmap, 170, 143, width));
+        // Outside the box.
+        Assert.False(IsSet(bitmap, 300, 250, width));
+    }
+
+    [Fact]
+    public void GetBitmap_ShouldCacheLoadedBitmap_AfterFirstLazyLoad()
+    {
+        const int width = 400;
+        const int height = 300;
+        var storage = new InMemoryStorage();
+
+        // Seed storage and reset the call counter so we only measure tracker behavior.
+        var seeder = new PlayerExplorationTracker(storage, () => (width, height));
+        seeder.MarkArea("bob", 50, 50);
+        seeder.Save("bob");
+
+        var tracker = new PlayerExplorationTracker(storage, () => (width, height));
+        var beforeFirst = storage.LoadCallCount;
+
+        var firstBitmap = tracker.GetBitmap("bob");
+        var afterFirst = storage.LoadCallCount;
+
+        var secondBitmap = tracker.GetBitmap("bob");
+        var afterSecond = storage.LoadCallCount;
+
+        Assert.NotNull(firstBitmap);
+        Assert.NotNull(secondBitmap);
+        // First call performs exactly one Load against storage.
+        Assert.Equal(beforeFirst + 1, afterFirst);
+        // Second call must hit the in-memory cache without re-reading storage.
+        Assert.Equal(afterFirst, afterSecond);
+    }
+
+    [Fact]
+    public void GetBitmap_ShouldReturnNull_WhenStorageHasNoData()
+    {
+        const int width = 400;
+        const int height = 300;
+        var storage = new InMemoryStorage();
+        var tracker = new PlayerExplorationTracker(storage, () => (width, height));
+
+        var bitmap = tracker.GetBitmap("never-seen");
+
+        Assert.Null(bitmap);
+        // The lazy-load path was attempted exactly once (no negative cache by design).
+        Assert.Equal(1, storage.LoadCallCount);
     }
 }

@@ -153,7 +153,38 @@ public sealed class PlayerExplorationTracker : IPlayerExplorationTracker
         {
             // Return a snapshot copy so renderers can iterate safely while PlayerUpdate
             // continues to mutate the live bitmap on a different thread.
-            return _bitmaps.TryGetValue(accountName, out var bitmap) ? new BitArray(bitmap) : null;
+            if (_bitmaps.TryGetValue(accountName, out var bitmap))
+            {
+                return new BitArray(bitmap);
+            }
+        }
+
+        // Cache miss: try lazy-load from disk so REST queries can return the latest
+        // persisted bitmap even before the player has logged in this session.
+        // IO is intentionally outside _lock to avoid blocking concurrent stamp calls.
+        var (width, height) = _worldSizeProvider();
+        if (width <= 0 || height <= 0)
+        {
+            return null;
+        }
+
+        var loaded = _storage.Load(accountName, width * height);
+        if (loaded is null)
+        {
+            return null;
+        }
+
+        lock (_lock)
+        {
+            // Double-check: another thread (e.g. OnPlayerPostLogin) may have loaded
+            // the bitmap between our two locks. Honor whichever instance is already
+            // in the dictionary so stamps and snapshots see the same BitArray.
+            if (_bitmaps.TryGetValue(accountName, out var existing))
+            {
+                return new BitArray(existing);
+            }
+            _bitmaps[accountName] = loaded;
+            return new BitArray(loaded);
         }
     }
 
