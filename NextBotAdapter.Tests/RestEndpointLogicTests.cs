@@ -254,6 +254,47 @@ public sealed class RestEndpointLogicTests
     }
 
     [Fact]
+    public void MapExploration_ShouldReturnEmptyEntriesWhenTrackerIsNull()
+    {
+        var gateway = new FakeLeaderboardGateway([]);
+
+        var result = Assert.IsType<RestObject>(LeaderboardEndpoints.MapExploration(gateway, null));
+
+        Assert.Equal("200", result.Status);
+        var entries = Assert.IsAssignableFrom<System.Collections.IEnumerable>(result["entries"]);
+        Assert.Empty(entries.Cast<object>());
+    }
+
+    [Fact]
+    public void MapExploration_ShouldReturnSortedEntriesWhenTrackerProvided()
+    {
+        var gateway = new FakeLeaderboardGateway(
+        [
+            (1, "alice", new FakePlayerData([new InventoryItemResponse(0, 1, 1, 0)], new UserInfoResponse(0, 0, 0, 0, 0, 0, 0))),
+            (2, "bob",   new FakePlayerData([new InventoryItemResponse(0, 1, 1, 0)], new UserInfoResponse(0, 0, 0, 0, 0, 0, 0))),
+            (3, "carol", new FakePlayerData([new InventoryItemResponse(0, 1, 1, 0)], new UserInfoResponse(0, 0, 0, 0, 0, 0, 0)))
+        ]);
+        var tracker = new FakeMapExplorationTracker(new Dictionary<string, double>
+        {
+            ["alice"] = 10.0,
+            ["bob"] = 50.0,
+            ["carol"] = 30.0
+        });
+
+        var result = Assert.IsType<RestObject>(LeaderboardEndpoints.MapExploration(gateway, tracker));
+
+        Assert.Equal("200", result.Status);
+        var entries = Assert.IsAssignableFrom<IReadOnlyList<NextBotAdapter.Models.Responses.MapExplorationLeaderboardEntryResponse>>(result["entries"]);
+        Assert.Equal(3, entries.Count);
+        Assert.Equal("bob",   entries[0].Username);
+        Assert.Equal(50.0,    entries[0].MapExplorationPercent);
+        Assert.Equal("carol", entries[1].Username);
+        Assert.Equal(30.0,    entries[1].MapExplorationPercent);
+        Assert.Equal("alice", entries[2].Username);
+        Assert.Equal(10.0,    entries[2].MapExplorationPercent);
+    }
+
+    [Fact]
     public void ReadRouteUser_ShouldPreferVerbParametersWhenProvided()
     {
         var args = new RestRequestArgs(new RestVerbs { [RequestParameters.User] = "verb-user" }, null!, null!, null!);
@@ -350,6 +391,19 @@ public sealed class RestEndpointLogicTests
             LastAccountName = accountName;
             return percent;
         }
+        public void Load(string accountName) { }
+        public void Save(string accountName) { }
+        public void SaveAll() { }
+    }
+
+    private sealed class FakeMapExplorationTracker(IReadOnlyDictionary<string, double> percents) : IPlayerExplorationTracker
+    {
+        public void MarkArea(string accountName, int tileX, int tileY) { }
+        public void MarkAtPosition(string accountName, int tileX, int tileY) { }
+        public void ForgetLastSample(string accountName) { }
+        public System.Collections.BitArray? GetBitmap(string accountName) => null;
+        public double GetExplorationPercent(string accountName)
+            => percents.TryGetValue(accountName, out var p) ? p : 0.0;
         public void Load(string accountName) { }
         public void Save(string accountName) { }
         public void SaveAll() { }

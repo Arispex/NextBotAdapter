@@ -42,4 +42,20 @@ public static class LeaderboardEndpoints
             .ToList();
         return new RestObject("200") { { "entries", entries } };
     }
+
+    public static IPlayerExplorationTracker? ExplorationTracker { get; set; }
+
+    public static object MapExploration(RestRequestArgs args)
+        => MapExploration(UserDataService.DefaultGateway, ExplorationTracker);
+
+    public static object MapExploration(IUserDataGateway gateway, IPlayerExplorationTracker? tracker)
+    {
+        if (tracker is null)
+        {
+            return new RestObject("200") { { "entries", Array.Empty<MapExplorationLeaderboardEntryResponse>() } };
+        }
+
+        var entries = MapExplorationLeaderboardService.GetLeaderboard(gateway, tracker);
+        return new RestObject("200") { { "entries", entries } };
+    }
 }

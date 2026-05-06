@@ -63,6 +63,7 @@ public sealed class NextBotAdapterPlugin(Main game) : TerrariaPlugin(game)
             explorationStorage,
             () => (Main.maxTilesX, Main.maxTilesY));
         UserEndpoints.ExplorationTracker = _playerExplorationTracker;
+        LeaderboardEndpoints.ExplorationTracker = _playerExplorationTracker;
         UserEndpoints.AccountLookup = TShockUserAccountLookup.Default;
         WorldEndpoints.WorldFileService = new WorldFileService();
         WorldEndpoints.MapFileService = new MapFileService();

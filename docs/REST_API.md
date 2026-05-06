@@ -561,6 +561,39 @@ GET /nextbot/users/Arispex/inventory?token=<token>
 
 ---
 
+### GET `/nextbot/leaderboards/map-exploration`
+
+返回所有注册玩家的地图探索率排行榜，按 `mapExplorationPercent` 降序排列。
+
+**权限：** `nextbot.leaderboards.map_exploration`
+
+**响应 200**
+
+```json
+{
+  "entries": [
+    { "username": "Arispex", "mapExplorationPercent": 42.5 },
+    { "username": "NextBot", "mapExplorationPercent": 12.34 }
+  ]
+}
+```
+
+| 字段                              | 类型    | 说明                                                                  |
+|-----------------------------------|---------|-----------------------------------------------------------------------|
+| `entries`                         | array   | 排行榜条目列表                                                        |
+| `entries[].username`              | string  | 玩家用户名                                                            |
+| `entries[].mapExplorationPercent` | number  | 该玩家已探索 tile 占全图 tile 总数的百分比，范围 0–100，保留 2 位小数 |
+
+**说明**
+
+- 覆盖所有注册玩家（包括尚无探索记录的玩家，其 `mapExplorationPercent` 为 0）
+- 结果按 `mapExplorationPercent` 降序排列；探索率为 0 的玩家排在末尾
+- 每条目的 `mapExplorationPercent` 与 `/nextbot/users/{user}/stats` 返回的 `mapExplorationPercent` 同字段同语义
+- 单次请求会按需懒加载所有有持久化文件的玩家位图，首次调用可能存在 IO 开销，命中内存缓存后开销显著降低
+- 当探索追踪服务尚未注入（如启动时序异常）时，返回 `entries` 为空数组，状态码仍为 200
+
+---
+
 ## Security（安全）
 
 ### GET `/nextbot/security/confirm-login/{user}`

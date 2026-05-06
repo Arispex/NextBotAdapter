@@ -22,6 +22,7 @@ public static class Permissions
     public const string LeaderboardDeaths = "nextbot.leaderboards.deaths";
     public const string LeaderboardFishingQuests = "nextbot.leaderboards.fishing_quests";
     public const string LeaderboardOnlineTime = "nextbot.leaderboards.online_time";
+    public const string LeaderboardMapExploration = "nextbot.leaderboards.map_exploration";
     public const string SecurityConfirmLogin = "nextbot.security.confirm_login";
     public const string SecurityRejectLogin = "nextbot.security.reject_login";
 }
