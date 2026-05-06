@@ -180,6 +180,67 @@ Reference code: `NextBotAdapter/Services/Exploration/PlayerExplorationTracker.cs
 
 ---
 
+## Storage interface return-value expressiveness
+
+A plugin persistence interface (`Load` / `Save` / `Delete` style) is consumed by callers that must decide whether to negative-cache, retry, or aggregate failure rates. Pick return types that let callers distinguish these outcomes; do not collapse different fail-safe meanings into a single sentinel or hide failures behind `void`.
+
+### Don't: a single `null` that conflates "missing" with "failed"
+
+```csharp
+// Bad: null means three different things.
+BitArray? Load(string name, int count);
+//   null = input invalid
+//   null = file does not exist        (safe to negative-cache)
+//   null = file exists but IO failed  (transient; must NOT negative-cache)
+```
+
+Why it's bad: callers that add `null` results to a missing-file negative cache will permanently mark transient IO errors as "missing" for the rest of the process lifetime. Player data appears lost until the server restarts.
+
+### Do: distinguish "confirmed missing" from "other failures"
+
+```csharp
+public sealed record ExplorationLoadResult(BitArray? Bitmap, bool FileMissing);
+
+ExplorationLoadResult Load(string name, int count);
+//   (bitmap, false) = success
+//   (null, true)    = confirmed missing  -> safe to negative-cache
+//   (null, false)   = invalid input / corrupt / IO error -> do NOT cache; retry next time
+```
+
+Callers branch on `FileMissing` before populating any negative cache. Transient errors retry naturally on the next access.
+
+### Don't: `void` save that swallows failures into logs
+
+```csharp
+// Bad: caller cannot tell if the write succeeded.
+void Save(string name, BitArray bitmap);
+// Internal try/catch -> PluginLogger.Error only.
+```
+
+Why it's bad: a batch caller (e.g. `SaveAll` at shutdown) cannot count successes vs failures or emit a completion-rate summary. Operators see scattered ERROR lines with no aggregate signal about how many accounts actually persisted.
+
+### Do: return `bool` (or a richer result) so batches can summarize
+
+```csharp
+bool Save(string name, BitArray bitmap);
+
+// Caller aggregates and emits one summary line.
+int success = 0, failure = 0;
+foreach (var (name, bitmap) in snapshot)
+{
+    if (_storage.Save(name, bitmap)) success++;
+    else failure++;
+}
+PluginLogger.Info($"SaveAll completed, success={success}, failure={failure}");
+```
+
+Apply the same shape to other persistence operations (`Delete`, `Rename`, etc.) when the caller needs to summarize or react to per-item failure.
+
+Reference task: `05-06-fix-exploration-tracker-audit-round2`.
+Reference code: `NextBotAdapter/Services/Exploration/IExplorationStorage.cs`, `NextBotAdapter/Services/Exploration/PlayerExplorationTracker.cs` (`SaveAll`).
+
+---
+
 ## Common Mistakes
 
 - Do not query TShock APIs directly from endpoint classes.
@@ -191,3 +252,5 @@ Reference code: `NextBotAdapter/Services/Exploration/PlayerExplorationTracker.cs
 - Do not use `Account.UUID` as a persistence key; it is a per-login device fingerprint, not account identity. Use `Account.Name` (or `Account.ID` if rename-stability is required).
 - Do not split get-or-create and mutation across two `lock` regions for the same in-memory cache; another writer can replace the entry between the regions and your mutation lands on an orphan. Use a single lock plus a `*Locked` helper.
 - Do not let `Load` (or any rehydration path) unconditionally overwrite an existing in-memory cache entry; check `ContainsKey` first so newer in-memory data is preserved.
+- Do not return a single `null` from a storage `Load` method to mean both "file missing" and "IO error / corrupt / invalid input"; callers cannot tell whether negative-caching is safe and will permanently hide transient errors. Return a result type that distinguishes confirmed-missing from other failures.
+- Do not declare a storage `Save` (or other persistence write) as `void` and only log on failure when callers need to aggregate success/failure counts. Return `bool` (or a result type) so batch callers like `SaveAll` can emit a completion-rate summary.
