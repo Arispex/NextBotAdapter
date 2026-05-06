@@ -37,6 +37,11 @@ public sealed class PlayerExplorationTracker : IPlayerExplorationTracker
     private readonly Dictionary<string, BitArray> _bitmaps = new(StringComparer.Ordinal);
     private readonly Dictionary<string, (int X, int Y)> _lastSamples = new(StringComparer.Ordinal);
     private readonly HashSet<string> _missingFiles = new(StringComparer.Ordinal);
+    // Accounts whose in-memory bitmap has been mutated since the last successful
+    // persist. Both Save(name) and SaveAll() consult and clear this set, then
+    // re-add on storage failure so the next flush retries. Lazy-load / Load do
+    // NOT mark dirty (data already mirrors disk).
+    private readonly HashSet<string> _dirty = new(StringComparer.Ordinal);
     private readonly object _lock = new();
     private readonly IExplorationStorage _storage;
     private readonly Func<(int Width, int Height)> _worldSizeProvider;
@@ -64,6 +69,7 @@ public sealed class PlayerExplorationTracker : IPlayerExplorationTracker
         {
             var bitmap = GetOrCreateBitmapLocked(accountName, width, height);
             MarkBox(bitmap, width, height, tileX, tileY);
+            _dirty.Add(accountName);
         }
     }
 
@@ -93,6 +99,7 @@ public sealed class PlayerExplorationTracker : IPlayerExplorationTracker
             {
                 MarkBox(bitmap, width, height, tileX, tileY);
                 _lastSamples[accountName] = (tileX, tileY);
+                _dirty.Add(accountName);
                 return;
             }
 
@@ -109,6 +116,7 @@ public sealed class PlayerExplorationTracker : IPlayerExplorationTracker
             {
                 MarkBox(bitmap, width, height, tileX, tileY);
                 _lastSamples[accountName] = (tileX, tileY);
+                _dirty.Add(accountName);
                 return;
             }
 
@@ -122,6 +130,7 @@ public sealed class PlayerExplorationTracker : IPlayerExplorationTracker
             }
 
             _lastSamples[accountName] = (tileX, tileY);
+            _dirty.Add(accountName);
         }
     }
 
@@ -282,33 +291,57 @@ public sealed class PlayerExplorationTracker : IPlayerExplorationTracker
             return;
         }
 
-        BitArray? snapshot;
+        BitArray snapshot;
         lock (_lock)
         {
-            if (!_bitmaps.TryGetValue(accountName, out var bitmap))
+            // Dirty short-circuit: bitmap unchanged since last persist — skip IO.
+            if (!_dirty.Contains(accountName))
             {
                 return;
             }
+            if (!_bitmaps.TryGetValue(accountName, out var bitmap))
+            {
+                // Dirty entry without a backing bitmap is unexpected; drop the
+                // dirty mark so we don't spin retrying.
+                _dirty.Remove(accountName);
+                return;
+            }
             snapshot = new BitArray(bitmap);
+            _dirty.Remove(accountName);
         }
 
-        _storage.Save(accountName, snapshot);
+        if (!_storage.Save(accountName, snapshot))
+        {
+            // Storage failed: re-mark dirty so the next flush retries.
+            lock (_lock)
+            {
+                _dirty.Add(accountName);
+            }
+        }
     }
 
-    public void SaveAll()
+    public void SaveAll(string contextLabel = "保存")
     {
         Dictionary<string, BitArray> snapshot;
         lock (_lock)
         {
-            snapshot = new Dictionary<string, BitArray>(_bitmaps.Count, StringComparer.Ordinal);
-            foreach (var (name, bitmap) in _bitmaps)
+            // Snapshot only dirty entries that still have a live bitmap. Clearing
+            // _dirty here is the commit point — any concurrent stamp after this
+            // point re-marks the account dirty for the next flush.
+            snapshot = new Dictionary<string, BitArray>(_dirty.Count, StringComparer.Ordinal);
+            foreach (var name in _dirty)
             {
-                snapshot[name] = new BitArray(bitmap);
+                if (_bitmaps.TryGetValue(name, out var bitmap))
+                {
+                    snapshot[name] = new BitArray(bitmap);
+                }
             }
+            _dirty.Clear();
         }
 
         var success = 0;
         var failure = 0;
+        var failedNames = new List<string>();
         foreach (var (name, bitmap) in snapshot)
         {
             if (_storage.Save(name, bitmap))
@@ -318,18 +351,31 @@ public sealed class PlayerExplorationTracker : IPlayerExplorationTracker
             else
             {
                 failure++;
+                failedNames.Add(name);
+            }
+        }
+
+        if (failedNames.Count > 0)
+        {
+            // Re-mark failed accounts so the next flush retries them.
+            lock (_lock)
+            {
+                foreach (var name in failedNames)
+                {
+                    _dirty.Add(name);
+                }
             }
         }
 
         if (failure > 0)
         {
-            PluginLogger.Warn($"SaveAll 完成，成功={success}，失败={failure}");
+            PluginLogger.Warn($"{contextLabel}完成，成功={success}，失败={failure}");
         }
         else if (success > 0)
         {
-            PluginLogger.Info($"SaveAll 完成，成功={success}");
+            PluginLogger.Info($"{contextLabel}完成，成功={success}");
         }
-        // success == 0 && failure == 0：dict 空，不打日志（启动后未持久化任何 bitmap）
+        // success == 0 && failure == 0：无脏数据，不打日志
     }
 
     private static void MarkBox(BitArray bitmap, int width, int height, int tileX, int tileY)

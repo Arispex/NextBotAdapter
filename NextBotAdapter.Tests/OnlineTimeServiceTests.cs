@@ -115,6 +115,76 @@ public sealed class OnlineTimeServiceTests
         Assert.EndsWith(Path.Combine("Data", "OnlineTime.json"), service.FilePath);
     }
 
+    [Fact]
+    public void Flush_ShouldPersistActiveSessionElapsedWithoutEndingSession()
+    {
+        var service = CreateService(out var filePath);
+
+        service.StartSession("alice");
+        // Sleep just enough that the integer-second elapsed value is stable.
+        Thread.Sleep(1100);
+        service.Flush();
+
+        // Records on disk reflect the elapsed seconds.
+        var persisted = ReadStore(filePath);
+        Assert.True(persisted.Records.TryGetValue("alice", out var seconds));
+        Assert.True(seconds >= 1, $"expected elapsed >= 1, got {seconds}");
+
+        // Session is still active — EndSession must continue to work normally.
+        service.EndSession("alice");
+        Assert.True(service.GetTotalSeconds("alice") >= seconds);
+    }
+
+    [Fact]
+    public void Flush_ShouldNotDoubleCount_OnSubsequentEndSession()
+    {
+        var service = CreateService(out var filePath);
+
+        service.StartSession("alice");
+        Thread.Sleep(1100);
+        service.Flush();
+        var afterFlush = ReadStore(filePath).Records["alice"];
+
+        Thread.Sleep(1100);
+        service.EndSession("alice");
+        var afterEnd = ReadStore(filePath).Records["alice"];
+
+        // EndSession's contribution must be only the post-Flush delta. There
+        // is some scheduler jitter, so allow for a small slack window.
+        var endDelta = afterEnd - afterFlush;
+        Assert.True(endDelta >= 1 && endDelta <= 5, $"expected EndSession to add only the post-Flush delta (1..5s), got {endDelta}s");
+    }
+
+    [Fact]
+    public void Flush_ShouldBeIdempotentAcrossMultipleCalls()
+    {
+        var service = CreateService(out var filePath);
+
+        service.StartSession("alice");
+        Thread.Sleep(1100);
+        service.Flush();
+        var afterFirst = ReadStore(filePath).Records["alice"];
+
+        // No-op flush right after — almost no time elapsed since last Flush
+        // reset the start. Records must not double-count what the first Flush
+        // already persisted.
+        service.Flush();
+        var afterSecond = ReadStore(filePath).Records["alice"];
+
+        Assert.InRange(afterSecond - afterFirst, 0, 1);
+    }
+
+    [Fact]
+    public void Flush_ShouldNoOp_WhenNoActiveSessions()
+    {
+        var service = CreateService(out var filePath);
+
+        var exception = Record.Exception(() => service.Flush());
+
+        Assert.Null(exception);
+        Assert.Empty(ReadStore(filePath).Records);
+    }
+
     private static OnlineTimeService CreateService(out string filePath)
     {
         var root = Path.Combine(Path.GetTempPath(), "NextBotAdapter.Tests", Guid.NewGuid().ToString("N"));

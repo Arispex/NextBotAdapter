@@ -27,6 +27,8 @@ public sealed class NextBotAdapterPlugin(Main game) : TerrariaPlugin(game)
     private PlayerExplorationTracker? _playerExplorationTracker;
     private readonly HashSet<int> _onlineNotifiedSlots = [];
     private readonly object _onlineNotifiedLock = new();
+    private System.Threading.Timer? _persistenceTimer;
+    private static readonly TimeSpan PersistenceInterval = TimeSpan.FromMinutes(5);
 
     public override string Author => "Arispex";
 
@@ -123,14 +125,26 @@ public sealed class NextBotAdapterPlugin(Main game) : TerrariaPlugin(game)
                 PluginLogger.Warn("autoLogin 已启用：设备指纹 (UUID + 上次登录 IP) 将替代密码作为唯一鉴权因素。");
             }
         }
+
+        _persistenceTimer = new System.Threading.Timer(OnPersistenceTimerTick, null, PersistenceInterval, PersistenceInterval);
+        PluginLogger.Info($"已启用定时持久化任务，间隔={PersistenceInterval.TotalSeconds} 秒。");
     }
 
     protected override void Dispose(bool disposing)
     {
         if (disposing)
         {
+            // Tear down the timer FIRST so no further callbacks are scheduled
+            // before the shutdown PersistAllSessions / SaveAll calls below. The
+            // parameterless Timer.Dispose() does not wait for an in-flight
+            // callback, but Flush/PersistAllSessions/SaveAll all serialize via
+            // their service-internal locks, so any race between a final tick
+            // and the shutdown writes is contention, not data corruption.
+            _persistenceTimer?.Dispose();
+            _persistenceTimer = null;
+
             _onlineTimeService?.PersistAllSessions();
-            _playerExplorationTracker?.SaveAll();
+            _playerExplorationTracker?.SaveAll("关机保存");
             Commands.ChatCommands.RemoveAll(c => c.CommandDelegate == NbCommand);
             GetDataHandlers.PlayerInfo.UnRegister(OnPlayerInfo);
             GetDataHandlers.PlayerUpdate.UnRegister(OnPlayerUpdate);
@@ -143,6 +157,19 @@ public sealed class NextBotAdapterPlugin(Main game) : TerrariaPlugin(game)
         }
 
         base.Dispose(disposing);
+    }
+
+    private void OnPersistenceTimerTick(object? state)
+    {
+        try
+        {
+            _onlineTimeService?.Flush();
+            _playerExplorationTracker?.SaveAll("自动保存");
+        }
+        catch (Exception ex)
+        {
+            PluginLogger.Warn($"定时持久化任务异常，原因：{ex.Message}");
+        }
     }
 
     private void NbCommand(CommandArgs args)

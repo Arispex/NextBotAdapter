@@ -11,4 +11,6 @@ public interface IOnlineTimeService
     IReadOnlyList<(string Username, long OnlineSeconds)> GetAllRecords();
 
     void PersistAllSessions();
+
+    void Flush();
 }

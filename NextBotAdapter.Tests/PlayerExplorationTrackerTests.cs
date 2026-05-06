@@ -836,6 +836,181 @@ public sealed class PlayerExplorationTrackerTests
     }
 
     [Fact]
+    public void Save_ShouldSkipUnchangedAccount_AfterFirstSave()
+    {
+        // Dirty tracking: a Save with no intervening MarkArea/MarkAtPosition
+        // since the previous Save must short-circuit and not hit storage.
+        const int width = 400;
+        const int height = 300;
+        var storage = new InMemoryStorage();
+        var tracker = new PlayerExplorationTracker(storage, () => (width, height));
+
+        tracker.MarkArea("alice", 100, 100);
+        tracker.Save("alice");
+        Assert.Equal(1, storage.SaveCallCount);
+
+        // No new stamps — second Save must short-circuit (account is no longer dirty).
+        tracker.Save("alice");
+        Assert.Equal(1, storage.SaveCallCount);
+    }
+
+    [Fact]
+    public void SaveAll_ShouldOnlyPersistDirtyAccounts()
+    {
+        // Dirty tracking: SaveAll must skip clean accounts even when they are
+        // present in the in-memory dictionary. This is the core IO-saving win.
+        const int width = 400;
+        const int height = 300;
+        var storage = new PartialFailureStorage();
+        var tracker = new PlayerExplorationTracker(storage, () => (width, height));
+
+        // Stamp three accounts, then SaveAll commits and clears all dirty.
+        tracker.MarkArea("alice", 100, 100);
+        tracker.MarkArea("bob", 150, 150);
+        tracker.MarkArea("carol", 200, 200);
+        tracker.SaveAll();
+        Assert.Equal(3, storage.SaveCallCount);
+
+        // Re-stamp only one account and call SaveAll again. Only the dirty
+        // account should be saved.
+        storage.SaveCalls.Clear();
+        tracker.MarkArea("bob", 160, 160);
+        tracker.SaveAll();
+
+        Assert.Equal(4, storage.SaveCallCount);
+        Assert.Single(storage.SaveCalls);
+        Assert.Equal("bob", storage.SaveCalls[0]);
+    }
+
+    [Fact]
+    public void SaveAll_ShouldRetainDirtyOnFailure_AndRetrySuccessfullyNextTime()
+    {
+        // Dirty tracking: when storage.Save returns false, the account stays
+        // dirty so the next flush retries it. After fixing the failure, the
+        // retry must succeed without re-stamping.
+        const int width = 400;
+        const int height = 300;
+        var storage = new PartialFailureStorage();
+        storage.FailingAccounts.Add("bob");
+        var tracker = new PlayerExplorationTracker(storage, () => (width, height));
+
+        tracker.MarkArea("alice", 100, 100);
+        tracker.MarkArea("bob", 200, 200);
+        tracker.SaveAll();
+
+        Assert.Equal(2, storage.SaveCallCount);
+
+        // bob's save failed → stays dirty. alice succeeded → clean.
+        storage.FailingAccounts.Clear();
+        storage.SaveCalls.Clear();
+        tracker.SaveAll();
+
+        // Only bob is retried. alice is not dirty.
+        Assert.Equal(3, storage.SaveCallCount);
+        Assert.Single(storage.SaveCalls);
+        Assert.Equal("bob", storage.SaveCalls[0]);
+
+        // bob is now clean — a third SaveAll is a no-op.
+        storage.SaveCalls.Clear();
+        tracker.SaveAll();
+        Assert.Equal(3, storage.SaveCallCount);
+    }
+
+    [Fact]
+    public void Save_ShouldRetainDirtyOnSingleAccountFailure_AndRetryNextCall()
+    {
+        // Single-account Save: if storage.Save returns false, the account must
+        // stay dirty so the next Save (or SaveAll) retries it.
+        const int width = 400;
+        const int height = 300;
+        var storage = new PartialFailureStorage();
+        storage.FailingAccounts.Add("alice");
+        var tracker = new PlayerExplorationTracker(storage, () => (width, height));
+
+        tracker.MarkArea("alice", 100, 100);
+        tracker.Save("alice");
+        Assert.Equal(1, storage.SaveCallCount);
+
+        // First Save failed → alice still dirty.
+        storage.FailingAccounts.Clear();
+        tracker.Save("alice");
+        Assert.Equal(2, storage.SaveCallCount);
+
+        // Second Save succeeded → alice clean.
+        tracker.Save("alice");
+        Assert.Equal(2, storage.SaveCallCount);
+    }
+
+    [Fact]
+    public void LazyLoad_ShouldNotMarkAccountDirty()
+    {
+        // Lazy-loaded bitmaps mirror disk and must NOT be considered dirty.
+        // A subsequent Save without any stamp must short-circuit.
+        const int width = 400;
+        const int height = 300;
+        var storage = new InMemoryStorage();
+
+        // Pre-seed via a separate tracker so storage holds a real bitmap.
+        var seeder = new PlayerExplorationTracker(storage, () => (width, height));
+        seeder.MarkArea("alice", 100, 100);
+        seeder.Save("alice");
+        var seederSaves = storage.SaveCallCount;
+
+        var tracker = new PlayerExplorationTracker(storage, () => (width, height));
+
+        // Lazy-load via GetBitmap.
+        Assert.NotNull(tracker.GetBitmap("alice"));
+
+        // Save must short-circuit because lazy-load did not mark dirty.
+        tracker.Save("alice");
+        Assert.Equal(seederSaves, storage.SaveCallCount);
+    }
+
+    [Fact]
+    public void Load_ShouldNotMarkAccountDirty()
+    {
+        // Load() pulls from disk and must NOT mark dirty. A subsequent Save
+        // without any stamp must short-circuit.
+        const int width = 400;
+        const int height = 300;
+        var storage = new InMemoryStorage();
+
+        var seeder = new PlayerExplorationTracker(storage, () => (width, height));
+        seeder.MarkArea("alice", 100, 100);
+        seeder.Save("alice");
+        var seederSaves = storage.SaveCallCount;
+
+        var tracker = new PlayerExplorationTracker(storage, () => (width, height));
+        tracker.Load("alice");
+
+        // No stamp happened — Save must short-circuit.
+        tracker.Save("alice");
+        Assert.Equal(seederSaves, storage.SaveCallCount);
+    }
+
+    [Fact]
+    public void MarkAtPosition_ShouldMarkAccountDirty()
+    {
+        // MarkAtPosition is the OnPlayerUpdate stamp path; it must also drive
+        // the dirty mark so periodic flush actually persists active session
+        // data.
+        const int width = 2400;
+        const int height = 600;
+        var storage = new PartialFailureStorage();
+        var tracker = new PlayerExplorationTracker(storage, () => (width, height));
+
+        tracker.MarkAtPosition("alice", 100, 100);
+        tracker.SaveAll();
+
+        Assert.Equal(1, storage.SaveCallCount);
+        Assert.Equal("alice", storage.SaveCalls[0]);
+
+        // Without further stamps, SaveAll should be a no-op.
+        tracker.SaveAll();
+        Assert.Equal(1, storage.SaveCallCount);
+    }
+
+    [Fact]
     public void SaveAll_ShouldNotInterrupt_WhenSomeSaveFails()
     {
         // Fix D: a single account's Save returning false must not stop SaveAll

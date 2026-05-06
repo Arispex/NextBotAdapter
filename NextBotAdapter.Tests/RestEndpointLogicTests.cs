@@ -373,6 +373,7 @@ public sealed class RestEndpointLogicTests
         public void StartSession(string username) { }
         public void EndSession(string username) { }
         public void PersistAllSessions() { }
+        public void Flush() { }
         public long GetTotalSeconds(string username) => _records.TryGetValue(username, out var s) ? s : 0;
         public IReadOnlyList<(string Username, long OnlineSeconds)> GetAllRecords()
             => _records.Select(kv => (kv.Key, kv.Value)).OrderByDescending(x => x.Value).ToList();
@@ -393,7 +394,7 @@ public sealed class RestEndpointLogicTests
         }
         public void Load(string accountName) { }
         public void Save(string accountName) { }
-        public void SaveAll() { }
+        public void SaveAll(string contextLabel = "保存") { }
     }
 
     private sealed class FakeMapExplorationTracker(IReadOnlyDictionary<string, double> percents) : IPlayerExplorationTracker
@@ -406,7 +407,7 @@ public sealed class RestEndpointLogicTests
             => percents.TryGetValue(accountName, out var p) ? p : 0.0;
         public void Load(string accountName) { }
         public void Save(string accountName) { }
-        public void SaveAll() { }
+        public void SaveAll(string contextLabel = "保存") { }
     }
 
     private sealed class FakeLeaderboardGateway(

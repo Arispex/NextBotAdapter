@@ -148,6 +148,31 @@ public sealed class OnlineTimeService : IOnlineTimeService
 
     }
 
+    /// <summary>
+    /// Periodic flush path used by the background persistence timer. Accumulates
+    /// elapsed seconds for every active session into <see cref="_records"/> and
+    /// resets each session's start to UtcNow so the next flush / EndSession only
+    /// counts the new delta. Active sessions are intentionally NOT cleared —
+    /// players are still online and will be ended via <see cref="EndSession"/>
+    /// or <see cref="PersistAllSessions"/>.
+    /// </summary>
+    public void Flush()
+    {
+        lock (_lock)
+        {
+            var now = DateTime.UtcNow;
+            foreach (var name in _activeSessions.Keys.ToList())
+            {
+                var start = _activeSessions[name];
+                var elapsed = (long)(now - start).TotalSeconds;
+                _records[name] = (_records.TryGetValue(name, out var existing) ? existing : 0) + elapsed;
+                _activeSessions[name] = now;
+            }
+
+            PersistLocked();
+        }
+    }
+
     private void PersistLocked()
     {
         SaveStore(new OnlineTimeStore(new Dictionary<string, long>(_records)));
