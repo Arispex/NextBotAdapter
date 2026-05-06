@@ -1260,3 +1260,36 @@ GET /users/{user}/stats 响应新增 mapExplorationPercent（double, 0–100, 2 
 ### Next Steps
 
 - None - task complete
+
+
+## Session 29: feat: 地图探索率排行榜 REST API
+
+**Date**: 2026-05-06
+**Task**: feat: 地图探索率排行榜 REST API
+**Branch**: `main`
+
+### Summary
+
+新增 GET /nextbot/leaderboards/map-exploration 端点，返回所有 TShock 账号按地图探索率降序排列。复用 IPlayerExplorationTracker.GetExplorationPercent，包含 0% 账号；tracker null 退化为空 entries（与 OnlineTime 风格一致）。route + permission + service + entry record + registrar 注册全套与三个现有 leaderboard 对齐。新增 5 条单元测试 + 2 条路由 / 注册声明断言，282/282 通过。docs/REST_API.md 同步。
+
+### Main Changes
+
+(Add details)
+
+### Git Commits
+
+| Hash | Message |
+|------|---------|
+| `1d689b8` | (see git log) |
+
+### Testing
+
+- [OK] (Add test results)
+
+### Status
+
+[OK] **Completed**
+
+### Next Steps
+
+- None - task complete

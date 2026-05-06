@@ -8,7 +8,7 @@
 
 <!-- @@@auto:current-status -->
 - **Active File**: `journal-1.md`
-- **Total Sessions**: 28
+- **Total Sessions**: 29
 - **Last Active**: 2026-05-06
 <!-- @@@/auto:current-status -->
 
@@ -19,7 +19,7 @@
 <!-- @@@auto:active-documents -->
 | File | Lines | Status |
 |------|-------|--------|
-| `journal-1.md` | ~1262 | Active |
+| `journal-1.md` | ~1295 | Active |
 <!-- @@@/auto:active-documents -->
 
 ---
@@ -29,6 +29,7 @@
 <!-- @@@auto:session-history -->
 | # | Date | Title | Commits | Branch |
 |---|------|-------|---------|--------|
+| 29 | 2026-05-06 | feat: 地图探索率排行榜 REST API | `1d689b8` | `main` |
 | 28 | 2026-05-06 | feat: 在 user stats 增加地图探索度百分比 | `279bea0` | `main` |
 | 27 | 2026-05-06 | refactor: 把 Explored 目录移动到 Data 子目录下 | `ab08974` | `main` |
 | 26 | 2026-05-06 | fix: 玩家视角地图在玩家本会话未登录前 REST 查询全黑 | `2450aa6` | `main` |
