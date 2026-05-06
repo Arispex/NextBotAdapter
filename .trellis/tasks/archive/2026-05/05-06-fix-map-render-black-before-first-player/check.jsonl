@@ -1,0 +1,2 @@
+{"file": ".trellis/spec/backend/quality-guidelines.md", "reason": "Code Review Checklist（layer placement / 测试覆盖 / 显式可读 / 不动公开 REST 字段名）"}
+{"file": ".trellis/spec/backend/database-guidelines.md", "reason": "确认 lazy-load 行为对齐持久化层契约：fail-safe（文件不存在 / 损坏 → null）、不在 IO 期间持锁阻塞 stamp"}

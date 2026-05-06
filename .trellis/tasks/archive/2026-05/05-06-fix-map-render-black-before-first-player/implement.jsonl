@@ -1,0 +1,4 @@
+{"file": ".trellis/spec/backend/quality-guidelines.md", "reason": "Required Patterns（显式可读 + Try* 服务方法 + 测试覆盖行为变更）、Forbidden Patterns（不发明 DI / middleware 抽象、不在 Plugin/Rest 写业务逻辑）、Testing Requirements（行为变更必须有自动化测试）"}
+{"file": ".trellis/spec/backend/database-guidelines.md", "reason": "TShock 数据访问与文件持久化模式：本任务在 `PlayerExplorationTracker.GetBitmap` cache miss 时新增按需读盘（`IExplorationStorage.Load`），需要遵循现有持久化层的 fail-safe 与并发约束"}
+{"file": ".trellis/spec/backend/error-handling.md", "reason": "Exception swallowing / fail-safe Load 行为约定：lazy-load 失败应当退化为 null 而不是抛异常（与 FileExplorationStorage.Load 现有契约一致）"}
+{"file": ".trellis/spec/backend/logging-guidelines.md", "reason": "lazy-load 是否需要打 INFO 日志？沿用 PlayerExplorationTracker.Load 现有 INFO 日志风格（'加载玩家探索数据成功，accountName=...'）"}
