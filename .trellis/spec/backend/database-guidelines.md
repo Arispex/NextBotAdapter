@@ -241,6 +241,83 @@ Reference code: `NextBotAdapter/Services/Exploration/IExplorationStorage.cs`, `N
 
 ---
 
+## Periodic flush + dirty tracking for crash durability
+
+When a plugin service holds in-memory state that accumulates over the server lifetime (player progress, statistics, leaderboard caches, session counters, etc.), relying on "persist on player logout + persist on plugin Dispose" is not enough. Crash, kernel panic, power loss, and `kill -9` skip Dispose entirely; the whole open-server window's data is lost.
+
+### Do: periodic flush timer in addition to shutdown persistence
+
+Start a `System.Threading.Timer` in plugin `Initialize` that runs a `Flush()` + `SaveAll()` on a configurable interval (default 5 minutes). Keep the existing logout / Dispose persistence as a final tail-flush. The two paths are orthogonal: at worst you lose one interval's worth of data on hard crash.
+
+```csharp
+// In plugin Initialize
+_persistenceTimer = new Timer(
+    _ => { try { _service.Flush(); _service.SaveAll(); } catch (Exception e) { PluginLogger.Error(...); } },
+    null,
+    interval,
+    interval);
+```
+
+### Do: dirty set so periodic flush only writes changed entries
+
+A naive periodic flush rewrites the entire in-memory cache every tick; in a 1000-player world with multi-MB blobs per player this is gigabytes of needless IO every interval, and 99% of entries did not change.
+
+Track changed keys with a `HashSet<string> _dirty`. Mark on every mutation path (stamp / set / increment / etc.). On flush:
+
+1. Snapshot the dirty subset under `_lock`, then clear `_dirty`.
+2. Persist the snapshot outside the hot path.
+3. Re-mark any keys whose persistence failed so the next tick retries them.
+4. Do **not** mark loaded-from-disk entries dirty — they already match disk.
+
+```csharp
+List<(string Name, T Value)> snapshot;
+lock (_lock)
+{
+    snapshot = _dirty
+        .Where(_cache.ContainsKey)
+        .Select(name => (name, _cache[name]))
+        .ToList();
+    _dirty.Clear();
+}
+
+foreach (var (name, value) in snapshot)
+{
+    if (!_storage.Save(name, value))
+    {
+        lock (_lock) { _dirty.Add(name); }  // retry next tick
+    }
+}
+```
+
+### Do: a `Flush()` method that drains active sessions without ending them
+
+Periodic flush must not reuse the shutdown path that *closes* active sessions / *clears* active state — that would corrupt still-online players' counters.
+
+Add a separate `Flush()` that:
+
+- pushes the accumulated delta of each active session into the persisted records, then
+- resets each session's `start` to `UtcNow` (so the next `EndSession` does not double-count), and
+- **does not** remove entries from the active session map.
+
+Reserve the existing `PersistAllSessions` / "end every session" logic for actual shutdown.
+
+### Do: stop the timer before running shutdown persistence in Dispose
+
+In plugin `Dispose`, the **first** step is `_persistenceTimer?.Dispose()` so no new tick is scheduled. The service-level `_lock` already serializes any in-flight callback with the subsequent shutdown persistence, so there is no concurrency window between the last tick and the final `PersistAllSessions` / `SaveAll`.
+
+```csharp
+public void Dispose()
+{
+    _persistenceTimer?.Dispose();   // stop scheduling first
+    _service.PersistAllSessions();  // shutdown tail-flush
+    _service.SaveAll();
+}
+```
+
+Reference: applies to any in-memory accumulator backed by file persistence in this project (see `PlayerExplorationTracker`, `OnlineTimeService`, and analogous services).
+
+---
+
 ## Common Mistakes
 
 - Do not query TShock APIs directly from endpoint classes.
@@ -254,3 +331,7 @@ Reference code: `NextBotAdapter/Services/Exploration/IExplorationStorage.cs`, `N
 - Do not let `Load` (or any rehydration path) unconditionally overwrite an existing in-memory cache entry; check `ContainsKey` first so newer in-memory data is preserved.
 - Do not return a single `null` from a storage `Load` method to mean both "file missing" and "IO error / corrupt / invalid input"; callers cannot tell whether negative-caching is safe and will permanently hide transient errors. Return a result type that distinguishes confirmed-missing from other failures.
 - Do not declare a storage `Save` (or other persistence write) as `void` and only log on failure when callers need to aggregate success/failure counts. Return `bool` (or a result type) so batch callers like `SaveAll` can emit a completion-rate summary.
+- Do not rely solely on logout / Dispose to persist accumulated in-memory state; crash, OOM, power loss, and `kill -9` skip both. Add a periodic flush timer (default 5 minutes) alongside the shutdown path.
+- Do not have the periodic flush rewrite the entire in-memory cache every tick. Track a dirty set on mutation paths, snapshot + clear under lock, and re-mark on per-item persist failure so the next tick retries.
+- Do not reuse the shutdown "end every session" path for periodic flush; it would close still-active sessions. Add a separate `Flush()` that pushes the delta into records and resets each active session's `start` to now, without removing the session.
+- Do not let the periodic timer keep firing during shutdown. In `Dispose`, dispose the timer first, then run the final `PersistAllSessions` / `SaveAll` under the same lock that serializes any in-flight callback.
