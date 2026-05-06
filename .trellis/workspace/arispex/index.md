@@ -8,7 +8,7 @@
 
 <!-- @@@auto:current-status -->
 - **Active File**: `journal-1.md`
-- **Total Sessions**: 26
+- **Total Sessions**: 27
 - **Last Active**: 2026-05-06
 <!-- @@@/auto:current-status -->
 
@@ -19,7 +19,7 @@
 <!-- @@@auto:active-documents -->
 | File | Lines | Status |
 |------|-------|--------|
-| `journal-1.md` | ~1196 | Active |
+| `journal-1.md` | ~1229 | Active |
 <!-- @@@/auto:active-documents -->
 
 ---
@@ -29,6 +29,7 @@
 <!-- @@@auto:session-history -->
 | # | Date | Title | Commits | Branch |
 |---|------|-------|---------|--------|
+| 27 | 2026-05-06 | refactor: 把 Explored 目录移动到 Data 子目录下 | `ab08974` | `main` |
 | 26 | 2026-05-06 | fix: 玩家视角地图在玩家本会话未登录前 REST 查询全黑 | `2450aa6` | `main` |
 | 25 | 2026-05-06 | fix: 玩家探索数据按账号名为 key 而非客户端 UUID | `849b204`, `486c3b2` | `main` |
 | 24 | 2026-05-06 | Fix concurrent map render race via shared MapRenderMutex | `1843a32` | `main` |

@@ -1194,3 +1194,36 @@ Diagnosed cross-endpoint race: /world/map-image, /users/{user}/map-image, /world
 ### Next Steps
 
 - None - task complete
+
+
+## Session 27: refactor: 把 Explored 目录移动到 Data 子目录下
+
+**Date**: 2026-05-06
+**Task**: refactor: 把 Explored 目录移动到 Data 子目录下
+**Branch**: `main`
+
+### Summary
+
+把玩家探索 bitmap 持久化目录从 tshock/NextBotAdapter/Explored/ 移到 tshock/NextBotAdapter/Data/Explored/，与 Whitelist/Blacklist 对齐。1 行 C# 改动 + 1 行 docs 同步（顺便补上一任务遗漏的 accountUuid → accountName）。267/267 测试通过。
+
+### Main Changes
+
+(Add details)
+
+### Git Commits
+
+| Hash | Message |
+|------|---------|
+| `ab08974` | (see git log) |
+
+### Testing
+
+- [OK] (Add test results)
+
+### Status
+
+[OK] **Completed**
+
+### Next Steps
+
+- None - task complete
