@@ -135,7 +135,7 @@ GET /nextbot/users/Arispex/inventory?token=<token>
 - 不会捕获仅"远远看到"但未靠近的区域。
 - 插件启用前已经探索过的内容无法回溯，新接入玩家的视角图初始为全黑。
 
-数据按 (世界 ID, 账号 UUID) 持久化于 `tshock/NextBotAdapter/Explored/{worldId}/{accountUuid}.bin`，玩家上线 / 下线 / 插件卸载时自动加载与保存。
+数据按 (世界 ID, 账号名) 持久化于 `tshock/NextBotAdapter/Data/Explored/{worldId}/{accountName}.bin`，玩家上线 / 下线 / 插件卸载时自动加载与保存。
 
 **响应 200**
 
