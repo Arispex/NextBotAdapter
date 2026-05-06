@@ -52,6 +52,22 @@ Examples:
 - `NextBotAdapter/Services/WhitelistFileService.cs`
 - `docs/CONFIGURATION.md`
 
+### TShock account identity for persistence keys
+
+When you need a stable per-account key (file name, dictionary key, bitmap owner, progress record id, etc.), use **`Account.Name`**, not `Account.UUID`.
+
+- Do: `args.Player.Account.Name`
+- Do not: `args.Player.Account.UUID`
+
+Why: TShock's `UserAccount.UUID` is **the last UUID the client sent at login**, i.e. a device fingerprint that gets overwritten on every successful login (both by TShock's built-in UUID auto-login and by this plugin's `PerformAutoLogin`, which calls `TShock.UserAccounts.SetUserAccountUUID(account, player.UUID)`). Using it as a persistence key causes:
+
+- same device, multiple accounts -> records cross-contaminate
+- same account, new device -> previous record looks lost
+
+This matches existing usage in the codebase, e.g. `_onlineTimeService.StartSession(args.Player.Account.Name)`. If a future feature needs to survive account renames, switch to `Account.ID` (the database primary key); do not fall back to `Account.UUID`.
+
+Reference task: `05-06-fix-player-exploration-key-use-account-name`.
+
 ---
 
 ## Migrations
@@ -108,3 +124,4 @@ Even though routes and permissions are not database objects, they are part of th
 - Do not overwrite malformed JSON files during fallback recovery.
 - Do not change persisted file names or JSON field names without updating `docs/CONFIGURATION.md` and related tests.
 - Do not assume this repository has a migration toolchain when it currently does not.
+- Do not use `Account.UUID` as a persistence key; it is a per-login device fingerprint, not account identity. Use `Account.Name` (or `Account.ID` if rename-stability is required).
