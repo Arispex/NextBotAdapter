@@ -1,0 +1,3 @@
+{"file": ".trellis/spec/backend/quality-guidelines.md", "reason": "Required Patterns（layer placement——'自动保存'语义属于 plugin 层不属于 tracker 层；接口签名干净；不在低层堆聚合日志）；Testing Requirements（行为变更必须有自动化测试，本次纯日志位置移动 + 签名还原不需要新增测试）"}
+{"file": ".trellis/spec/backend/logging-guidelines.md", "reason": "聚合层日志放在 plugin / 服务编排层；底层 service 聚合日志会随对象增多而过时；失败诊断依赖底层 per-account Error 日志（FileExplorationStorage.Save 已有）"}
+{"file": ".trellis/spec/backend/database-guidelines.md", "reason": "in-memory cache + persistent store consistency 不被破坏；dirty 短路 / 失败重打脏 / 并发模型（IO 不在 _lock 内）保持"}

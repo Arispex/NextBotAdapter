@@ -1,0 +1,2 @@
+{"file": ".trellis/spec/backend/quality-guidelines.md", "reason": "Code Review Checklist：layer placement（聚合日志在 plugin 层）+ 不动公开 REST 字段名 + 测试覆盖"}
+{"file": ".trellis/spec/backend/logging-guidelines.md", "reason": "确认日志位置 / 文案 / 级别（INFO 自动保存完成；Flush / SaveAll 不打）符合分层日志约定"}
