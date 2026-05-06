@@ -8,7 +8,7 @@
 
 <!-- @@@auto:current-status -->
 - **Active File**: `journal-1.md`
-- **Total Sessions**: 32
+- **Total Sessions**: 33
 - **Last Active**: 2026-05-06
 <!-- @@@/auto:current-status -->
 
@@ -19,7 +19,7 @@
 <!-- @@@auto:active-documents -->
 | File | Lines | Status |
 |------|-------|--------|
-| `journal-1.md` | ~1397 | Active |
+| `journal-1.md` | ~1430 | Active |
 <!-- @@@/auto:active-documents -->
 
 ---
@@ -29,6 +29,7 @@
 <!-- @@@auto:session-history -->
 | # | Date | Title | Commits | Branch |
 |---|------|-------|---------|--------|
+| 33 | 2026-05-06 | refactor: 自动保存日志移到 plugin 层，去掉每子系统计数 | `c50ebf2` | `main` |
 | 32 | 2026-05-06 | feat: 5 分钟定时刷盘 + bitmap 脏标记，避免断电丢失会话数据 | `376c0dc`, `a03f2c2` | `main` |
 | 31 | 2026-05-06 | fix: tracker IO 异常永久负缓存 + 钩子顺序竞态 + SaveAll 可观测性（audit round 2） | `139154b`, `930f74b` | `main` |
 | 30 | 2026-05-06 | fix: 玩家探索 tracker race 与缓存遗漏（audit followups） | `bca23b9`, `df3f14c` | `main` |

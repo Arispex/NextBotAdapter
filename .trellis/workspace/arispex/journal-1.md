@@ -1395,3 +1395,36 @@ GET /users/{user}/stats 响应新增 mapExplorationPercent（double, 0–100, 2 
 ### Next Steps
 
 - None - task complete
+
+
+## Session 33: refactor: 自动保存日志移到 plugin 层，去掉每子系统计数
+
+**Date**: 2026-05-06
+**Task**: refactor: 自动保存日志移到 plugin 层，去掉每子系统计数
+**Branch**: `main`
+
+### Summary
+
+用户反馈 'SaveAll 完成，成功=N' 日志只反映 bitmap 子系统的 dirty 数，与 OnlineTimeService.Flush 持久化的 fact 脱节（AFK 玩家会显示 '成功=0' 误导），且未来再加自动保存对象语义越窄。把'自动保存完成'统一日志移到 plugin 层定时回调（Flush + SaveAll 之后一条 INFO '自动保存完成。'），SaveAll 接口签名还原 void SaveAll()，内部不再 emit 聚合日志，失败诊断依赖 FileExplorationStorage.Save 的 per-account Error 日志。Dispose 关机路径不加日志。304/304 通过。
+
+### Main Changes
+
+(Add details)
+
+### Git Commits
+
+| Hash | Message |
+|------|---------|
+| `c50ebf2` | (see git log) |
+
+### Testing
+
+- [OK] (Add test results)
+
+### Status
+
+[OK] **Completed**
+
+### Next Steps
+
+- None - task complete
