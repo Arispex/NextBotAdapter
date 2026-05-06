@@ -177,7 +177,7 @@ public sealed class PlayerExplorationTracker : IPlayerExplorationTracker
             return null;
         }
 
-        var loaded = _storage.Load(accountName, width * height);
+        var result = _storage.Load(accountName, width * height);
 
         lock (_lock)
         {
@@ -188,14 +188,20 @@ public sealed class PlayerExplorationTracker : IPlayerExplorationTracker
             {
                 return new BitArray(existing);
             }
-            if (loaded is null)
+            if (result.Bitmap is null)
             {
-                _missingFiles.Add(accountName);
+                // Only register a confirmed missing-file as a negative cache hit.
+                // Transient IO failures (e.g. NFS hiccup) and corrupt/partial files
+                // must NOT poison the cache — next call will retry the IO.
+                if (result.FileMissing)
+                {
+                    _missingFiles.Add(accountName);
+                }
                 return null;
             }
-            _bitmaps[accountName] = loaded;
+            _bitmaps[accountName] = result.Bitmap;
             _missingFiles.Remove(accountName);
-            return new BitArray(loaded);
+            return new BitArray(result.Bitmap);
         }
     }
 
@@ -233,12 +239,9 @@ public sealed class PlayerExplorationTracker : IPlayerExplorationTracker
         }
 
         var expectedBitCount = width * height;
-        var bitmap = _storage.Load(accountName, expectedBitCount);
-        if (bitmap is null)
-        {
-            return;
-        }
+        var result = _storage.Load(accountName, expectedBitCount);
 
+        bool inserted = false;
         lock (_lock)
         {
             // Preserve any in-memory bitmap already populated via lazy-load or stamp
@@ -247,11 +250,29 @@ public sealed class PlayerExplorationTracker : IPlayerExplorationTracker
             {
                 return;
             }
-            _bitmaps[accountName] = bitmap;
+
+            if (result.Bitmap is null)
+            {
+                // Mirror GetBitmap's negative-cache policy: only confirmed-missing
+                // files seed _missingFiles. Transient IO errors / corrupt files are
+                // not negative-cached so the next call retries IO.
+                if (result.FileMissing)
+                {
+                    _missingFiles.Add(accountName);
+                }
+                return;
+            }
+
+            _bitmaps[accountName] = result.Bitmap;
             _missingFiles.Remove(accountName);
+            inserted = true;
         }
 
-        PluginLogger.Info($"加载玩家探索数据成功，accountName={accountName}");
+        // Log outside _lock — only when a bitmap was actually pulled in this call.
+        if (inserted)
+        {
+            PluginLogger.Info($"加载玩家探索数据成功，accountName={accountName}");
+        }
     }
 
     public void Save(string accountName)
@@ -286,10 +307,29 @@ public sealed class PlayerExplorationTracker : IPlayerExplorationTracker
             }
         }
 
+        var success = 0;
+        var failure = 0;
         foreach (var (name, bitmap) in snapshot)
         {
-            _storage.Save(name, bitmap);
+            if (_storage.Save(name, bitmap))
+            {
+                success++;
+            }
+            else
+            {
+                failure++;
+            }
         }
+
+        if (failure > 0)
+        {
+            PluginLogger.Warn($"SaveAll 完成，成功={success}，失败={failure}");
+        }
+        else if (success > 0)
+        {
+            PluginLogger.Info($"SaveAll 完成，成功={success}");
+        }
+        // success == 0 && failure == 0：dict 空，不打日志（启动后未持久化任何 bitmap）
     }
 
     private static void MarkBox(BitArray bitmap, int width, int height, int tileX, int tileY)

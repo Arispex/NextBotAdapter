@@ -316,31 +316,100 @@ public sealed class PlayerExplorationTrackerTests
         private readonly Dictionary<string, byte[]> _store = new(StringComparer.Ordinal);
 
         public int LoadCallCount { get; private set; }
+        public int SaveCallCount { get; private set; }
 
-        public BitArray? Load(string accountName, int expectedBitCount)
+        public ExplorationLoadResult Load(string accountName, int expectedBitCount)
         {
             LoadCallCount++;
 
             if (!_store.TryGetValue(accountName, out var bytes))
             {
-                return null;
+                // Match FileExplorationStorage semantics: confirmed missing.
+                return new ExplorationLoadResult(null, true);
             }
 
             var expectedByteCount = (expectedBitCount + 7) / 8;
             if (bytes.Length != expectedByteCount)
             {
-                return null;
+                // Corrupt / partial: file exists but shape wrong — not negative-cacheable.
+                return new ExplorationLoadResult(null, false);
             }
 
-            return new BitArray(bytes) { Length = expectedBitCount };
+            var bitmap = new BitArray(bytes) { Length = expectedBitCount };
+            return new ExplorationLoadResult(bitmap, false);
         }
 
-        public void Save(string accountName, BitArray bitmap)
+        public bool Save(string accountName, BitArray bitmap)
         {
+            SaveCallCount++;
             var byteCount = (bitmap.Length + 7) / 8;
             var bytes = new byte[byteCount];
             bitmap.CopyTo(bytes, 0);
             _store[accountName] = bytes;
+            return true;
+        }
+    }
+
+    /// <summary>
+    /// Storage fake that simulates transient IO errors (e.g. NFS hiccup) by
+    /// returning <see cref="ExplorationLoadResult"/> with <c>FileMissing=false</c>.
+    /// Used to verify the tracker does NOT poison the negative cache on transient
+    /// IO failures.
+    /// </summary>
+    private sealed class IoFailingStorage : IExplorationStorage
+    {
+        public int LoadCallCount { get; private set; }
+        public int SaveCallCount { get; private set; }
+
+        // When false, Load reports a transient IO failure: (null, FileMissing=false).
+        // When true, Load returns a stamped bitmap successfully.
+        public bool ReturnSuccess { get; set; }
+
+        public ExplorationLoadResult Load(string accountName, int expectedBitCount)
+        {
+            LoadCallCount++;
+            if (!ReturnSuccess)
+            {
+                // Transient IO error: must NOT be negative-cached by caller.
+                return new ExplorationLoadResult(null, false);
+            }
+
+            var bitmap = new BitArray(expectedBitCount);
+            // Stamp a sentinel bit so test can verify the bitmap was actually returned.
+            if (expectedBitCount > 0) bitmap.Set(0, true);
+            return new ExplorationLoadResult(bitmap, false);
+        }
+
+        public bool Save(string accountName, BitArray bitmap)
+        {
+            SaveCallCount++;
+            return true;
+        }
+    }
+
+    /// <summary>
+    /// Storage fake that lets the test selectively configure which accounts'
+    /// <see cref="Save"/> should fail. Used to verify SaveAll continues across
+    /// per-account failures and reports both counts.
+    /// </summary>
+    private sealed class PartialFailureStorage : IExplorationStorage
+    {
+        public int LoadCallCount { get; private set; }
+        public int SaveCallCount { get; private set; }
+        public HashSet<string> FailingAccounts { get; } = new(StringComparer.Ordinal);
+        public List<string> SaveCalls { get; } = new();
+
+        public ExplorationLoadResult Load(string accountName, int expectedBitCount)
+        {
+            LoadCallCount++;
+            return new ExplorationLoadResult(null, true);
+        }
+
+        public bool Save(string accountName, BitArray bitmap)
+        {
+            SaveCallCount++;
+            SaveCalls.Add(accountName);
+            return !FailingAccounts.Contains(accountName);
         }
     }
 
@@ -671,5 +740,124 @@ public sealed class PlayerExplorationTrackerTests
         var percent = tracker.GetExplorationPercent("tail");
 
         Assert.Equal(100.0, percent);
+    }
+
+    [Fact]
+    public void GetBitmap_ShouldNotCacheMissOnIoFailure_AndRetryOnNextCall()
+    {
+        // Fix C: a transient IO error (NFS hiccup, momentary permission loss) must
+        // not poison the negative cache. Otherwise the affected account is locked
+        // out of exploration data until the process restarts.
+        const int width = 400;
+        const int height = 300;
+        var storage = new IoFailingStorage { ReturnSuccess = false };
+        var tracker = new PlayerExplorationTracker(storage, () => (width, height));
+
+        // First call: storage reports IO failure (null, FileMissing=false).
+        var first = tracker.GetBitmap("alice");
+        Assert.Null(first);
+        Assert.Equal(1, storage.LoadCallCount);
+
+        // Second call MUST retry IO (negative cache was not populated for IO error).
+        var second = tracker.GetBitmap("alice");
+        Assert.Null(second);
+        Assert.Equal(2, storage.LoadCallCount);
+
+        // Recovery: storage starts succeeding. Tracker must pick the bitmap up.
+        storage.ReturnSuccess = true;
+        var third = tracker.GetBitmap("alice");
+        Assert.NotNull(third);
+        Assert.Equal(3, storage.LoadCallCount);
+        // Sentinel bit set by the fake at index 0 confirms the loaded bitmap surfaced.
+        Assert.True(third!.Get(0));
+    }
+
+    [Fact]
+    public void Load_ShouldRecordNegativeCache_WhenStorageReportsFileMissing()
+    {
+        // Fix B: Load(name) must seed the negative cache when storage reports a
+        // confirmed missing file, mirroring GetBitmap's policy. Otherwise a later
+        // GetBitmap for the same account would do a redundant IO probe.
+        const int width = 400;
+        const int height = 300;
+        var storage = new InMemoryStorage();
+        var tracker = new PlayerExplorationTracker(storage, () => (width, height));
+
+        // Load probes storage once and finds nothing (FileMissing=true).
+        tracker.Load("never-seen");
+        Assert.Equal(1, storage.LoadCallCount);
+
+        // GetBitmap must hit the negative cache and skip the storage probe.
+        var bitmap = tracker.GetBitmap("never-seen");
+        Assert.Null(bitmap);
+        Assert.Equal(1, storage.LoadCallCount);
+    }
+
+    [Fact]
+    public void Load_ShouldNotRecordNegativeCache_OnTransientIoFailure()
+    {
+        // Fix B + C consistency: when Load encounters a transient IO failure
+        // (FileMissing=false, Bitmap=null), it must NOT seed the negative cache.
+        // A subsequent GetBitmap should re-probe storage so the lookup can recover
+        // when IO becomes healthy again.
+        const int width = 400;
+        const int height = 300;
+        var storage = new IoFailingStorage { ReturnSuccess = false };
+        var tracker = new PlayerExplorationTracker(storage, () => (width, height));
+
+        tracker.Load("alice");
+        Assert.Equal(1, storage.LoadCallCount);
+
+        // No negative cache seeded → next GetBitmap must retry IO.
+        Assert.Null(tracker.GetBitmap("alice"));
+        Assert.Equal(2, storage.LoadCallCount);
+    }
+
+    [Fact]
+    public void SaveAll_ShouldCallStorageSaveForEveryInMemoryBitmap()
+    {
+        // Fix D: SaveAll iterates every in-memory bitmap and calls storage.Save
+        // for each one without short-circuiting.
+        const int width = 400;
+        const int height = 300;
+        var storage = new PartialFailureStorage();
+        var tracker = new PlayerExplorationTracker(storage, () => (width, height));
+
+        tracker.MarkArea("alice", 100, 100);
+        tracker.MarkArea("bob", 200, 200);
+        tracker.MarkArea("carol", 300, 250);
+
+        tracker.SaveAll();
+
+        Assert.Equal(3, storage.SaveCallCount);
+        Assert.Contains("alice", storage.SaveCalls);
+        Assert.Contains("bob", storage.SaveCalls);
+        Assert.Contains("carol", storage.SaveCalls);
+    }
+
+    [Fact]
+    public void SaveAll_ShouldNotInterrupt_WhenSomeSaveFails()
+    {
+        // Fix D: a single account's Save returning false must not stop SaveAll
+        // from attempting the rest. This protects against losing data for healthy
+        // accounts when one account's path is on a failing disk.
+        const int width = 400;
+        const int height = 300;
+        var storage = new PartialFailureStorage();
+        storage.FailingAccounts.Add("bob");
+        var tracker = new PlayerExplorationTracker(storage, () => (width, height));
+
+        tracker.MarkArea("alice", 100, 100);
+        tracker.MarkArea("bob", 200, 200);
+        tracker.MarkArea("carol", 300, 250);
+
+        var exception = Record.Exception(() => tracker.SaveAll());
+
+        Assert.Null(exception);
+        // Every account was attempted, even though "bob" failed.
+        Assert.Equal(3, storage.SaveCallCount);
+        Assert.Contains("alice", storage.SaveCalls);
+        Assert.Contains("bob", storage.SaveCalls);
+        Assert.Contains("carol", storage.SaveCalls);
     }
 }

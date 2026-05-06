@@ -14,17 +14,18 @@ public sealed class FileExplorationStorage : IExplorationStorage
         _worldIdProvider = worldIdProvider;
     }
 
-    public BitArray? Load(string accountName, int expectedBitCount)
+    public ExplorationLoadResult Load(string accountName, int expectedBitCount)
     {
         if (string.IsNullOrWhiteSpace(accountName) || expectedBitCount <= 0)
         {
-            return null;
+            return new ExplorationLoadResult(null, false);
         }
 
         var filePath = ResolveFilePath(accountName);
         if (!File.Exists(filePath))
         {
-            return null;
+            // Confirmed missing: caller can safely populate the negative cache.
+            return new ExplorationLoadResult(null, true);
         }
 
         try
@@ -34,27 +35,31 @@ public sealed class FileExplorationStorage : IExplorationStorage
             if (bytes.Length != expectedByteCount)
             {
                 PluginLogger.Warn($"加载玩家探索数据失败，原因：文件大小不匹配，accountName={accountName}，expected={expectedByteCount}，actual={bytes.Length}");
-                return null;
+                // Corrupt / partially-written file: do not negative-cache; a future
+                // overwrite may make the file readable again.
+                return new ExplorationLoadResult(null, false);
             }
 
             var bitmap = new BitArray(bytes)
             {
                 Length = expectedBitCount
             };
-            return bitmap;
+            return new ExplorationLoadResult(bitmap, false);
         }
         catch (Exception ex)
         {
             PluginLogger.Warn($"加载玩家探索数据失败，accountName={accountName}，原因：{ex.Message}");
-            return null;
+            // Transient IO error (e.g. NFS hiccup, momentary permission loss): do
+            // not negative-cache; next call will retry the IO.
+            return new ExplorationLoadResult(null, false);
         }
     }
 
-    public void Save(string accountName, BitArray bitmap)
+    public bool Save(string accountName, BitArray bitmap)
     {
         if (string.IsNullOrWhiteSpace(accountName) || bitmap.Length <= 0)
         {
-            return;
+            return false;
         }
 
         var filePath = ResolveFilePath(accountName);
@@ -70,10 +75,12 @@ public sealed class FileExplorationStorage : IExplorationStorage
             var bytes = new byte[byteCount];
             bitmap.CopyTo(bytes, 0);
             File.WriteAllBytes(filePath, bytes);
+            return true;
         }
         catch (Exception ex)
         {
             PluginLogger.Error($"保存玩家探索数据失败，accountName={accountName}，原因：{ex.Message}");
+            return false;
         }
     }
 

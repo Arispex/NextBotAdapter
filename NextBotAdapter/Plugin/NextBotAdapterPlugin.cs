@@ -210,12 +210,18 @@ public sealed class NextBotAdapterPlugin(Main game) : TerrariaPlugin(game)
         var accountName = args.Player?.Account?.Name;
         if (!string.IsNullOrEmpty(accountName))
         {
-            _playerExplorationTracker?.Load(accountName);
-            // Treat each login as a fresh session: drop any stale last-sample so the
-            // first MarkAtPosition after login can't draw an interpolated line from
-            // the previous session's exit position (the OnServerLeave hook can be
+            // Order matters: ForgetLastSample BEFORE Load. Otherwise, an
+            // OnPlayerUpdate that fires while Load is still running on this thread
+            // (Load releases the lock during IO) could write a fresh, legitimate
+            // entry into _lastSamples — and a later ForgetLastSample call would
+            // incorrectly drop it, causing the first interpolation segment of the
+            // new session to be missed. Treat each login as a fresh session: drop
+            // any stale last-sample BEFORE the load probes storage, so the first
+            // MarkAtPosition after login can't draw an interpolated line from the
+            // previous session's exit position (the OnServerLeave hook can be
             // missed on abnormal disconnects such as network timeout / client kill).
             _playerExplorationTracker?.ForgetLastSample(accountName);
+            _playerExplorationTracker?.Load(accountName);
         }
     }
 
