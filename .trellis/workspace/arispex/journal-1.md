@@ -1293,3 +1293,37 @@ GET /users/{user}/stats 响应新增 mapExplorationPercent（double, 0–100, 2 
 ### Next Steps
 
 - None - task complete
+
+
+## Session 30: fix: 玩家探索 tracker race 与缓存遗漏（audit followups）
+
+**Date**: 2026-05-06
+**Task**: fix: 玩家探索 tracker race 与缓存遗漏（audit followups）
+**Branch**: `main`
+
+### Summary
+
+修 code review 发现的 4 个真实问题：(1) MarkArea/MarkAtPosition 与 Load 的两段式 lock race（改为单 lock 原子操作 + GetOrCreateBitmapLocked 显式语义）；(2) Load 无条件覆写 in-memory（改为 conditional insert）；(3) Leaderboard 对无 bitmap 文件账号重复磁盘探测（加 _missingFiles HashSet 实现进程内负缓存）；(4) _lastSamples 跨会话残留（OnPlayerPostLogin 追加 ForgetLastSample）。新增 5 条单元测试，287/287 通过。沉淀'in-memory cache + persistent store consistency'规则到 backend/database-guidelines.md。外部 REST 行为零变化。
+
+### Main Changes
+
+(Add details)
+
+### Git Commits
+
+| Hash | Message |
+|------|---------|
+| `bca23b9` | (see git log) |
+| `df3f14c` | (see git log) |
+
+### Testing
+
+- [OK] (Add test results)
+
+### Status
+
+[OK] **Completed**
+
+### Next Steps
+
+- None - task complete
