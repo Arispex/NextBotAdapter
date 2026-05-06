@@ -8,7 +8,7 @@
 
 <!-- @@@auto:current-status -->
 - **Active File**: `journal-1.md`
-- **Total Sessions**: 25
+- **Total Sessions**: 26
 - **Last Active**: 2026-05-06
 <!-- @@@/auto:current-status -->
 
@@ -19,7 +19,7 @@
 <!-- @@@auto:active-documents -->
 | File | Lines | Status |
 |------|-------|--------|
-| `journal-1.md` | ~1163 | Active |
+| `journal-1.md` | ~1196 | Active |
 <!-- @@@/auto:active-documents -->
 
 ---
@@ -29,6 +29,7 @@
 <!-- @@@auto:session-history -->
 | # | Date | Title | Commits | Branch |
 |---|------|-------|---------|--------|
+| 26 | 2026-05-06 | fix: 玩家视角地图在玩家本会话未登录前 REST 查询全黑 | `2450aa6` | `main` |
 | 25 | 2026-05-06 | fix: 玩家探索数据按账号名为 key 而非客户端 UUID | `849b204`, `486c3b2` | `main` |
 | 24 | 2026-05-06 | Fix concurrent map render race via shared MapRenderMutex | `1843a32` | `main` |
 | 23 | 2026-05-06 | Render player-specific explored map (v1 + path-param refactor) | `1baa319`, `c8d51af`, `856a057`, `4240dd5`, `3252d6b` | `main` |

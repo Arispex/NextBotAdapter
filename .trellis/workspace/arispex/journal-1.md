@@ -1161,3 +1161,36 @@ Diagnosed cross-endpoint race: /world/map-image, /users/{user}/map-image, /world
 ### Next Steps
 
 - None - task complete
+
+
+## Session 26: fix: 玩家视角地图在玩家本会话未登录前 REST 查询全黑
+
+**Date**: 2026-05-06
+**Task**: fix: 玩家视角地图在玩家本会话未登录前 REST 查询全黑
+**Branch**: `main`
+
+### Summary
+
+修复 /users/{user}/map-image 在服务端重启后该玩家本次未登录时返回全黑的 lazy-load bug。在 PlayerExplorationTracker.GetBitmap 中加按需载盘：cache miss 时从 _storage.Load 一次（IO 在 lock 外，double-check 写回 dict），命中就缓存。OnPlayerPostLogin 的预热路径不动，REST 端契约升级为按需取 bitmap。新增 3 条单元测试，267/267 通过。
+
+### Main Changes
+
+(Add details)
+
+### Git Commits
+
+| Hash | Message |
+|------|---------|
+| `2450aa6` | (see git log) |
+
+### Testing
+
+- [OK] (Add test results)
+
+### Status
+
+[OK] **Completed**
+
+### Next Steps
+
+- None - task complete
