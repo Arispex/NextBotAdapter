@@ -1011,6 +1011,135 @@ public sealed class PlayerExplorationTrackerTests
     }
 
     [Fact]
+    public void TryOrInto_ShouldOrInMemoryBitmapIntoTarget_WhenAccountIsCached()
+    {
+        // V-P10 contract: in-memory dict hit must merge directly into target
+        // without allocating a snapshot copy.
+        const int width = 400;
+        const int height = 300;
+        var tracker = CreateTracker(width, height);
+
+        tracker.MarkArea("alice", 100, 100);
+        var union = new BitArray(width * height);
+
+        var result = tracker.TryOrInto("alice", union);
+
+        Assert.True(result);
+        // (100, 100) was inside alice's reveal box -> must be set in union.
+        Assert.True(IsSet(union, 100, 100, width));
+        // (300, 250) was not inside alice's reveal box -> must remain unset.
+        Assert.False(IsSet(union, 300, 250, width));
+    }
+
+    [Fact]
+    public void TryOrInto_ShouldLazyLoadFromStorage_AndMergeIntoTarget()
+    {
+        const int width = 400;
+        const int height = 300;
+        var storage = new InMemoryStorage();
+
+        // Seed disk with alice via a separate tracker.
+        var seeder = new PlayerExplorationTracker(storage, () => (width, height));
+        seeder.MarkArea("alice", 100, 100);
+        seeder.Save("alice");
+
+        // Fresh tracker with empty in-memory cache -> TryOrInto must lazy-load.
+        var tracker = new PlayerExplorationTracker(storage, () => (width, height));
+        var union = new BitArray(width * height);
+
+        var result = tracker.TryOrInto("alice", union);
+
+        Assert.True(result);
+        Assert.True(IsSet(union, 100, 100, width));
+    }
+
+    [Fact]
+    public void TryOrInto_ShouldReturnFalseAndLeaveTargetUnchanged_OnConfirmedMissing()
+    {
+        const int width = 400;
+        const int height = 300;
+        var storage = new InMemoryStorage();
+        var tracker = new PlayerExplorationTracker(storage, () => (width, height));
+        var union = new BitArray(width * height);
+        // Pre-set a sentinel bit so we can verify the target is not mutated on miss.
+        union.Set(0, true);
+
+        var result = tracker.TryOrInto("never-seen", union);
+
+        Assert.False(result);
+        // Sentinel bit unchanged; nothing else added either.
+        Assert.True(union.Get(0));
+        for (var i = 1; i < union.Length; i++)
+        {
+            Assert.False(union.Get(i));
+        }
+    }
+
+    [Fact]
+    public void TryOrInto_ShouldSeedNegativeCacheOnFirstMiss()
+    {
+        const int width = 400;
+        const int height = 300;
+        var storage = new InMemoryStorage();
+        var tracker = new PlayerExplorationTracker(storage, () => (width, height));
+        var union = new BitArray(width * height);
+
+        Assert.False(tracker.TryOrInto("never-seen", union));
+        Assert.Equal(1, storage.LoadCallCount);
+
+        // Second call must hit the negative cache; no second IO probe.
+        Assert.False(tracker.TryOrInto("never-seen", union));
+        Assert.Equal(1, storage.LoadCallCount);
+    }
+
+    [Fact]
+    public void TryOrInto_ShouldProduceSameUnionAsGetBitmapOrPath()
+    {
+        // V-P10 equivalence: looping TryOrInto over multiple accounts produces
+        // an identical union to the legacy GetBitmap+Or path. This is the
+        // contract that lets WorldExploredMapImageService swap to TryOrInto
+        // without changing observable behavior.
+        const int width = 400;
+        const int height = 300;
+        var length = width * height;
+
+        var aliceBitmap = new BitArray(length);
+        aliceBitmap.Set(10, true);
+        aliceBitmap.Set(150, true);
+
+        var bobBitmap = new BitArray(length);
+        bobBitmap.Set(150, true); // overlap with alice
+        bobBitmap.Set(2000, true);
+
+        var storage = new InMemoryStorage();
+        storage.Save("alice", aliceBitmap);
+        storage.Save("bob", bobBitmap);
+
+        // Path A: GetBitmap + Or.
+        var trackerA = new PlayerExplorationTracker(storage, () => (width, height));
+        var unionA = new BitArray(length);
+        var aliceA = trackerA.GetBitmap("alice");
+        var bobA = trackerA.GetBitmap("bob");
+        Assert.NotNull(aliceA);
+        Assert.NotNull(bobA);
+        unionA.Or(aliceA!);
+        unionA.Or(bobA!);
+
+        // Path B: TryOrInto.
+        var trackerB = new PlayerExplorationTracker(storage, () => (width, height));
+        var unionB = new BitArray(length);
+        Assert.True(trackerB.TryOrInto("alice", unionB));
+        Assert.True(trackerB.TryOrInto("bob", unionB));
+
+        // Must be byte-for-byte equal.
+        Assert.Equal(unionA.Length, unionB.Length);
+        for (var i = 0; i < length; i++)
+        {
+            Assert.Equal(unionA.Get(i), unionB.Get(i));
+        }
+    }
+
+    [Fact]
     public void SaveAll_ShouldNotInterrupt_WhenSomeSaveFails()
     {
         // Fix D: a single account's Save returning false must not stop SaveAll

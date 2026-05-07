@@ -230,6 +230,87 @@ public sealed class PluginConfigServiceTests
         Assert.Equal(WhitelistSettings.Default.DenyMessage, result!.Whitelist.DenyMessage);
     }
 
+    [Fact]
+    public void Load_ShouldReturnCachedInstance_OnSubsequentCalls()
+    {
+        var service = CreateService();
+        // Seed a real config file so Load reads from disk on the first call.
+        File.WriteAllText(service.ConfigFilePath,
+            JsonConvert.SerializeObject(NextBotAdapterConfig.Default, JsonSettings));
+
+        var first = service.Load();
+        var second = service.Load();
+
+        // Cache hit returns the same reference without re-reading the file.
+        Assert.Same(first, second);
+    }
+
+    [Fact]
+    public void Reload_ShouldInvalidateCache_AndReturnFreshInstance()
+    {
+        var service = CreateService();
+        File.WriteAllText(service.ConfigFilePath,
+            JsonConvert.SerializeObject(NextBotAdapterConfig.Default, JsonSettings));
+
+        var first = service.Load();
+        var afterReload = service.Reload();
+
+        // Reload drops the cache, so the next Load must produce a different
+        // instance even when the on-disk content hasn't changed.
+        Assert.NotSame(first, afterReload);
+    }
+
+    [Fact]
+    public void Save_ShouldInvalidateCache()
+    {
+        var service = CreateService();
+        File.WriteAllText(service.ConfigFilePath,
+            JsonConvert.SerializeObject(NextBotAdapterConfig.Default, JsonSettings));
+
+        var first = service.Load();
+        service.Save(NextBotAdapterConfig.Default);
+        var second = service.Load();
+
+        Assert.NotSame(first, second);
+    }
+
+    [Fact]
+    public void EnsureConfigComplete_ShouldInvalidateCache_WhenFileRewritten()
+    {
+        var service = CreateService();
+        // Write a partial config so EnsureConfigComplete actually rewrites the
+        // file (originalText != completeText).
+        File.WriteAllText(service.ConfigFilePath, """
+            {
+              "whitelist": { "enabled": true }
+            }
+            """);
+
+        var first = service.Load();
+        service.EnsureConfigComplete();
+        var second = service.Load();
+
+        Assert.NotSame(first, second);
+    }
+
+    [Fact]
+    public void TryUpdateConfig_ShouldInvalidateCache()
+    {
+        var service = CreateService();
+        File.WriteAllText(service.ConfigFilePath,
+            JsonConvert.SerializeObject(NextBotAdapterConfig.Default, JsonSettings));
+
+        var first = service.Load();
+        var ok = service.TryUpdateConfig(
+            new[] { new KeyValuePair<string, string>("$.whitelist.enabled", "false") },
+            out var error);
+        var second = service.Load();
+
+        Assert.True(ok);
+        Assert.Null(error);
+        Assert.NotSame(first, second);
+    }
+
     private static PluginConfigService CreateService()
     {
         var root = Path.Combine(Path.GetTempPath(), "NextBotAdapter.Tests", Guid.NewGuid().ToString("N"));

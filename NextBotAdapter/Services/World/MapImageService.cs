@@ -60,9 +60,9 @@ public sealed class MapImageService : IMapImageService
         var image = new Image<Rgba32>(Main.maxTilesX, Main.maxTilesY);
         LightUpWholeMap();
 
-        for (var x = 0; x < Main.maxTilesX; x++)
+        for (var y = 0; y < Main.maxTilesY; y++)
         {
-            for (var y = 0; y < Main.maxTilesY; y++)
+            for (var x = 0; x < Main.maxTilesX; x++)
             {
                 var tile = Main.Map._tiles[x + Edge, y + Edge];
                 var color = MapHelper.GetMapTileXnaColor(tile);

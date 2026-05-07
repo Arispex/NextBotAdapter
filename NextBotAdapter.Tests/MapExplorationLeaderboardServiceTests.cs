@@ -96,5 +96,6 @@ public sealed class MapExplorationLeaderboardServiceTests
         public void Load(string accountName) { }
         public void Save(string accountName) { }
         public void SaveAll() { }
+        public bool TryOrInto(string accountName, BitArray target) => false;
     }
 }

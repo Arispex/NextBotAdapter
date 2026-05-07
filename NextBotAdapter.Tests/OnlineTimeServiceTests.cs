@@ -216,6 +216,56 @@ public sealed class OnlineTimeServiceTests
     }
 
     [Fact]
+    public void EndSession_ShouldNotLoseData_UnderConcurrentEndSessions()
+    {
+        // V-P4: lock-IO decoupling must not lose elapsed-second contributions
+        // when many EndSession calls land concurrently. The test starts N
+        // sessions, ends them in parallel, and asserts every record landed
+        // on disk with its elapsed time accumulated.
+        var service = CreateService(out var filePath);
+
+        const int playerCount = 16;
+        var names = Enumerable.Range(0, playerCount).Select(i => $"player-{i}").ToArray();
+        foreach (var n in names)
+        {
+            service.StartSession(n);
+        }
+
+        Parallel.ForEach(names, n => service.EndSession(n));
+
+        var persisted = ReadStore(filePath);
+        Assert.Equal(playerCount, persisted.Records.Count);
+        foreach (var n in names)
+        {
+            Assert.True(persisted.Records.ContainsKey(n), $"missing record for {n}");
+            // Elapsed seconds may be 0 on a fast machine; the contract is just
+            // that the entry exists and is non-negative.
+            Assert.True(persisted.Records[n] >= 0);
+        }
+    }
+
+    [Fact]
+    public void EndSession_DiskContentShouldStayValid_AfterRapidEndSessions()
+    {
+        // Regression guard for write-collision corruption: with IO outside the
+        // service-level _lock, _ioLock must serialize the File.WriteAllText
+        // calls so the JSON on disk is always parseable.
+        var service = CreateService(out var filePath);
+
+        for (var round = 0; round < 5; round++)
+        {
+            var names = Enumerable.Range(0, 8).Select(i => $"r{round}-p{i}").ToArray();
+            foreach (var n in names) service.StartSession(n);
+            Parallel.ForEach(names, n => service.EndSession(n));
+        }
+
+        // The file must always be valid JSON; a partial-write would throw here.
+        var store = ReadStore(filePath);
+        Assert.NotNull(store);
+        Assert.True(store.Records.Count >= 8);
+    }
+
+    [Fact]
     public void Reload_ShouldAddNewRecordsFromDisk()
     {
         var service = CreateService(out var filePath);

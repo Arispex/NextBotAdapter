@@ -181,6 +181,12 @@ public sealed class WorldExploredMapImageServiceTests
         public void Load(string accountName) { }
         public void Save(string accountName) { }
         public void SaveAll() { }
+        public bool TryOrInto(string accountName, BitArray target)
+        {
+            if (!bitmaps.TryGetValue(accountName, out var b) || b is null) return false;
+            if (b.Length == target.Length) target.Or(b);
+            return true;
+        }
     }
 
     private sealed class CapturingRenderer : IPlayerMapImageService

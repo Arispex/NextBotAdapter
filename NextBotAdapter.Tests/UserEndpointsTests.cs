@@ -152,6 +152,13 @@ public sealed class UserEndpointsTests
         public void Load(string accountName) { }
         public void Save(string accountName) { }
         public void SaveAll() { }
+        public bool TryOrInto(string accountName, BitArray target)
+        {
+            LastGetBitmapKey = accountName;
+            if (bitmap is null) return false;
+            if (bitmap.Length == target.Length) target.Or(bitmap);
+            return true;
+        }
     }
 
     private sealed class FakePlayerMapImageService : IPlayerMapImageService

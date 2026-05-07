@@ -33,11 +33,10 @@ public sealed class WorldExploredMapImageService : IWorldExploredMapImageService
                 continue;
             }
 
-            var bitmap = _tracker.GetBitmap(username);
-            if (bitmap is not null && bitmap.Length == union.Length)
-            {
-                union.Or(bitmap);
-            }
+            // TryOrInto merges in-place without allocating a snapshot BitArray.
+            // Length-mismatched bitmaps are treated as found-but-skipped — same
+            // observable behavior as the previous GetBitmap+Or path.
+            _tracker.TryOrInto(username, union);
         }
 
         return _renderer.Generate("world-explored", union);

@@ -5,6 +5,7 @@ namespace NextBotAdapter.Services;
 
 public sealed class FileExplorationStorage : IExplorationStorage
 {
+    private static readonly HashSet<char> InvalidFileNameChars = new(Path.GetInvalidFileNameChars());
     private readonly string _rootDirectory;
     private readonly Func<int> _worldIdProvider;
 
@@ -93,11 +94,10 @@ public sealed class FileExplorationStorage : IExplorationStorage
 
     private static string SanitizeFileName(string raw)
     {
-        var invalid = Path.GetInvalidFileNameChars();
         var chars = raw.ToCharArray();
         for (var i = 0; i < chars.Length; i++)
         {
-            if (Array.IndexOf(invalid, chars[i]) >= 0)
+            if (InvalidFileNameChars.Contains(chars[i]))
             {
                 chars[i] = '_';
             }

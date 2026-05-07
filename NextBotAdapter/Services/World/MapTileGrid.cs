@@ -7,8 +7,8 @@ internal static class MapTileGrid
     {
         var width = target.GetLength(0);
         var height = target.GetLength(1);
-        for (var x = 0; x < worldWidth; x++)
         for (var y = 0; y < worldHeight; y++)
+        for (var x = 0; x < worldWidth; x++)
         {
             var rawX = x + edge;
             var rawY = y + edge;

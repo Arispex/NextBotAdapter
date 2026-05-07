@@ -13,7 +13,10 @@ public sealed class BlacklistService : IBlacklistService
     private readonly PluginConfigService? _configService;
     private readonly string? _filePath;
     private readonly object _lock = new();
-    private List<BlacklistEntry> _entries;
+    // Username (case-insensitive) -> entry. Dictionary enables O(1) presence
+    // lookups without maintaining a separate set, while preserving insertion
+    // order for GetAll() iteration.
+    private Dictionary<string, BlacklistEntry> _entries;
     private BlacklistSettings _settings;
 
     public BlacklistService(PluginConfigService configService)
@@ -25,7 +28,7 @@ public sealed class BlacklistService : IBlacklistService
     {
         _configService = configService;
         _filePath = filePath;
-        _entries = [];
+        _entries = new Dictionary<string, BlacklistEntry>(StringComparer.OrdinalIgnoreCase);
         _settings = BlacklistSettings.Default;
         Reload();
     }
@@ -33,7 +36,7 @@ public sealed class BlacklistService : IBlacklistService
     public BlacklistService(BlacklistSettings settings, BlacklistStore store)
     {
         _settings = settings;
-        _entries = store.Entries.ToList();
+        _entries = BuildEntryMap(store.Entries);
     }
 
     public string? FilePath => _filePath;
@@ -55,7 +58,7 @@ public sealed class BlacklistService : IBlacklistService
         {
             lock (_lock)
             {
-                return new BlacklistStore(_entries.ToArray());
+                return new BlacklistStore(_entries.Values.ToArray());
             }
         }
 
@@ -89,7 +92,7 @@ public sealed class BlacklistService : IBlacklistService
         lock (_lock)
         {
             _settings = settings;
-            _entries = store.Entries.ToList();
+            _entries = BuildEntryMap(store.Entries);
         }
 
         return store;
@@ -105,7 +108,7 @@ public sealed class BlacklistService : IBlacklistService
         BlacklistStore store;
         lock (_lock)
         {
-            store = new BlacklistStore(_entries.ToArray());
+            store = new BlacklistStore(_entries.Values.ToArray());
         }
 
         WriteStore(store);
@@ -116,7 +119,7 @@ public sealed class BlacklistService : IBlacklistService
     {
         lock (_lock)
         {
-            return _entries.ToArray();
+            return _entries.Values.ToArray();
         }
     }
 
@@ -129,7 +132,7 @@ public sealed class BlacklistService : IBlacklistService
                 return false;
             }
 
-            return _entries.Any(e => string.Equals(e.Username, user, StringComparison.OrdinalIgnoreCase));
+            return _entries.ContainsKey(user);
         }
     }
 
@@ -143,7 +146,7 @@ public sealed class BlacklistService : IBlacklistService
 
         lock (_lock)
         {
-            if (_entries.Any(e => string.Equals(e.Username, user, StringComparison.OrdinalIgnoreCase)))
+            if (_entries.ContainsKey(user))
             {
                 error = "User already exists in blacklist.";
                 if (_filePath is not null)
@@ -154,7 +157,7 @@ public sealed class BlacklistService : IBlacklistService
                 return false;
             }
 
-            _entries.Add(new BlacklistEntry(user, reason));
+            _entries.Add(user, new BlacklistEntry(user, reason));
         }
 
         error = null;
@@ -177,8 +180,7 @@ public sealed class BlacklistService : IBlacklistService
 
         lock (_lock)
         {
-            var existing = _entries.FirstOrDefault(e => string.Equals(e.Username, user, StringComparison.OrdinalIgnoreCase));
-            if (existing is null)
+            if (!_entries.Remove(user))
             {
                 error = "User not found in blacklist.";
                 if (_filePath is not null)
@@ -188,8 +190,6 @@ public sealed class BlacklistService : IBlacklistService
 
                 return false;
             }
-
-            _entries.Remove(existing);
         }
 
         error = null;
@@ -212,8 +212,8 @@ public sealed class BlacklistService : IBlacklistService
                 return true;
             }
 
-            var entry = _entries.FirstOrDefault(e => string.Equals(e.Username, user, StringComparison.OrdinalIgnoreCase));
-            if (entry is null)
+            // O(1) lookup that also recovers the reason in one step.
+            if (!_entries.TryGetValue(user, out var entry))
             {
                 return true;
             }
@@ -246,5 +246,19 @@ public sealed class BlacklistService : IBlacklistService
 
         EnsureDirectory();
         File.WriteAllText(_filePath, JsonConvert.SerializeObject(store, JsonSettings));
+    }
+
+    private static Dictionary<string, BlacklistEntry> BuildEntryMap(IReadOnlyList<BlacklistEntry> entries)
+    {
+        var map = new Dictionary<string, BlacklistEntry>(entries.Count, StringComparer.OrdinalIgnoreCase);
+        foreach (var entry in entries)
+        {
+            // Last-writer-wins on duplicate usernames (matches prior list-based
+            // semantics where late entries with same username were treated as
+            // already-present).
+            map[entry.Username] = entry;
+        }
+
+        return map;
     }
 }

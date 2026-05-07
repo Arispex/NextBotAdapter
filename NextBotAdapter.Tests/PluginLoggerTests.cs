@@ -31,6 +31,19 @@ public sealed class PluginLoggerTests
     }
 
     [Fact]
+    public void Format_ShouldCollapseMixedWhitespaceRunsIntoSingleSpace()
+    {
+        // V-P7 regression: the regex-based Normalize must coalesce any mixed
+        // run of \r\n\t plus regular spaces into a single space, and trim.
+        var formatted = PluginLogger.Format("INFO", "  a\t\t\tb \n\n c\r\n\td   ");
+
+        // Match exactly: "[<ts>] [INFO] [NextBotAdapter] a b c d"
+        Assert.Matches(
+            new Regex(@"^\[[^\]]+\] \[INFO\] \[NextBotAdapter\] a b c d$"),
+            formatted);
+    }
+
+    [Fact]
     public void Format_ShouldTruncateOverlongDynamicContent()
     {
         var formatted = PluginLogger.Format("ERROR", new string('x', 600));

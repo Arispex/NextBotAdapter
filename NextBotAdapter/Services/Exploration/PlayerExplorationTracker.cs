@@ -214,6 +214,79 @@ public sealed class PlayerExplorationTracker : IPlayerExplorationTracker
         }
     }
 
+    /// <summary>
+    /// Merge this account's bitmap directly into <paramref name="target"/> via
+    /// <see cref="BitArray.Or(BitArray)"/>. Avoids the snapshot copy that
+    /// <see cref="GetBitmap"/> allocates per call — important for fan-out
+    /// over many accounts (e.g. world-explored union).
+    /// </summary>
+    public bool TryOrInto(string accountName, BitArray target)
+    {
+        if (string.IsNullOrWhiteSpace(accountName) || target is null)
+        {
+            return false;
+        }
+
+        lock (_lock)
+        {
+            if (_bitmaps.TryGetValue(accountName, out var bitmap))
+            {
+                if (bitmap.Length == target.Length)
+                {
+                    target.Or(bitmap);
+                }
+                return true;
+            }
+
+            // Negative cache hit: previous probe confirmed file missing.
+            if (_missingFiles.Contains(accountName))
+            {
+                return false;
+            }
+        }
+
+        var (width, height) = _worldSizeProvider();
+        if (width <= 0 || height <= 0)
+        {
+            return false;
+        }
+
+        // IO outside _lock so concurrent stamp paths are not blocked.
+        var result = _storage.Load(accountName, width * height);
+
+        lock (_lock)
+        {
+            // Double-check: another thread (e.g. OnPlayerPostLogin) may have
+            // populated the bitmap during our IO window. Honor whichever
+            // instance is already in the dictionary.
+            if (_bitmaps.TryGetValue(accountName, out var existing))
+            {
+                if (existing.Length == target.Length)
+                {
+                    target.Or(existing);
+                }
+                return true;
+            }
+
+            if (result.Bitmap is null)
+            {
+                if (result.FileMissing)
+                {
+                    _missingFiles.Add(accountName);
+                }
+                return false;
+            }
+
+            _bitmaps[accountName] = result.Bitmap;
+            _missingFiles.Remove(accountName);
+            if (result.Bitmap.Length == target.Length)
+            {
+                target.Or(result.Bitmap);
+            }
+            return true;
+        }
+    }
+
     public double GetExplorationPercent(string accountName)
     {
         var bitmap = GetBitmap(accountName);

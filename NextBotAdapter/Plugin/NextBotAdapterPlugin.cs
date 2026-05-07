@@ -220,8 +220,16 @@ public sealed class NextBotAdapterPlugin(Main game) : TerrariaPlugin(game)
         }
     }
 
-    private static bool HasIpChanged(string? knownIps, string currentIp)
+    /// <summary>
+    /// Returns true if the player's current IP is not the most recent entry in
+    /// the account's KnownIps list. Also outputs the parsed list (when parsing
+    /// succeeded) so downstream callers in the same connection chain (notably
+    /// <see cref="PerformAutoLogin"/>) can reuse it instead of re-deserializing
+    /// the same JSON array.
+    /// </summary>
+    private static bool HasIpChanged(string? knownIps, string currentIp, out List<string>? parsedIps)
     {
+        parsedIps = null;
         if (string.IsNullOrEmpty(knownIps))
         {
             return true;
@@ -229,8 +237,9 @@ public sealed class NextBotAdapterPlugin(Main game) : TerrariaPlugin(game)
 
         try
         {
-            var ips = Newtonsoft.Json.JsonConvert.DeserializeObject<string[]>(knownIps);
-            return ips is not { Length: > 0 } || ips[^1] != currentIp;
+            var ips = Newtonsoft.Json.JsonConvert.DeserializeObject<List<string>>(knownIps);
+            parsedIps = ips;
+            return ips is not { Count: > 0 } || ips[^1] != currentIp;
         }
         catch
         {
@@ -403,7 +412,7 @@ public sealed class NextBotAdapterPlugin(Main game) : TerrariaPlugin(game)
         var loginName = args.LoginName;
         var account = TShock.UserAccounts.GetUserAccountByName(loginName);
 
-        if (EvaluateLoginConfirmation(player, loginName, account, settings, out var denialReason))
+        if (EvaluateLoginConfirmation(player, loginName, account, settings, out var denialReason, out _))
         {
             return;
         }
@@ -443,16 +452,17 @@ public sealed class NextBotAdapterPlugin(Main game) : TerrariaPlugin(game)
             return;
         }
 
+        List<string>? parsedKnownIps = null;
         if (settings.Enabled && _loginConfirmationService is not null)
         {
-            if (!EvaluateLoginConfirmation(player, loginName, account, settings, out var denialReason))
+            if (!EvaluateLoginConfirmation(player, loginName, account, settings, out var denialReason, out parsedKnownIps))
             {
                 player.Disconnect(denialReason!);
                 return;
             }
         }
 
-        PerformAutoLogin(player, account);
+        PerformAutoLogin(player, account, parsedKnownIps);
 
         NotifyPlayerOnline(args.Who, player);
     }
@@ -512,14 +522,19 @@ public sealed class NextBotAdapterPlugin(Main game) : TerrariaPlugin(game)
 
     // Returns true if login should be allowed; false if rejected (denialReason set).
     // Safe to call with account == null (returns true — nothing to check).
+    // <paramref name="parsedKnownIps"/> outputs the deserialized account.KnownIps
+    // (when DetectIp ran successfully) so a follow-on <see cref="PerformAutoLogin"/>
+    // call in the same connection chain can avoid re-parsing the same JSON.
     private bool EvaluateLoginConfirmation(
         TSPlayer player,
         string loginName,
         UserAccount? account,
         LoginConfirmationSettings settings,
-        out string? denialReason)
+        out string? denialReason,
+        out List<string>? parsedKnownIps)
     {
         denialReason = null;
+        parsedKnownIps = null;
         var uuid = player.UUID ?? string.Empty;
 
         if (settings.DetectUuid && string.IsNullOrEmpty(uuid))
@@ -542,7 +557,7 @@ public sealed class NextBotAdapterPlugin(Main game) : TerrariaPlugin(game)
             detectedUuid = uuid;
         }
 
-        if (settings.DetectIp && HasIpChanged(account.KnownIps, player.IP))
+        if (settings.DetectIp && HasIpChanged(account.KnownIps, player.IP, out parsedKnownIps))
         {
             detectedIp = player.IP;
         }
@@ -611,7 +626,7 @@ public sealed class NextBotAdapterPlugin(Main game) : TerrariaPlugin(game)
     private static bool IsAutoLoginConfigurationSafe(LoginConfirmationSettings settings)
         => settings.Enabled && (settings.DetectUuid || settings.DetectIp);
 
-    private void PerformAutoLogin(TSPlayer player, UserAccount account)
+    private void PerformAutoLogin(TSPlayer player, UserAccount account, List<string>? parsedKnownIps)
     {
         try
         {
@@ -627,7 +642,11 @@ public sealed class NextBotAdapterPlugin(Main game) : TerrariaPlugin(game)
                 player.PlayerData?.RestoreCharacter(player);
             }
 
-            var knownIps = Newtonsoft.Json.JsonConvert.DeserializeObject<List<string>>(account.KnownIps ?? "[]") ?? [];
+            // Reuse the list parsed by EvaluateLoginConfirmation when available.
+            // Fall back to a fresh deserialize when the upstream check ran with
+            // DetectIp disabled or skipped, when settings.Enabled was false, or
+            // when the JSON was unparseable (parsedKnownIps stays null).
+            var knownIps = parsedKnownIps ?? Newtonsoft.Json.JsonConvert.DeserializeObject<List<string>>(account.KnownIps ?? "[]") ?? [];
             if (!knownIps.Contains(player.IP))
             {
                 knownIps.Add(player.IP);

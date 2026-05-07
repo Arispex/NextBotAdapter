@@ -24,9 +24,9 @@ public sealed class PlayerMapImageService : IPlayerMapImageService
             FillMaskedTiles(bitmap, width, height);
 
             using var image = new Image<Rgba32>(width, height);
-            for (var x = 0; x < width; x++)
+            for (var y = 0; y < height; y++)
             {
-                for (var y = 0; y < height; y++)
+                for (var x = 0; x < width; x++)
                 {
                     var index = (y * width) + x;
                     var explored = index < bitmap.Length && bitmap.Get(index);
@@ -63,9 +63,9 @@ public sealed class PlayerMapImageService : IPlayerMapImageService
             var height = Main.maxTilesY;
             using var image = new Image<Rgba32>(width, height);
             var black = new Rgba32(0, 0, 0, 255);
-            for (var x = 0; x < width; x++)
+            for (var y = 0; y < height; y++)
             {
-                for (var y = 0; y < height; y++)
+                for (var x = 0; x < width; x++)
                 {
                     image[x, y] = black;
                 }

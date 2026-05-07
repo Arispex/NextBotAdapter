@@ -13,7 +13,7 @@ public sealed class WhitelistService : IWhitelistService
     private readonly PluginConfigService? _configService;
     private readonly string? _filePath;
     private readonly object _lock = new();
-    private List<string> _users;
+    private HashSet<string> _users;
     private WhitelistSettings _settings;
 
     public WhitelistService(PluginConfigService configService)
@@ -25,7 +25,7 @@ public sealed class WhitelistService : IWhitelistService
     {
         _configService = configService;
         _filePath = filePath;
-        _users = [];
+        _users = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
         _settings = WhitelistSettings.Default;
         Reload();
     }
@@ -33,7 +33,7 @@ public sealed class WhitelistService : IWhitelistService
     public WhitelistService(WhitelistSettings settings, WhitelistStore store)
     {
         _settings = settings;
-        _users = store.Users.ToList();
+        _users = new HashSet<string>(store.Users, StringComparer.OrdinalIgnoreCase);
     }
 
     public string? FilePath => _filePath;
@@ -89,7 +89,7 @@ public sealed class WhitelistService : IWhitelistService
         lock (_lock)
         {
             _settings = settings;
-            _users = store.Users.ToList();
+            _users = new HashSet<string>(store.Users, StringComparer.OrdinalIgnoreCase);
         }
 
         return store;
@@ -129,8 +129,7 @@ public sealed class WhitelistService : IWhitelistService
                 return true;
             }
 
-            var comparer = StringComparer.OrdinalIgnoreCase;
-            return _users.Contains(user, comparer);
+            return _users.Contains(user);
         }
     }
 
@@ -144,8 +143,7 @@ public sealed class WhitelistService : IWhitelistService
 
         lock (_lock)
         {
-            var comparer = StringComparer.OrdinalIgnoreCase;
-            if (_users.Contains(user, comparer))
+            if (_users.Contains(user))
             {
                 error = "User already exists in whitelist.";
                 if (_filePath is not null)
@@ -179,9 +177,7 @@ public sealed class WhitelistService : IWhitelistService
 
         lock (_lock)
         {
-            var comparer = StringComparer.OrdinalIgnoreCase;
-            var existing = _users.FirstOrDefault(item => comparer.Equals(item, user));
-            if (existing is null)
+            if (!_users.Remove(user))
             {
                 error = "User not found in whitelist.";
                 if (_filePath is not null)
@@ -191,8 +187,6 @@ public sealed class WhitelistService : IWhitelistService
 
                 return false;
             }
-
-            _users.Remove(existing);
         }
 
         error = null;
@@ -215,8 +209,7 @@ public sealed class WhitelistService : IWhitelistService
                 return true;
             }
 
-            var comparer = StringComparer.OrdinalIgnoreCase;
-            if (_users.Contains(user, comparer))
+            if (_users.Contains(user))
             {
                 return true;
             }

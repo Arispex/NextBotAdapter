@@ -202,4 +202,40 @@ public sealed class BlacklistServiceTests
         Assert.Equal("Player2", all[1].Username);
         Assert.Equal("reason2", all[1].Reason);
     }
+
+    [Fact]
+    public void TryValidateJoin_RecoversReason_FromLargeEntrySet()
+    {
+        // With dict-backed storage, presence and reason recovery both run in
+        // O(1) regardless of how many other entries exist. This covers the case
+        // where the target sits at the end of a many-entry list.
+        var entries = Enumerable
+            .Range(0, 500)
+            .Select(i => new BlacklistEntry($"Player{i}", $"reason{i}"))
+            .ToArray();
+        var service = CreateService(entries: entries);
+
+        var result = service.TryValidateJoin("Player499", out var reason);
+
+        Assert.False(result);
+        Assert.Equal("你已被封禁，原因：reason499。如有疑问，请联系管理员。", reason);
+    }
+
+    [Fact]
+    public void TryAdd_PreservesInsertionOrder_ForGetAll()
+    {
+        // Dictionary<string, T> preserves insertion order for value enumeration
+        // in modern .NET. GetAll consumers may rely on this order.
+        var service = CreateService();
+
+        Assert.True(service.TryAdd("First", "r1", out _));
+        Assert.True(service.TryAdd("Second", "r2", out _));
+        Assert.True(service.TryAdd("Third", "r3", out _));
+
+        var all = service.GetAll();
+        Assert.Equal(3, all.Count);
+        Assert.Equal("First", all[0].Username);
+        Assert.Equal("Second", all[1].Username);
+        Assert.Equal("Third", all[2].Username);
+    }
 }

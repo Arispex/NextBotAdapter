@@ -19,4 +19,13 @@ public interface IPlayerExplorationTracker
     void Save(string accountName);
 
     void SaveAll();
+
+    /// <summary>
+    /// Merge this account's bitmap into <paramref name="target"/> via in-place
+    /// <see cref="BitArray.Or(BitArray)"/> without allocating a snapshot copy.
+    /// Returns true when bitmap data was found (in-memory or via lazy-load) and
+    /// merged into <paramref name="target"/>; false on confirmed missing data.
+    /// Lengths must match; mismatched bitmaps are treated as found but skipped.
+    /// </summary>
+    bool TryOrInto(string accountName, BitArray target);
 }

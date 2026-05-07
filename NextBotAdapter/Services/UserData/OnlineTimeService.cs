@@ -11,6 +11,10 @@ public sealed class OnlineTimeService : IOnlineTimeService
     private readonly Dictionary<string, DateTime> _activeSessions = new();
     private Dictionary<string, long> _records;
     private readonly object _lock = new();
+    // Serializes disk IO so concurrent EndSession / Flush / PersistAllSessions
+    // calls cannot interleave their File.WriteAllText writes and corrupt the
+    // store. Acquired strictly outside _lock — never under it.
+    private readonly object _ioLock = new();
 
     public OnlineTimeService()
         : this(Path.Combine(TShockAPI.TShock.SavePath, "NextBotAdapter", "Data", "OnlineTime.json"))
@@ -79,9 +83,18 @@ public sealed class OnlineTimeService : IOnlineTimeService
 
     public void Save()
     {
-        lock (_lock)
+        // Take the records snapshot UNDER _ioLock so concurrent EndSession /
+        // Flush / PersistAllSessions calls cannot interleave their snapshots
+        // and let an older snapshot overwrite a newer write. _ioLock serializes
+        // both the snapshot and the WriteAllText call.
+        lock (_ioLock)
         {
-            PersistLocked();
+            OnlineTimeStore snapshot;
+            lock (_lock)
+            {
+                snapshot = new OnlineTimeStore(new Dictionary<string, long>(_records));
+            }
+            SaveStore(snapshot);
         }
     }
 
@@ -98,6 +111,7 @@ public sealed class OnlineTimeService : IOnlineTimeService
     public void EndSession(string username)
     {
         long elapsed;
+        bool ended;
 
         lock (_lock)
         {
@@ -109,7 +123,24 @@ public sealed class OnlineTimeService : IOnlineTimeService
             _activeSessions.Remove(username);
             elapsed = (long)(DateTime.UtcNow - start).TotalSeconds;
             _records[username] = _records.TryGetValue(username, out var existing) ? existing + elapsed : elapsed;
-            PersistLocked();
+            ended = true;
+        }
+
+        if (ended)
+        {
+            // IO outside _lock so concurrent stamp / read paths are not blocked
+            // by disk latency. Snapshot is taken UNDER _ioLock so concurrent
+            // EndSession / Flush calls cannot let an older snapshot overwrite a
+            // newer write — both snapshot and WriteAllText are serialized.
+            lock (_ioLock)
+            {
+                OnlineTimeStore snapshot;
+                lock (_lock)
+                {
+                    snapshot = new OnlineTimeStore(new Dictionary<string, long>(_records));
+                }
+                SaveStore(snapshot);
+            }
         }
 
         PluginLogger.Info($"玩家 {username} 本次在线 {elapsed} 秒，已累计保存。");
@@ -149,18 +180,22 @@ public sealed class OnlineTimeService : IOnlineTimeService
 
     public void PersistAllSessions()
     {
-        lock (_lock)
+        lock (_ioLock)
         {
-            foreach (var (username, start) in _activeSessions)
+            OnlineTimeStore snapshot;
+            lock (_lock)
             {
-                var elapsed = (long)(DateTime.UtcNow - start).TotalSeconds;
-                _records[username] = (_records.TryGetValue(username, out var existing) ? existing : 0) + elapsed;
+                foreach (var (username, start) in _activeSessions)
+                {
+                    var elapsed = (long)(DateTime.UtcNow - start).TotalSeconds;
+                    _records[username] = (_records.TryGetValue(username, out var existing) ? existing : 0) + elapsed;
+                }
+
+                _activeSessions.Clear();
+                snapshot = new OnlineTimeStore(new Dictionary<string, long>(_records));
             }
-
-            _activeSessions.Clear();
-            PersistLocked();
+            SaveStore(snapshot);
         }
-
     }
 
     /// <summary>
@@ -173,24 +208,28 @@ public sealed class OnlineTimeService : IOnlineTimeService
     /// </summary>
     public void Flush()
     {
-        lock (_lock)
+        lock (_ioLock)
         {
-            var now = DateTime.UtcNow;
-            foreach (var name in _activeSessions.Keys.ToList())
+            OnlineTimeStore snapshot;
+            lock (_lock)
             {
-                var start = _activeSessions[name];
-                var elapsed = (long)(now - start).TotalSeconds;
-                _records[name] = (_records.TryGetValue(name, out var existing) ? existing : 0) + elapsed;
-                _activeSessions[name] = now;
+                var now = DateTime.UtcNow;
+                // Snapshot session entries via ToArray so we are not iterating
+                // a dictionary while mutating its values (the value
+                // reassignment below is technically allowed by Dictionary, but
+                // the ToArray copy keeps the loop body explicit and harder to
+                // misread).
+                foreach (var (name, start) in _activeSessions.ToArray())
+                {
+                    var elapsed = (long)(now - start).TotalSeconds;
+                    _records[name] = (_records.TryGetValue(name, out var existing) ? existing : 0) + elapsed;
+                    _activeSessions[name] = now;
+                }
+
+                snapshot = new OnlineTimeStore(new Dictionary<string, long>(_records));
             }
-
-            PersistLocked();
+            SaveStore(snapshot);
         }
-    }
-
-    private void PersistLocked()
-    {
-        SaveStore(new OnlineTimeStore(new Dictionary<string, long>(_records)));
     }
 
     private void SaveStore(OnlineTimeStore store)

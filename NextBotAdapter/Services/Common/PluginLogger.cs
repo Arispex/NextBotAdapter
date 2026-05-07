@@ -1,4 +1,5 @@
 using System;
+using System.Text.RegularExpressions;
 using TShockAPI;
 
 namespace NextBotAdapter.Services;
@@ -6,6 +7,10 @@ namespace NextBotAdapter.Services;
 public static class PluginLogger
 {
     private const int MaxMessageLength = 300;
+    // Single-pass collapse of any whitespace run (\r, \n, \t, space, etc.)
+    // into a single space. Replaces the previous Replace+while loop, which
+    // both allocated a fresh string per pass and re-scanned the buffer.
+    private static readonly Regex WhitespaceRegex = new(@"\s+", RegexOptions.Compiled);
 
     public static string Format(string level, string message)
         => $"[{DateTimeOffset.Now:yyyy-MM-ddTHH:mm:ss.fffzzz}] [{level}] [NextBotAdapter] {Normalize(message)}";
@@ -27,17 +32,12 @@ public static class PluginLogger
 
     private static string Normalize(string message)
     {
-        var normalized = message
-            .Replace("\r", " ")
-            .Replace("\n", " ")
-            .Replace("\t", " ");
-
-        while (normalized.Contains("  ", StringComparison.Ordinal))
+        if (string.IsNullOrEmpty(message))
         {
-            normalized = normalized.Replace("  ", " ", StringComparison.Ordinal);
+            return message;
         }
 
-        normalized = normalized.Trim();
+        var normalized = WhitespaceRegex.Replace(message, " ").Trim();
 
         return normalized.Length <= MaxMessageLength
             ? normalized

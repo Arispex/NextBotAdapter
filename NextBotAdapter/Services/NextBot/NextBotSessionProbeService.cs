@@ -53,6 +53,10 @@ public interface INextBotSessionProbeService
 public sealed class NextBotSessionProbeService : INextBotSessionProbeService
 {
     private static readonly HttpClient DefaultClient = new() { Timeout = TimeSpan.FromSeconds(5) };
+    private static readonly JsonSerializerSettings NullIgnoreSettings = new()
+    {
+        NullValueHandling = NullValueHandling.Ignore,
+    };
     private readonly HttpClient _httpClient;
 
     public NextBotSessionProbeService()
@@ -255,7 +259,7 @@ public sealed class NextBotSessionProbeService : INextBotSessionProbeService
                 server_name = serverName,
                 message,
             },
-            new JsonSerializerSettings { NullValueHandling = NullValueHandling.Ignore });
+            NullIgnoreSettings);
         using var request = new HttpRequestMessage(HttpMethod.Post, uri)
         {
             Content = new StringContent(body, Encoding.UTF8, "application/json"),

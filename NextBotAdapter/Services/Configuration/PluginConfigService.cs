@@ -17,6 +17,8 @@ public sealed class PluginConfigService
         MergeNullValueHandling = MergeNullValueHandling.Ignore
     };
     private readonly string _configDirectoryPath;
+    private readonly object _cacheLock = new();
+    private NextBotAdapterConfig? _cached;
 
     public PluginConfigService()
         : this(Path.Combine(TShockAPI.TShock.SavePath, "NextBotAdapter"))
@@ -51,6 +53,7 @@ public sealed class PluginConfigService
             if (originalText != completeText)
             {
                 File.WriteAllText(ConfigFilePath, completeText);
+                InvalidateCache();
                 PluginLogger.Info("配置文件已自动补全缺失字段。");
             }
         }
@@ -61,6 +64,39 @@ public sealed class PluginConfigService
     }
 
     public NextBotAdapterConfig Load()
+    {
+        var existing = _cached;
+        if (existing is not null)
+        {
+            return existing;
+        }
+
+        lock (_cacheLock)
+        {
+            if (_cached is not null)
+            {
+                return _cached;
+            }
+
+            _cached = LoadFromDisk();
+            return _cached;
+        }
+    }
+
+    public NextBotAdapterConfig Reload()
+    {
+        InvalidateCache();
+        return Load();
+    }
+
+    public void Save(NextBotAdapterConfig config)
+    {
+        EnsureDirectories();
+        WriteConfigFile(config.WithDefaults());
+        InvalidateCache();
+    }
+
+    private NextBotAdapterConfig LoadFromDisk()
     {
         EnsureDirectories();
         if (!File.Exists(ConfigFilePath))
@@ -81,13 +117,12 @@ public sealed class PluginConfigService
         }
     }
 
-    public NextBotAdapterConfig Reload()
-        => Load();
-
-    public void Save(NextBotAdapterConfig config)
+    private void InvalidateCache()
     {
-        EnsureDirectories();
-        WriteConfigFile(config.WithDefaults());
+        lock (_cacheLock)
+        {
+            _cached = null;
+        }
     }
 
     public WhitelistSettings LoadWhitelistSettings()
@@ -135,6 +170,7 @@ public sealed class PluginConfigService
         }
 
         File.WriteAllText(ConfigFilePath, root.ToString(Formatting.Indented));
+        InvalidateCache();
         error = null;
         return true;
     }

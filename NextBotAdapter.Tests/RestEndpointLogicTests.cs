@@ -395,6 +395,7 @@ public sealed class RestEndpointLogicTests
         public void Load(string accountName) { }
         public void Save(string accountName) { }
         public void SaveAll() { }
+        public bool TryOrInto(string accountName, System.Collections.BitArray target) => false;
     }
 
     private sealed class FakeMapExplorationTracker(IReadOnlyDictionary<string, double> percents) : IPlayerExplorationTracker
@@ -408,6 +409,7 @@ public sealed class RestEndpointLogicTests
         public void Load(string accountName) { }
         public void Save(string accountName) { }
         public void SaveAll() { }
+        public bool TryOrInto(string accountName, System.Collections.BitArray target) => false;
     }
 
     private sealed class FakeLeaderboardGateway(
