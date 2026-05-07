@@ -7,6 +7,7 @@ public static class EndpointRoutes
     public const string UserMapImage = "/nextbot/users/{user}/map-image";
     public const string WorldProgress = "/nextbot/world/progress";
     public const string WorldMapImage = "/nextbot/world/map-image";
+    public const string WorldExploredMapImage = "/nextbot/world/explored-map-image";
     public const string WorldFile = "/nextbot/world/world-file";
     public const string WorldMapFile = "/nextbot/world/map-file";
     public const string Whitelist = "/nextbot/whitelist";

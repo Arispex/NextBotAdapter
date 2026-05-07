@@ -18,6 +18,7 @@ public sealed class EndpointBehaviorTests
             command => AssertRoute(command, EndpointRoutes.UserMapImage, Permissions.UserMapImage),
             command => AssertRoute(command, EndpointRoutes.WorldProgress, Permissions.WorldProgress),
             command => AssertRoute(command, EndpointRoutes.WorldMapImage, Permissions.WorldMapImage),
+            command => AssertRoute(command, EndpointRoutes.WorldExploredMapImage, Permissions.WorldExploredMapImage),
             command => AssertRoute(command, EndpointRoutes.WorldFile, Permissions.WorldFile),
             command => AssertRoute(command, EndpointRoutes.WorldMapFile, Permissions.WorldMapFile),
             command => AssertRoute(command, EndpointRoutes.Whitelist, Permissions.WhitelistView),

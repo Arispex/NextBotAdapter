@@ -231,6 +231,43 @@ GET /nextbot/users/Arispex/inventory?token=<token>
 
 ---
 
+### GET `/nextbot/world/explored-map-image`
+
+实时生成"全玩家探索区域并集"地图 PNG 图片并以 Base64 返回。语义为"任意 TShock 账号走过的区域"——把所有账号的已探索 bitmap 按位 OR 合成一张并集图，再交给与 `/users/{user}/map-image` 相同的渲染管线输出。任意玩家走过的瓦片显示真实色，其余瓦片为不透明纯黑。
+
+**权限：** `nextbot.world.explored_map_image`
+
+**模拟探索说明**
+
+- "已探索"语义、采样规则、瞬移阈值、首次启用前不可回溯等行为均与 `/users/{user}/map-image` 一致。
+- 未上线 / 无探索数据 / bitmap 文件不存在的账号自动跳过，不影响其他账号合并。
+- 全服 0 个账号有数据时返回全黑 PNG，不报错。
+- 每次请求实时合并并实时渲染，**不缓存**。
+- 与 `/users/{user}/map-image` 共享渲染管线（共用一把渲染锁串行化），1080p 大世界 PNG 编码约 1–2 秒。
+
+**响应 200**
+
+```json
+{
+  "fileName": "map-world-explored-2025-03-24_10-30-00.png",
+  "base64": "<base64-encoded PNG>"
+}
+```
+
+| 字段       | 类型   | 说明                                   |
+|------------|--------|----------------------------------------|
+| `fileName` | string | 带时间戳的建议文件名（前缀 `map-world-explored-`） |
+| `base64`   | string | Base64 编码的 PNG 图片数据             |
+
+**错误**
+
+| 状态码 | `error`                                            | 原因                       |
+|--------|----------------------------------------------------|----------------------------|
+| 500    | `World explored map service is not configured.`    | 服务未在插件初始化时注入   |
+| 500    | `<异常信息>`                                       | 合并或渲染过程异常         |
+
+---
+
 ### GET `/nextbot/world/world-file`
 
 读取当前世界的 `.wld` 文件并以 Base64 返回。

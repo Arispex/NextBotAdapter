@@ -7,6 +7,7 @@ public static class Permissions
     public const string UserMapImage = "nextbot.users.map_image";
     public const string WorldProgress = "nextbot.world.progress";
     public const string WorldMapImage = "nextbot.world.map_image";
+    public const string WorldExploredMapImage = "nextbot.world.explored_map_image";
     public const string WorldFile = "nextbot.world.world_file";
     public const string WorldMapFile = "nextbot.world.map_file";
     public const string WhitelistView = "nextbot.whitelist.view";
