@@ -1461,3 +1461,37 @@ GET /users/{user}/stats 响应新增 mapExplorationPercent（double, 0–100, 2 
 ### Next Steps
 
 - None - task complete
+
+
+## Session 35: fix: 全项目审计 follow-up（V-3 / V-4 / V-6）
+
+**Date**: 2026-05-07
+**Task**: fix: 全项目审计 follow-up（V-3 / V-4 / V-6）
+**Branch**: `main`
+
+### Summary
+
+全项目代码审计后修 3 个真实问题：(V-4 核心安全) 黑/白名单仅在 OnPlayerInfo 按 player.Name 拦截，玩家可改显示名 + /login 到不同账号绕过；新增 PostLoginAccountGuard helper，OnPlayerPostLogin 按 account.Name 二次校验失败则 Disconnect。(V-6) OnlineTimeService.Reload 改 max-merge 而非完全替换，避免 IO 期间另一线程 Flush 增量被覆盖。(V-3 defensive) VerifyNextBot 用 Task.Run 包裹 sync-over-async 调用。新增 8 条测试，322/322 通过。Spec 沉淀到 error-handling.md（identity validation）+ database-guidelines.md（reload merge）。审计 V-1/V-2 在自托管 threat model 下不构成漏洞，V-5 概率极低，已知 known issues 全部不可触发——确认项目无可被触发漏洞。
+
+### Main Changes
+
+(Add details)
+
+### Git Commits
+
+| Hash | Message |
+|------|---------|
+| `7836bb9` | (see git log) |
+| `efa71a5` | (see git log) |
+
+### Testing
+
+- [OK] (Add test results)
+
+### Status
+
+[OK] **Completed**
+
+### Next Steps
+
+- None - task complete

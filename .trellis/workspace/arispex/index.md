@@ -8,7 +8,7 @@
 
 <!-- @@@auto:current-status -->
 - **Active File**: `journal-1.md`
-- **Total Sessions**: 34
+- **Total Sessions**: 35
 - **Last Active**: 2026-05-07
 <!-- @@@/auto:current-status -->
 
@@ -19,7 +19,7 @@
 <!-- @@@auto:active-documents -->
 | File | Lines | Status |
 |------|-------|--------|
-| `journal-1.md` | ~1463 | Active |
+| `journal-1.md` | ~1497 | Active |
 <!-- @@@/auto:active-documents -->
 
 ---
@@ -29,6 +29,7 @@
 <!-- @@@auto:session-history -->
 | # | Date | Title | Commits | Branch |
 |---|------|-------|---------|--------|
+| 35 | 2026-05-07 | fix: 全项目审计 follow-up（V-3 / V-4 / V-6） | `7836bb9`, `efa71a5` | `main` |
 | 34 | 2026-05-07 | feat: 全玩家探索区域并集渲染端点 | `1d12f89` | `main` |
 | 33 | 2026-05-06 | refactor: 自动保存日志移到 plugin 层，去掉每子系统计数 | `c50ebf2` | `main` |
 | 32 | 2026-05-06 | feat: 5 分钟定时刷盘 + bitmap 脏标记，避免断电丢失会话数据 | `376c0dc`, `a03f2c2` | `main` |
