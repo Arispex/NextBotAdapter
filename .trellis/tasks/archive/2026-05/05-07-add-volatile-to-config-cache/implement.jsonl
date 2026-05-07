@@ -1,0 +1,2 @@
+{"file": ".trellis/spec/backend/quality-guidelines.md", "reason": "Required Patterns（显式可读、防御性编程）；本次单字段加修饰符不需要新增测试"}
+{"file": ".trellis/spec/backend/database-guidelines.md", "reason": "in-memory cache + persistent store consistency 小节涉及双检锁；本次完善内存模型保证"}
