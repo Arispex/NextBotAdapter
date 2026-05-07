@@ -1428,3 +1428,36 @@ GET /users/{user}/stats 响应新增 mapExplorationPercent（double, 0–100, 2 
 ### Next Steps
 
 - None - task complete
+
+
+## Session 34: feat: 全玩家探索区域并集渲染端点
+
+**Date**: 2026-05-07
+**Task**: feat: 全玩家探索区域并集渲染端点
+**Branch**: `main`
+
+### Summary
+
+新增 GET /nextbot/world/explored-map-image：按位 OR 合并所有 TShock 账号的探索 bitmap 输出一张并集 PNG。复用现有 IUserDataGateway.GetAllUserAccounts + IPlayerExplorationTracker.GetBitmap (lazy-load + 负缓存) + IPlayerMapImageService 渲染管线，零新基础设施。fileName 因复用 PlayerMapImageService.EncodePng 实际是 map-world-explored-{timestamp}.png（PRD vs out-of-scope 冲突时让 docs 反映实际）。新增 10 条测试，314/314 通过；外部其他端点零变化。
+
+### Main Changes
+
+(Add details)
+
+### Git Commits
+
+| Hash | Message |
+|------|---------|
+| `1d12f89` | (see git log) |
+
+### Testing
+
+- [OK] (Add test results)
+
+### Status
+
+[OK] **Completed**
+
+### Next Steps
+
+- None - task complete
