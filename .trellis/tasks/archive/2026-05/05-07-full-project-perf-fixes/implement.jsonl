@@ -1,0 +1,4 @@
+{"file": ".trellis/spec/backend/quality-guidelines.md", "reason": "Required Patterns（显式可读 + record 不可变契约 + 集中常量）、Forbidden Patterns（不重复硬编码、不破坏 REST 字段名）、Testing Requirements（行为变更必须有自动化测试，性能优化用 spy 计数验证）"}
+{"file": ".trellis/spec/backend/database-guidelines.md", "reason": "in-memory cache + persistent store consistency 已沉淀小节（V-P1 配置缓存、V-P4 lock 外 IO 都是该原则的应用）；并发模型不变量（IO 不在 _lock 内、用 _ioLock 序列化磁盘写）"}
+{"file": ".trellis/spec/backend/error-handling.md", "reason": "缓存失效 / 反射 cache miss / TryOrInto null 路径不引入新错误码、不抛异常向上"}
+{"file": ".trellis/spec/backend/logging-guidelines.md", "reason": "PluginLogger.Normalize 改 Regex 不影响时间戳 / 级别格式（PluginLogger.Format 自带）；无新日志路径"}
