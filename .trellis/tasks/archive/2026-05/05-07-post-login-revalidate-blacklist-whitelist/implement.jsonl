@@ -1,0 +1,4 @@
+{"file": ".trellis/spec/backend/quality-guidelines.md", "reason": "Required Patterns（thin endpoint / service-layer 业务逻辑 / 测试覆盖行为变更）、Forbidden Patterns（不在 Plugin 写复杂业务逻辑——可抽 helper 让 Plugin 仍是薄壳）、Testing Requirements（V-4 安全改动必须有单测）"}
+{"file": ".trellis/spec/backend/error-handling.md", "reason": "黑/白名单二次校验失败的 disconnect 路径与 OnPlayerInfo 一致（共用 TryValidateJoin 的 denialReason）；不引入新错误码；reload merge 不抛异常向上"}
+{"file": ".trellis/spec/backend/database-guidelines.md", "reason": "OnlineTimeService Reload merge 是 in-memory cache + persistent store consistency 的延伸（已沉淀的小节）；并发模型不变量（IO 在 lock 外）保持"}
+{"file": ".trellis/spec/backend/logging-guidelines.md", "reason": "黑/白名单二次校验失败 WARN 日志风格与 OnPlayerInfo 既有日志一致；'按账号名核验' 措辞用于区分两个校验点"}
