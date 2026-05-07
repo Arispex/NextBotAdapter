@@ -1495,3 +1495,36 @@ GET /users/{user}/stats 响应新增 mapExplorationPercent（double, 0–100, 2 
 ### Next Steps
 
 - None - task complete
+
+
+## Session 36: perf: 全项目性能 audit 全量修复（13 项）
+
+**Date**: 2026-05-07
+**Task**: perf: 全项目性能 audit 全量修复（13 项）
+**Branch**: `main`
+
+### Summary
+
+全项目性能 audit + trust-but-verify 后保留 9 项必修；implement 中再扫描发现 3 项漏掉的，最终 13 项一锅修。V-P1 PluginConfigService cache（消除高频钩子的磁盘 IO + JSON 解析）；V-P2 PlayerStatisticsReader 反射 cache；V-P3 4 处嵌套循环改行优先（ImageSharp cache locality）；V-P4+V-P9 OnlineTimeService _ioLock 序列化磁盘写 + IO 出 lock；V-P5 白/黑名单 HashSet/Dictionary；V-P6 SanitizeFileName 缓存非法字符；V-P7 PluginLogger Regex；V-P8 KnownIps 复用；V-P10 TryOrInto 避免大量 BitArray 拷贝；V-P11 JsonSerializerSettings static readonly；V-P12 BlacklistService Dictionary 重构；V-P13 PlayerInventoryMapper 反射 cache。新增 18 条测试，340/340 通过。最终 verification 确认无回归、无 ≥80 confidence 新发现，验收标准达成。
+
+### Main Changes
+
+(Add details)
+
+### Git Commits
+
+| Hash | Message |
+|------|---------|
+| `5fa28b7` | (see git log) |
+
+### Testing
+
+- [OK] (Add test results)
+
+### Status
+
+[OK] **Completed**
+
+### Next Steps
+
+- None - task complete
