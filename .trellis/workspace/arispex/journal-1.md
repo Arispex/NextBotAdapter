@@ -1528,3 +1528,36 @@ GET /users/{user}/stats 响应新增 mapExplorationPercent（double, 0–100, 2 
 ### Next Steps
 
 - None - task complete
+
+
+## Session 37: fix: PluginConfigService._cached 加 volatile（ARM64 双检锁安全）
+
+**Date**: 2026-05-07
+**Task**: fix: PluginConfigService._cached 加 volatile（ARM64 双检锁安全）
+**Branch**: `main`
+
+### Summary
+
+最终性能 audit 发现 V-P1 缓存字段缺 volatile 修饰，违反 C# 双检锁标准模式。x86/x64 强内存模型下事实上无害，但 ARM64 / Apple Silicon 弱内存模型下理论存在写重排风险（reference 可见但对象字段未完全初始化）。1 字符串改动加 volatile 补 acquire/release barrier，零运行时开销。340/340 测试通过，行为零变化。
+
+### Main Changes
+
+(Add details)
+
+### Git Commits
+
+| Hash | Message |
+|------|---------|
+| `4f3486b` | (see git log) |
+
+### Testing
+
+- [OK] (Add test results)
+
+### Status
+
+[OK] **Completed**
+
+### Next Steps
+
+- None - task complete
