@@ -175,8 +175,45 @@ lock (_lock)
 }
 ```
 
-Reference task: `05-06-fix-exploration-tracker-audit-followups`.
-Reference code: `NextBotAdapter/Services/Exploration/PlayerExplorationTracker.cs`.
+### Don't: `Reload` replaces the cache wholesale after IO outside the lock
+
+```csharp
+// Bad: IO runs unlocked; on completion the entire cache is replaced.
+public void Reload()
+{
+    var store = Load();                         // IO outside the lock
+    lock (_lock)
+    {
+        _records = new Dictionary<string, long>(store.Records);  // wholesale replace
+    }
+}
+```
+
+Why it's bad: while `Load()` is running, another thread can complete a `Flush` / `Save` write path that updates both disk and `_records` with newer per-key values. The wholesale replace then **erases** those concurrent updates - the on-disk file Reload read is older than the in-memory state for some keys.
+
+### Do: merge by per-key resolution (e.g. take-max for monotonic counters)
+
+When the cached records are monotonic (online-time totals, cumulative progress, exploration counters, etc.), Reload must merge into the existing dictionary using a per-key resolution rule that cannot regress live data:
+
+```csharp
+public void Reload()
+{
+    var store = Load();          // IO outside the lock is fine
+    lock (_lock)
+    {
+        foreach (var (key, loaded) in store.Records)
+        {
+            if (!_records.TryGetValue(key, out var current) || loaded > current)
+                _records[key] = loaded;   // take max; never overwrite a higher live value
+        }
+    }
+}
+```
+
+For non-monotonic data, define an explicit per-key rule (timestamped last-writer-wins, version compare, etc.) instead of replacing the whole dictionary.
+
+Reference task: `05-06-fix-exploration-tracker-audit-followups`, `05-07-fix-online-time-reload-data-loss`.
+Reference code: `NextBotAdapter/Services/Exploration/PlayerExplorationTracker.cs`, `NextBotAdapter/Services/OnlineTimeService.cs`.
 
 ---
 
@@ -329,6 +366,7 @@ Reference: applies to any in-memory accumulator backed by file persistence in th
 - Do not use `Account.UUID` as a persistence key; it is a per-login device fingerprint, not account identity. Use `Account.Name` (or `Account.ID` if rename-stability is required).
 - Do not split get-or-create and mutation across two `lock` regions for the same in-memory cache; another writer can replace the entry between the regions and your mutation lands on an orphan. Use a single lock plus a `*Locked` helper.
 - Do not let `Load` (or any rehydration path) unconditionally overwrite an existing in-memory cache entry; check `ContainsKey` first so newer in-memory data is preserved.
+- Do not implement `Reload` as "load store, then wholesale replace the dictionary". Concurrent writers between the IO and the swap will be erased. Merge per-key with an explicit resolution rule (take-max for monotonic counters, timestamped last-writer-wins otherwise).
 - Do not return a single `null` from a storage `Load` method to mean both "file missing" and "IO error / corrupt / invalid input"; callers cannot tell whether negative-caching is safe and will permanently hide transient errors. Return a result type that distinguishes confirmed-missing from other failures.
 - Do not declare a storage `Save` (or other persistence write) as `void` and only log on failure when callers need to aggregate success/failure counts. Return `bool` (or a result type) so batch callers like `SaveAll` can emit a completion-rate summary.
 - Do not rely solely on logout / Dispose to persist accumulated in-memory state; crash, OOM, power loss, and `kill -9` skip both. Add a periodic flush timer (default 5 minutes) alongside the shutdown path.

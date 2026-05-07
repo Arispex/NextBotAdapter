@@ -77,6 +77,41 @@ Examples:
 - `IWhitelistService.TryRemove(...)`
 - `PersistedWhitelistService.TryValidateJoin(...)`
 
+### Validate identity by account name, not display name, and re-check after login
+
+TShock distinguishes the player's **display name** (`player.Name`, set client-side, can be anything) from the **account name** (`player.Account.Name`, the canonical identity established by `/login`). For any access-control check (whitelist, blacklist, role gating), the rule is:
+
+- Treat display name as untrusted: it can be set freely on the connect packet and a player can rename it before logging in.
+- Treat `account.Name` as the real identity: it is established only after authentication.
+- Run authorization checks at **both** ingress and post-login - same predicate, different identifier:
+  - `OnPlayerInfo` (or equivalent connect hook): check by `args.Name` to fail fast on obvious denials.
+  - `OnPlayerPostLogin`: re-check by `args.Player.Account.Name` and `Disconnect` if the real identity is denied.
+
+Why: a player can connect with a display name that passes the ingress check, then `/login <bannedAccount> <password>` to assume a denied account. Without the post-login re-check, the ingress filter is bypassed entirely.
+
+Express the rule as a helper that returns an explicit `(Allowed, DenialReason)` value, not a thrown exception, and reuse it from every entry point:
+
+```csharp
+public static class PostLoginAccountGuard
+{
+    public static (bool Allowed, string? DenialReason) Validate(
+        string accountName,
+        IBlacklistService blacklist,
+        IWhitelistService whitelist) { /* ... */ }
+}
+
+// Plugin hook:
+var guard = PostLoginAccountGuard.Validate(args.Player.Account.Name, _blacklist, _whitelist);
+if (!guard.Allowed)
+{
+    PluginLogger.Warn($"账号 {args.Player.Account.Name} 登录后被拒绝（按账号名核验）：{guard.DenialReason}");
+    args.Player?.Disconnect(guard.DenialReason!);
+    return;
+}
+```
+
+Tests required: a player whose display name is allowed but whose post-login account is denied must be disconnected with the same denial reason that the ingress path would emit. Cover both whitelist (account not in list) and blacklist (account in list) variants.
+
 ### Catch exceptions only at boundaries
 
 Current boundary catches in the codebase:
@@ -128,3 +163,4 @@ Examples:
 - Do not swallow exceptions without logging them.
 - Do not replace concrete error messages with vague placeholders when the real reason is safe to expose.
 - Do not change response field names such as `status`, `error`, `code`, or `message` without updating the public API contract.
+- Do not authorize a connection by display name (`player.Name`) only; display name is untrusted and the player can `/login` to a different account afterward. Re-check by `player.Account.Name` in `OnPlayerPostLogin` and `Disconnect` on denial.
