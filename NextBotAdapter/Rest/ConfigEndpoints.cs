@@ -98,7 +98,12 @@ public static class ConfigEndpoints
         try
         {
             var settings = configService.Load().NextBot;
-            var result = probe.ProbeAsync(settings).GetAwaiter().GetResult();
+            // Defensive: hop to the thread pool before awaiting so a hostile
+            // SyncContext on the REST worker thread cannot deadlock the probe.
+            // The REST worker still blocks here — that is unchanged — but the
+            // await inside ProbeAsync now runs on a clean continuation.
+            var result = Task.Run(async () =>
+                await probe.ProbeAsync(settings).ConfigureAwait(false)).GetAwaiter().GetResult();
 
             var obj = new RestObject("200")
             {

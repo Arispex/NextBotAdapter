@@ -52,11 +52,26 @@ public sealed class OnlineTimeService : IOnlineTimeService
 
     public OnlineTimeStore Reload()
     {
+        // IO outside the lock — keep the existing convention. The disk snapshot
+        // here may already be older than the in-memory _records by the time
+        // we acquire the lock, because Flush / EndSession on other threads can
+        // run during the IO window.
         var store = Load();
 
         lock (_lock)
         {
-            _records = new Dictionary<string, long>(store.Records);
+            // Merge instead of replace: _records is monotonically increasing
+            // (StartSession / Flush / EndSession only ever add elapsed time),
+            // so per-account max(in-memory, disk) preserves the freshest value.
+            // A wholesale replacement here would silently erase any Flush
+            // delta that landed in memory while Load was reading the file.
+            foreach (var (username, seconds) in store.Records)
+            {
+                if (!_records.TryGetValue(username, out var current) || seconds > current)
+                {
+                    _records[username] = seconds;
+                }
+            }
         }
 
         return store;

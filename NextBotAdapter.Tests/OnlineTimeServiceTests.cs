@@ -185,6 +185,52 @@ public sealed class OnlineTimeServiceTests
         Assert.Empty(ReadStore(filePath).Records);
     }
 
+    [Fact]
+    public void Reload_ShouldMergeAndKeepLargerInMemoryValue()
+    {
+        // Seed disk + in-memory with alice=100.
+        var service = CreateService(new OnlineTimeStore(
+            new Dictionary<string, long> { ["alice"] = 100 }), out var filePath);
+
+        // Simulate the race: another thread flushed alice=200 to disk and
+        // updated in-memory _records, but we are about to call Reload whose
+        // earlier Load already snapshotted the file. To exercise the merge
+        // path we instead overwrite the disk file with an older snapshot
+        // (alice=80) AFTER the in-memory bump. Without the merge, Reload
+        // would replace _records with the older disk snapshot and erase the
+        // in-memory progress.
+        service.StartSession("alice");
+        service.EndSession("alice");
+        var inMemoryAfterEnd = service.GetTotalSeconds("alice");
+        Assert.True(inMemoryAfterEnd >= 100);
+
+        // Roll back the on-disk file to a stale snapshot.
+        File.WriteAllText(filePath, JsonConvert.SerializeObject(
+            new OnlineTimeStore(new Dictionary<string, long> { ["alice"] = 80 }),
+            JsonSettings));
+
+        service.Reload();
+
+        // Merge keeps the larger in-memory value; the stale 80 must NOT win.
+        Assert.True(service.GetTotalSeconds("alice") >= inMemoryAfterEnd);
+    }
+
+    [Fact]
+    public void Reload_ShouldAddNewRecordsFromDisk()
+    {
+        var service = CreateService(out var filePath);
+
+        // In-memory starts empty. Drop a fresh snapshot on disk that contains
+        // a brand-new account; Reload should pick it up.
+        File.WriteAllText(filePath, JsonConvert.SerializeObject(
+            new OnlineTimeStore(new Dictionary<string, long> { ["alice"] = 50 }),
+            JsonSettings));
+
+        service.Reload();
+
+        Assert.Equal(50, service.GetTotalSeconds("alice"));
+    }
+
     private static OnlineTimeService CreateService(out string filePath)
     {
         var root = Path.Combine(Path.GetTempPath(), "NextBotAdapter.Tests", Guid.NewGuid().ToString("N"));

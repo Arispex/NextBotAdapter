@@ -240,10 +240,27 @@ public sealed class NextBotAdapterPlugin(Main game) : TerrariaPlugin(game)
 
     private void OnPlayerPostLogin(PlayerPostLoginEventArgs args)
     {
-        _onlineTimeService?.StartSession(args.Player.Account.Name);
         var accountName = args.Player?.Account?.Name;
+
+        // Re-check blacklist / whitelist by Account.Name. OnPlayerInfo only
+        // matched the player's display name, so a player joining with an
+        // unlisted display name and then running /login <listed account>
+        // could bypass either list. Run this BEFORE StartSession so the
+        // disconnect path does not leave a dangling active session entry.
         if (!string.IsNullOrEmpty(accountName))
         {
+            var guard = PostLoginAccountGuard.Validate(accountName, _blacklistService, _whitelistService);
+            if (!guard.Allowed)
+            {
+                PluginLogger.Warn($"账号 {accountName} 登录后被拒绝（按账号名核验），原因：{guard.DenialReason}");
+                args.Player?.Disconnect(guard.DenialReason!);
+                return;
+            }
+        }
+
+        if (!string.IsNullOrEmpty(accountName))
+        {
+            _onlineTimeService?.StartSession(accountName);
             // Order matters: ForgetLastSample BEFORE Load. Otherwise, an
             // OnPlayerUpdate that fires while Load is still running on this thread
             // (Load releases the lock during IO) could write a fresh, legitimate
