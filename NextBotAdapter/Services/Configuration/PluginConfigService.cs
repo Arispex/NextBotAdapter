@@ -18,7 +18,7 @@ public sealed class PluginConfigService
     };
     private readonly string _configDirectoryPath;
     private readonly object _cacheLock = new();
-    private NextBotAdapterConfig? _cached;
+    private volatile NextBotAdapterConfig? _cached;
 
     public PluginConfigService()
         : this(Path.Combine(TShockAPI.TShock.SavePath, "NextBotAdapter"))
