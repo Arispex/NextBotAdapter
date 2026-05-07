@@ -1,0 +1,4 @@
+{"file": ".trellis/spec/backend/directory-structure.md", "reason": "新增 IWorldExploredMapImageService.cs / WorldExploredMapImageService.cs 在 Services/World/ 下，与现有 MapImageService / PlayerMapImageService / MapFileService 同目录"}
+{"file": ".trellis/spec/backend/quality-guidelines.md", "reason": "Required Patterns（thin endpoint + service-layer 业务逻辑 + 集中常量）、Forbidden Patterns（不重复路由 / 错误码字面量）、Testing Requirements（行为变更必须有自动化测试）"}
+{"file": ".trellis/spec/backend/error-handling.md", "reason": "REST 错误响应风格：service null 返回 500 / 渲染异常返回 500，与 UserEndpoints.MapImage 对齐；error.message 仅返回有效原因"}
+{"file": ".trellis/spec/backend/logging-guidelines.md", "reason": "渲染异常 PluginLogger.Error 风格与现有 UserEndpoints.MapImage / MapEndpoints.Image 对齐；不在 union 合并循环里打高频日志"}

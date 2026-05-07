@@ -1,0 +1,2 @@
+{"file": ".trellis/spec/backend/quality-guidelines.md", "reason": "Code Review Checklist：layer placement（service / endpoint / model / infra）+ 复用集中常量 + 测试覆盖"}
+{"file": ".trellis/spec/backend/error-handling.md", "reason": "确认错误响应 status 与文案与 UserEndpoints.MapImage 对齐；不引入新错误码"}
