@@ -1,0 +1,5 @@
+{"file": ".trellis/spec/backend/index.md", "reason": "Backend pre-development checklist entry point — directs to directory-structure / quality / error-handling / logging"}
+{"file": ".trellis/spec/backend/directory-structure.md", "reason": "Confirms where ProbeAsync / NextBotProbeResult / tests belong; no new files to relocate but verifies the touched paths fit conventions"}
+{"file": ".trellis/spec/backend/quality-guidelines.md", "reason": "Required code-style / test patterns; informs how to add the new RateLimited enum case + record field + test"}
+{"file": ".trellis/spec/backend/error-handling.md", "reason": "Status-code → error-category mapping policy; 429 belongs to a new RateLimited bucket, not Unreachable"}
+{"file": ".trellis/spec/backend/logging-guidelines.md", "reason": "Human-readable WARN log style for the new RateLimited branch in VerifyNextBotConnectionAsync"}
