@@ -1,0 +1,5 @@
+{"file": ".trellis/spec/backend/index.md", "reason": "Backend pre-development checklist entry point — directs to directory-structure / quality / error-handling / logging"}
+{"file": ".trellis/spec/backend/directory-structure.md", "reason": "Confirms new helper belongs under Infrastructure/ alongside RequestParameters.cs; tests under NextBotAdapter.Tests/"}
+{"file": ".trellis/spec/backend/quality-guidelines.md", "reason": "Required code-style / test patterns for adding the new helper + endpoint changes"}
+{"file": ".trellis/spec/backend/error-handling.md", "reason": "Boundary catch policy for UriFormatException — fall back to raw verbs string instead of throwing"}
+{"file": ".trellis/spec/backend/logging-guidelines.md", "reason": "If any log is added (e.g. WARN on invalid percent-encoding), follows human-readable plugin log style"}

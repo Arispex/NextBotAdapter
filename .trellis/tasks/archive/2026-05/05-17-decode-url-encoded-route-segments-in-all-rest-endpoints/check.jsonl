@@ -1,0 +1,4 @@
+{"file": ".trellis/spec/backend/index.md", "reason": "Backend review checklist entry point"}
+{"file": ".trellis/spec/backend/quality-guidelines.md", "reason": "Verify test coverage for the new helper across all branches (verbs decode / invalid encoding fallback / parameters fall-through)"}
+{"file": ".trellis/spec/backend/error-handling.md", "reason": "Verify UriFormatException is caught and falls back without throwing through to upstream"}
+{"file": ".trellis/spec/backend/logging-guidelines.md", "reason": "Verify any new log lines (if added) follow plugin format"}
