@@ -55,5 +55,5 @@ public static class SecurityEndpoints
     }
 
     private static string? ReadRouteUser(RestRequestArgs args)
-        => args.Verbs?[RequestParameters.User] ?? args.Parameters?[RequestParameters.User] ?? args.Request?.Parameters?[RequestParameters.User];
+        => RouteParameters.ReadDecodedRouteParam(args, RequestParameters.User);
 }

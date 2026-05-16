@@ -49,6 +49,29 @@ Examples:
 
 ---
 
+## REST Endpoint Conventions
+
+### Convention: Always URL-decode route-segment parameters via `RouteParameters.ReadDecodedRouteParam`
+
+**What**: When reading any path-template segment such as `{user}` from `RestRequestArgs`, always call `RouteParameters.ReadDecodedRouteParam(args, key)`. Never read `args.Verbs?[key]` directly.
+
+**Why**: TShock's `Rests.SecureRestCommand` does **not** auto-decode path-segment captures populated into `args.Verbs[...]` — verbs are not auto-decoded. A confirmed bug: posting to `/nextbot/whitelist/add/{user}` with a non-ASCII username (e.g. `千亦` → `%E5%8D%83%E4%BA%A6`) caused the raw percent-encoded string to flow into persistence and join-validation, breaking the feature. The helper centralizes the decode + fallback chain so all endpoints behave consistently.
+
+**Example** (correct shell, see `NextBotAdapter/Rest/WhitelistEndpoints.cs`):
+
+```csharp
+private static string? ReadRouteUser(RestRequestArgs args)
+    => RouteParameters.ReadDecodedRouteParam(args, RequestParameters.User);
+```
+
+**Gotchas**:
+- Query / form parameters from `args.Parameters?[key]` and `args.Request?.Parameters?[key]` are **already decoded** by the server — do NOT double-decode them. The helper handles this: only the verb source is unescaped, the fallback sources are returned as-is.
+- A malformed percent-encoding (e.g. `%ZZ`) does not throw; `Uri.UnescapeDataString`'s `UriFormatException` is caught and the raw value is returned so upstream validation can reject it through the normal blank / invalid-username paths.
+
+**Existing call sites to model new endpoints on**: `Rest/WhitelistEndpoints.cs`, `Rest/BlacklistEndpoints.cs`, `Rest/UserEndpoints.cs`, `Rest/SecurityEndpoints.cs` — each defines a small `ReadRouteUser` shell that delegates to `RouteParameters.ReadDecodedRouteParam`.
+
+---
+
 ## Testing Requirements
 
 The repository uses xUnit in `NextBotAdapter.Tests/`.

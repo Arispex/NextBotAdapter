@@ -43,6 +43,7 @@ Additional API rules for this repository:
 - keep success responses focused on `data`; do not add frontend-facing success `message` fields
 - keep `error.message` limited to the effective reason; do not turn it into frontend display copy such as "动作 + 结果"
 - preserve raw response field names and documented payload structure
+- always read route-segment params via `RouteParameters.ReadDecodedRouteParam` (verbs are not auto-decoded by `Rests.SecureRestCommand`); see "REST Endpoint Conventions" in [Quality Guidelines](./quality-guidelines.md)
 
 ### Read when the task touches persistence or config contracts
 
