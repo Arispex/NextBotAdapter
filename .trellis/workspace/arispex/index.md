@@ -8,8 +8,8 @@
 
 <!-- @@@auto:current-status -->
 - **Active File**: `journal-1.md`
-- **Total Sessions**: 37
-- **Last Active**: 2026-05-07
+- **Total Sessions**: 38
+- **Last Active**: 2026-05-17
 <!-- @@@/auto:current-status -->
 
 ---
@@ -19,7 +19,7 @@
 <!-- @@@auto:active-documents -->
 | File | Lines | Status |
 |------|-------|--------|
-| `journal-1.md` | ~1563 | Active |
+| `journal-1.md` | ~1596 | Active |
 <!-- @@@/auto:active-documents -->
 
 ---
@@ -29,6 +29,7 @@
 <!-- @@@auto:session-history -->
 | # | Date | Title | Commits | Branch |
 |---|------|-------|---------|--------|
+| 38 | 2026-05-17 | URL-decode REST route segments fix | `ecba53c` | `main` |
 | 37 | 2026-05-07 | fix: PluginConfigService._cached 加 volatile（ARM64 双检锁安全） | `4f3486b` | `main` |
 | 36 | 2026-05-07 | perf: 全项目性能 audit 全量修复（13 项） | `5fa28b7` | `main` |
 | 35 | 2026-05-07 | fix: 全项目审计 follow-up（V-3 / V-4 / V-6） | `7836bb9`, `efa71a5` | `main` |

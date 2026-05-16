@@ -1561,3 +1561,36 @@ GET /users/{user}/stats 响应新增 mapExplorationPercent（double, 0–100, 2 
 ### Next Steps
 
 - None - task complete
+
+
+## Session 38: URL-decode REST route segments fix
+
+**Date**: 2026-05-17
+**Task**: URL-decode REST route segments fix
+**Branch**: `main`
+
+### Summary
+
+新增 RouteParameters.ReadDecodedRouteParam 共享 helper，仅对 verbs 来源 Uri.UnescapeDataString，UriFormatException 时返回原值。四个 endpoint 文件（Whitelist / Blacklist / User / Security）的 ReadRouteUser 私有壳改为调新 helper，覆盖全部 9 个带 {user} 路径段的 endpoint。新增 8 条单测覆盖 verbs 解码 / ASCII 不变 / 已解码兜底 / invalid 编码 / 三段式 fallback / parameters 不重复 decode。spec 沉淀到 backend/quality-guidelines.md 新增 REST Endpoint Conventions 小节。
+
+### Main Changes
+
+(Add details)
+
+### Git Commits
+
+| Hash | Message |
+|------|---------|
+| `ecba53c` | (see git log) |
+
+### Testing
+
+- [OK] (Add test results)
+
+### Status
+
+[OK] **Completed**
+
+### Next Steps
+
+- None - task complete
